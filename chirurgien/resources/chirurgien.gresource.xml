@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gresources>
+  <gresource prefix="/io/github/leonardschardijn/chirurgien">
+    <!-- Menus: Client-side decorations & Window manager decorations -->
+    <file preprocess="xml-stripblanks">menus/menu-csd.ui</file>
+    <file preprocess="xml-stripblanks">menus/menu-wmd.ui</file>
+
+    <!-- UI definitions -->
+    <file preprocess="xml-stripblanks">ui/chirurgien-analyzer-view.ui</file>
+    <file preprocess="xml-stripblanks">ui/chirurgien-preferences-dialog.ui</file>
+    <file preprocess="xml-stripblanks">ui/chirurgien-analyzer-info-dialog.ui</file>
+    <file preprocess="xml-stripblanks">ui/chirurgien-shortcuts-dialog.ui</file>
+
+    <!-- Analyzer information tabs -->
+    <file preprocess="xml-stripblanks">analyzer-info/intro-tab.ui</file>
+    <file preprocess="xml-stripblanks">analyzer-info/png-tab.ui</file>
+  </gresource>
+</gresources>

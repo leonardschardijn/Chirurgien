@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop">
+  <id>io.github.leonardschardijn.Chirurgien.desktop</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  <name>Chirurgien</name>
+  <summary>Understand file formats</summary>
+  <description>
+    <p>
+      Chirurgien is a simple tool that helps to understand file formats.
+    </p>
+  </description>
+  <content_rating type="oars-1.1" />
+</component>

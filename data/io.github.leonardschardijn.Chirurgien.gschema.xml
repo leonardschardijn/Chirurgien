@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist gettext-domain="chirurgien">
+  <enum id="io.github.leonardschardijn.chirurgien.FileJustification">
+    <value nick="left" value="0"/>
+    <value nick="right" value="1"/>
+    <value nick="center" value="2"/>
+  </enum>
+  <schema id="io.github.leonardschardijn.chirurgien" path="/io/github/leonardschardijn/chirurgien/">
+    <child name="preferences" schema="io.github.leonardschardijn.chirurgien.preferences"/>
+    <child name="state" schema="io.github.leonardschardijn.chirurgien.state"/>
+  </schema>
+  <schema id="io.github.leonardschardijn.chirurgien.preferences" path="/io/github/leonardschardijn/chirurgien/preferences/">
+    <key name="disable-csd" type="b">
+      <default>false</default>
+      <summary>Disable client-side decorations</summary>
+      <description>
+        Whether client-side decorations should be disabled. Client-side decorations make the application look better integrated with GNOME.
+      </description>
+    </key>
+    <key name="bytes-per-line" type="i">
+      <range min="10" max="200"/>
+      <default>32</default>
+      <summary>Bytes per line</summary>
+      <description>
+        How many bytes should be displayed per line on the hexadecimal/text view of the analyzed file.
+      </description>
+    </key>
+    <key name="file-justification" enum="io.github.leonardschardijn.chirurgien.FileJustification">
+      <aliases>
+        <alias value='GTK_JUSTIFY_LEFT' target='left'/>
+        <alias value='GTK_JUSTIFY_RIGHT' target='right'/>
+        <alias value='GTK_JUSTIFY_CENTER' target='center'/>
+      </aliases>
+      <default>'left'</default>
+      <summary>File view justification</summary>
+      <description>
+        Used for justifying the hexadecimal/text view.
+      </description>
+    </key>
+    <key name="show-navigation" type="b">
+      <default>true</default>
+      <summary>Show navigation buttons</summary>
+      <description>
+        Whether the navigation buttons panel should be visible.
+      </description>
+    </key>
+  </schema>
+  <schema id="io.github.leonardschardijn.chirurgien.state" path="/io/github/leonardschardijn/chirurgien/state/">
+    <key name="state" type="i">
+      <default>0</default>
+      <summary>Window state</summary>
+    </key>
+    <key name="size" type="(ii)">
+      <default>(900, 600)</default>
+      <summary>Window size</summary>
+    </key>
+    <key name="position" type="i">
+      <default>400</default>
+      <summary>Analyzer panes divider position</summary>
+    </key>
+  </schema>
+</schemalist>

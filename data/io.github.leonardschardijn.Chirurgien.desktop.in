@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Chirurgien
+Comment=Understand file formats
+Exec=chirurgien
+Icon=io.github.leonardschardijn.Chirurgien
+Terminal=false
+Type=Application
+Categories=GTK;Utility;
+StartupNotify=true

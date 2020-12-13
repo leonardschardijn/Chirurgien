@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <template class="ChirurgienPreferencesDialog" parent="GtkDialog">
+    <property name="title" translatable="yes">Preferences</property>
+    <property name="type_hint">dialog</property>
+    <property name="resizable">False</property>
+    <property name="modal">True</property>
+    <child internal-child="vbox">
+      <object class="GtkBox">
+        <property name="orientation">vertical</property>
+        <child>
+          <object class="GtkNotebook">
+            <property name="visible">True</property>
+            <child>
+              <object class="GtkGrid">
+                <property name="margin">10</property>
+                <property name="column-spacing">10</property>
+                <property name="row-spacing">10</property>
+                <property name="visible">True</property>
+                <child>
+                  <object class="GtkLabel">
+                    <property name="visible">True</property>
+                    <property name="xalign">0</property>
+                    <property name="label" translatable="yes">Bytes per line:</property>
+                  </object>
+                  <packing>
+                    <property name="left_attach">0</property>
+                    <property name="top_attach">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkSpinButton" id="bytes">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="adjustment">adjustment</property>
+                    <property name="climb_rate">1</property>
+                    <property name="snap_to_ticks">True</property>
+                    <property name="numeric">True</property>
+                  </object>
+                  <packing>
+                    <property name="left_attach">1</property>
+                    <property name="top_attach">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLabel">
+                    <property name="visible">True</property>
+                    <property name="xalign">0</property>
+                    <property name="label" translatable="yes">Justification:</property>
+                  </object>
+                  <packing>
+                    <property name="left_attach">0</property>
+                    <property name="top_attach">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkComboBoxText" id="justification">
+                    <property name="visible">True</property>
+                    <items>
+                      <item translatable="yes" id="left">Left</item>
+                      <item translatable="yes" id="center">Center</item>
+                      <item translatable="yes" id="right">Right</item>
+                    </items>
+                  </object>   
+                  <packing>
+                    <property name="left_attach">1</property>
+                    <property name="top_attach">1</property>
+                  </packing>
+                </child>
+                <child>
+                <object class="GtkCheckButton" id="navigation">
+                  <property name="label" translatable="yes">Show navigation buttons</property>
+                  <property name="visible">True</property>
+                  <property name="draw_indicator">True</property>
+                </object>
+                <packing>
+                  <property name="left_attach">0</property>
+                  <property name="top_attach">2</property>
+                  <property name="width">2</property>
+                </packing>
+              </child>
+              </object>
+            </child>
+            <child type="tab">
+              <object class="GtkLabel">
+                <property name="label" translatable="yes">View</property>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+  </template>
+  <object class="GtkAdjustment" id="adjustment">
+    <property name="lower">10</property>
+    <property name="upper">200</property>
+    <property name="step_increment">1</property>
+    <property name="page_increment">10</property>
+  </object>
+</interface>

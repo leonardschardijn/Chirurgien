@@ -1,0 +1,40 @@
+data/io.github.leonardschardijn.Chirurgien.desktop.in
+data/io.github.leonardschardijn.Chirurgien.appdata.xml.in
+data/io.github.leonardschardijn.Chirurgien.gschema.xml
+
+# Application strings
+chirurgien/chirurgien-actions.c
+chirurgien/chirurgien-analyzer-info-dialog.c
+chirurgien/chirurgien-window.c
+chirurgien/analyzers/chirurgien-analyzer.c
+chirurgien/resources/menus/menu-csd.ui
+chirurgien/resources/menus/menu-wmd.ui
+chirurgien/resources/ui/chirurgien-analyzer-info-dialog.ui
+chirurgien/resources/ui/chirurgien-analyzer-view.ui
+chirurgien/resources/ui/chirurgien-preferences-dialog.ui
+chirurgien/resources/ui/chirurgien-shortcuts-dialog.ui
+
+# Analyzer information strings
+chirurgien/resources/analyzer-info/intro-tab.ui
+chirurgien/resources/analyzer-info/png-tab.ui
+
+# PNG analyzer strings
+chirurgien/analyzers/png/png-analyzer.c
+chirurgien/analyzers/png/png-ihdr-chunk.c
+chirurgien/analyzers/png/png-plte-chunk.c
+chirurgien/analyzers/png/png-idat-chunk.c
+chirurgien/analyzers/png/png-trns-chunk.c
+chirurgien/analyzers/png/png-chrm-chunk.c
+chirurgien/analyzers/png/png-gama-chunk.c
+chirurgien/analyzers/png/png-iccp-chunk.c
+chirurgien/analyzers/png/png-sbit-chunk.c
+chirurgien/analyzers/png/png-srgb-chunk.c
+chirurgien/analyzers/png/png-text-chunk.c
+chirurgien/analyzers/png/png-ztxt-chunk.c
+chirurgien/analyzers/png/png-itxt-chunk.c
+chirurgien/analyzers/png/png-bkgd-chunk.c
+chirurgien/analyzers/png/png-hist-chunk.c
+chirurgien/analyzers/png/png-phys-chunk.c
+chirurgien/analyzers/png/png-splt-chunk.c
+chirurgien/analyzers/png/png-time-chunk.c
+
