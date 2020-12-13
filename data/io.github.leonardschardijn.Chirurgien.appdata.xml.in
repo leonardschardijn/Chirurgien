@@ -10,5 +10,18 @@
       Chirurgien is a simple tool that helps to understand file formats.
     </p>
   </description>
+  <screenshots>
+    <screenshot type="default">
+      <image>https://raw.githubusercontent.com/leonardschardijn/Chirurgien/master/data/screenshot1.png</image>
+    </screenshot>
+    <screenshot>
+      <image>https://raw.githubusercontent.com/leonardschardijn/Chirurgien/master/data/screenshot2.png</image>
+    </screenshot>
+    <screenshot>
+      <image>https://raw.githubusercontent.com/leonardschardijn/Chirurgien/master/data/screenshot3.png</image>
+    </screenshot>
+  </screenshots>
+  <url type="homepage">https://leonardschardijn.github.io/chirurgien/</url>
+  <developer_name>Daniel Léonard Schardijn</developer_name>
   <content_rating type="oars-1.1" />
 </component>
