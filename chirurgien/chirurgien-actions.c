@@ -165,8 +165,8 @@ chirurgien_actions_about (__attribute__((unused)) GSimpleAction *action,
                     "license-type", GTK_LICENSE_GPL_3_0,
                     "logo-icon-name", "io.github.leonardschardijn.Chirurgien",
                     "version", VERSION,
-                    //"website", "http://",
-                    "website-label", "No website",
+                    "website", "https://github.com/leonardschardijn/Chirurgien",
+                    "website-label", _("Website"),
                     NULL);
 }
 
