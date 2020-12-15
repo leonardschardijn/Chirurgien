@@ -186,27 +186,30 @@ chirurgien_actions_open (__attribute__((unused)) GSimpleAction *action,
     ChirurgienWindow *window;
 
     g_autoptr (GFile) file = NULL;
-    g_autofree gchar *filename = NULL;
+    g_autofree gchar *uri = NULL;
 
-    GtkWidget *dialog;
+    GtkFileChooserNative *dialog;
     gint result;
 
     window = CHIRURGIEN_WINDOW (user_data);
 
-    dialog = gtk_file_chooser_dialog_new (_("Analyze file"), GTK_WINDOW (window),
+    dialog = gtk_file_chooser_native_new (_("Analyze file"), GTK_WINDOW (window),
                                           GTK_FILE_CHOOSER_ACTION_OPEN,
-                                          _("Cancel"), GTK_RESPONSE_NONE,
-                                          _("Open"), GTK_RESPONSE_ACCEPT,
-                                          NULL);
+                                          NULL, NULL);
 
-    result = gtk_dialog_run (GTK_DIALOG (dialog));
+    result = gtk_native_dialog_run (GTK_NATIVE_DIALOG (dialog));
 
-    filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
-    gtk_widget_destroy (dialog);
+    uri = gtk_file_chooser_get_uri (GTK_FILE_CHOOSER (dialog));
+
+    /* This is required if the application is running under flatpak, the recent files
+     * are not updated otherwise */
+    gtk_recent_manager_add_item (gtk_recent_manager_get_default (), uri);
+
+    g_object_unref (dialog);
 
     if (result == GTK_RESPONSE_ACCEPT)
     {
-        file = g_file_new_for_path (filename);
+        file = g_file_new_for_uri (uri);
         chirurgien_actions_analyze_file (window, file);
     }
 
@@ -337,11 +340,22 @@ chirurgien_actions_analyze_file (ChirurgienWindow *window,
 
     GError *error = NULL;
 
-    file_info = g_file_query_info (file, G_FILE_ATTRIBUTE_STANDARD_DISPLAY_NAME, G_FILE_QUERY_INFO_NONE, NULL, &error);
+    file_info = g_file_query_info (file, G_FILE_ATTRIBUTE_STANDARD_DISPLAY_NAME","G_FILE_ATTRIBUTE_STANDARD_SIZE,
+                                   G_FILE_QUERY_INFO_NONE, NULL, &error);
+    /* The file was probably deleted */
     if (file_info == NULL)
     {
         widget = gtk_message_dialog_new (GTK_WINDOW (window), GTK_DIALOG_MODAL, GTK_MESSAGE_INFO,
                                          GTK_BUTTONS_CLOSE, error->message);
+        gtk_dialog_run (GTK_DIALOG (widget));
+        gtk_widget_destroy (widget);
+        return;
+    }
+    /* The file is empty */
+    if (!g_file_info_get_size (file_info))
+    {
+        widget = gtk_message_dialog_new (GTK_WINDOW (window), GTK_DIALOG_MODAL, GTK_MESSAGE_INFO,
+                                         GTK_BUTTONS_CLOSE, _("The selected file is empty."));
         gtk_dialog_run (GTK_DIALOG (widget));
         gtk_widget_destroy (widget);
         return;
