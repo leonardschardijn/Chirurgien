@@ -6,6 +6,20 @@ chirurgien_sources += [
 ]
 
 chirurgien_sources += [
+  'analyzers/jpeg/jpeg-analyzer.c',
+  'analyzers/jpeg/jpeg-app0-marker.c',
+  'analyzers/jpeg/jpeg-app2-marker.c',
+  'analyzers/jpeg/jpeg-dqt-marker.c',
+  'analyzers/jpeg/jpeg-dht-marker.c',
+  'analyzers/jpeg/jpeg-dac-marker.c',
+  'analyzers/jpeg/jpeg-sofn-marker.c',
+  'analyzers/jpeg/jpeg-dri-marker.c',
+  'analyzers/jpeg/jpeg-sos-marker.c',
+  'analyzers/jpeg/jpeg-dnl-marker.c',
+  'analyzers/jpeg/jpeg-com-marker.c'
+]
+
+chirurgien_sources += [
   'analyzers/png/png-analyzer.c',
   'analyzers/png/png-ihdr-chunk.c',
   'analyzers/png/png-plte-chunk.c',

@@ -27,9 +27,22 @@
 gboolean
 analyze_time_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts)
 {
-    gsize bytes_left = chunk_length;
+    AnalyzerTab tab;
+
+    gchar *description_message;
+
     guint16 year;
     guint8 date[5];
+
+    gchar *fields[] = {
+        _("Month"),
+        _("Day"),
+        _("Hour"),
+        _("Minute"),
+        _("Second")
+    };
+
+    guint i;
 
     if (!chunk_length)
         return TRUE;
@@ -38,130 +51,61 @@ analyze_time_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts)
 
     if (!chunk_counts[IHDR])
     {
-        analyzer_utils_create_tag (file, &png_colors[ERROR_COLOR_1], FALSE, chunk_length,
-                                   _("The first chunk must be the IHDR chunk"), NULL);
+        analyzer_utils_tag_error (file, ERROR_COLOR_1, chunk_length,
+                                  _("The first chunk must be the IHDR chunk"));
         return TRUE;
     }
 
+    analyzer_utils_init_tab (&tab);
+
+    analyzer_utils_set_title_tab (&tab, _("<b>Last-modification time</b>"));
+
     if (!analyzer_utils_read (&year, file , 2))
-    {
-        analyzer_utils_create_tag (file, &png_colors[ERROR_COLOR_1], FALSE, -1,
-                                   _("Unrecognized data"), NULL);
-        return FALSE;
-    }
+            goto END_ERROR;
+
+    analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 2, _("Year"));
+
     year = ntohs (year);
-    analyzer_utils_create_tag (file, &png_colors[CHUNK_DATA_COLOR_1], TRUE, 2,
-                               _("Year"), NULL);
-    bytes_left -= 2;
+    description_message = g_strdup_printf ("%u", year);
+    analyzer_utils_describe_tab (&tab, _("Year"), description_message);
+    g_free (description_message);
 
-    if (!analyzer_utils_read (&date[0], file, 1))
-        return FALSE;
-    analyzer_utils_create_tag (file, &png_colors[CHUNK_DATA_COLOR_2], TRUE, 1,
-                               _("Month"), NULL);
-    bytes_left -= 1;
-
-    if (!analyzer_utils_read (&date[1], file, 1))
-        return FALSE;
-    analyzer_utils_create_tag (file, &png_colors[CHUNK_DATA_COLOR_1], TRUE, 1,
-                               _("Day"), NULL);
-    bytes_left -= 1;
-
-    if (!analyzer_utils_read (&date[2], file, 1))
-        return FALSE;
-    analyzer_utils_create_tag (file, &png_colors[CHUNK_DATA_COLOR_2], TRUE, 1,
-                               _("Hour"), NULL);
-    bytes_left -= 1;
-
-    if (!analyzer_utils_read (&date[3], file, 1))
-        return FALSE;
-    analyzer_utils_create_tag (file, &png_colors[CHUNK_DATA_COLOR_1], TRUE, 1,
-                               _("Minute"), NULL);
-    bytes_left -= 1;
-    
-    if (!analyzer_utils_read (&date[4], file, 1))
-        return FALSE;
-    analyzer_utils_create_tag (file, &png_colors[CHUNK_DATA_COLOR_2], TRUE, 1,
-                               _("Second"), NULL);
-    bytes_left -= 1;
-
-    if (bytes_left > 0)
+    for (i = 0; i < 5; i++)
     {
-        analyzer_utils_create_tag (file, &png_colors[ERROR_COLOR_1], FALSE, bytes_left,
-                                   _("Unrecognized data"), NULL);
-        /* Advance pointer */
-        file->file_contents_index += bytes_left;
+        if (!analyzer_utils_read (&date[i], file, 1))
+            return FALSE;
+
+        if (i % 2)
+            analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 1, fields[i]);
+        else
+            analyzer_utils_tag (file, CHUNK_DATA_COLOR_2, 1, fields[i]);
+
+        description_message = g_strdup_printf ("%u", date[i]);
+        analyzer_utils_describe_tab (&tab, fields[i], description_message);
+        g_free (description_message);
     }
 
-    if (file->description_notebook != NULL)
+    description_message = g_strdup_printf ("%.4u-%.2u-%.2u %.2u:%.2u:%.2u",
+                                           year, date[0], date[1],
+                                           date[2], date[3], date[4]);
+    analyzer_utils_add_description_tab (&tab, _("Date"), description_message,
+                                        NULL, 10, 0);
+    g_free (description_message);
+
+    /* Fixed length chunk */
+    if (chunk_length > 7)
     {
-        GtkWidget *scrolled, *grid, *label;
-        gchar *description_message;
+        chunk_length -= 7;
+        analyzer_utils_tag_error (file, ERROR_COLOR_1, chunk_length, _("Unrecognized data"));
 
-        guint description_lines_count = 0;
-
-        scrolled = gtk_scrolled_window_new (NULL, NULL);
-
-        grid = gtk_grid_new ();
-        gtk_widget_set_margin_start (grid, 10);
-        gtk_widget_set_margin_end (grid, 10);
-        gtk_widget_set_margin_bottom (grid, 10);
-        gtk_widget_set_margin_top (grid, 10);
-        gtk_grid_set_column_spacing (GTK_GRID (grid), 10);
-        gtk_widget_set_halign (grid, GTK_ALIGN_CENTER);
-
-        analyzer_utils_add_description_here (GTK_GRID (grid), &description_lines_count,
-                                     _("<b>Last-modification time</b>"), NULL, NULL,
-                                     0, 20);
-
-        description_message = g_strdup_printf ("%u", year);
-        analyzer_utils_add_description_here (GTK_GRID (grid), &description_lines_count,
-                                     _("Year"), description_message, NULL,
-                                     0, 0);
-        g_free (description_message);
-
-        description_message = g_strdup_printf ("%u", date[0]);
-        analyzer_utils_add_description_here (GTK_GRID (grid), &description_lines_count,
-                                     _("Month"), description_message, NULL,
-                                     0, 0);
-        g_free (description_message);
-
-        description_message = g_strdup_printf ("%u", date[1]);
-        analyzer_utils_add_description_here (GTK_GRID (grid), &description_lines_count,
-                                     _("Day"), description_message, NULL,
-                                     0, 0);
-        g_free (description_message);
-
-        description_message = g_strdup_printf ("%u", date[2]);
-        analyzer_utils_add_description_here (GTK_GRID (grid), &description_lines_count,
-                                     _("Hour"), description_message, NULL,
-                                     0, 0);
-        g_free (description_message);
-
-        description_message = g_strdup_printf ("%u", date[3]);
-        analyzer_utils_add_description_here (GTK_GRID (grid), &description_lines_count,
-                                     _("Minute"), description_message, NULL,
-                                     0, 0);
-        g_free (description_message);
-
-        description_message = g_strdup_printf ("%u", date[4]);
-        analyzer_utils_add_description_here (GTK_GRID (grid), &description_lines_count,
-                                     _("Second"), description_message, NULL,
-                                     0, 10);
-        g_free (description_message);
-
-        description_message = g_strdup_printf ("%.4u-%.2u-%.2u %.2u:%.2u:%.2u", year, date[0], date[1],
-                                               date[2], date[3], date[4]);
-        analyzer_utils_add_description_here (GTK_GRID (grid), &description_lines_count,
-                                     _("Date"), description_message, NULL,
-                                     0, 0);
-        g_free (description_message);
-
-        gtk_container_add (GTK_CONTAINER (scrolled), grid);
-        gtk_widget_show_all (scrolled);
-
-        label = gtk_label_new ("tIME");
-        gtk_notebook_insert_page (file->description_notebook, scrolled, label, -1);
+        ADVANCE_POINTER (file, chunk_length);
     }
+
+    analyzer_utils_insert_tab (file, &tab, chunk_types[tIME]);
 
     return TRUE;
+
+    END_ERROR:
+    analyzer_utils_tag_error (file, ERROR_COLOR_1, -1, _("Unrecognized data"));
+    return FALSE;
 }

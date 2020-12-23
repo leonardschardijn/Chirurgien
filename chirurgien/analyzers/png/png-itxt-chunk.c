@@ -27,6 +27,11 @@
 gboolean
 analyze_itxt_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts)
 {
+    AnalyzerTab tab;
+
+    gchar *description_message1;
+    gchar *description_message2 = NULL;
+
     g_autofree gchar *itxt_chunk = NULL;
 
     gchar *keyword = NULL;
@@ -40,7 +45,7 @@ analyze_itxt_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts)
 
     gint compression_flag = -1, compression_method = -1;
 
-    g_autofree guchar *inflate_text = NULL;
+    g_autofree gchar *inflate_text = NULL;
     gsize deflate_size, inflate_size, expected_deflate_size;
 
     if (!chunk_length)
@@ -50,17 +55,19 @@ analyze_itxt_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts)
 
     if (!chunk_counts[IHDR])
     {
-        analyzer_utils_create_tag (file, &png_colors[ERROR_COLOR_1], FALSE, chunk_length,
-                                   _("The first chunk must be the IHDR chunk"), NULL);
+        analyzer_utils_tag_error (file, ERROR_COLOR_1, chunk_length,
+                                  _("The first chunk must be the IHDR chunk"));
         return TRUE;
     }
+
+    analyzer_utils_init_tab (&tab);
 
     itxt_chunk = g_malloc (chunk_length);
 
     if (!analyzer_utils_read (itxt_chunk, file, chunk_length))
     {
-        analyzer_utils_create_tag (file, &png_colors[ERROR_COLOR_1], FALSE, -1,
-                                   _("Chunk length exceeds available data"), NULL);
+        analyzer_utils_tag_error (file, ERROR_COLOR_1, -1,
+                                  _("Chunk length exceeds available data"));
         return FALSE;
     }
 
@@ -75,13 +82,6 @@ analyze_itxt_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts)
      *    - null separator -
      *   text string (possibly compressed)
      * */
-    if (*itxt_chunk == '\0')
-    {
-        analyzer_utils_create_tag (file, &png_colors[ERROR_COLOR_1], FALSE, chunk_length,
-                                   _("Invalid keyword length"), NULL);
-        return TRUE;
-    }
-
     for (i = 0; i < chunk_length; i++)
     {
         if (itxt_chunk[i] == '\0')
@@ -122,242 +122,99 @@ analyze_itxt_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts)
         keyword_length = chunk_length;
     }
 
-    if (keyword_length >= 80)
+    if (keyword_length == 0 || keyword_length >= 80)
     {
-        analyzer_utils_create_tag (file, &png_colors[ERROR_COLOR_1], FALSE, chunk_length,
-                                   _("Invalid keyword length"), NULL);
+        analyzer_utils_tag_error (file, ERROR_COLOR_1, chunk_length, _("Invalid keyword length"));
         return TRUE;
     }
 
-    analyzer_utils_create_tag (file, &png_colors[CHUNK_DATA_COLOR_1], TRUE, keyword_length,
-                               _("Keyword"), NULL);
+    analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, keyword_length, _("Keyword"));
+    analyzer_utils_tag (file, CHUNK_DATA_COLOR_2, 1, _("Null separator"));
+    analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 1, _("Compression flag"));
+    analyzer_utils_tag (file, CHUNK_DATA_COLOR_2, 1, _("Compression method"));
+    analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, language_tag_length, _("Language tag"));
+    analyzer_utils_tag (file, CHUNK_DATA_COLOR_2, 1, _("Null separator"));
+    analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, translated_keyword_length, _("Translated keyword"));
+    analyzer_utils_tag (file, CHUNK_DATA_COLOR_2, 1, _("Null separator"));
 
-    analyzer_utils_create_tag (file, &png_colors[CHUNK_DATA_COLOR_2], TRUE, 1,
-                               _("Null separator"), NULL);
-
-    analyzer_utils_create_tag (file, &png_colors[CHUNK_DATA_COLOR_1], TRUE, 1,
-                               _("Compression flag"), NULL);
-
-    analyzer_utils_create_tag (file, &png_colors[CHUNK_DATA_COLOR_2], TRUE, 1,
-                               _("Compression method"), NULL);
-
-    analyzer_utils_create_tag (file, &png_colors[CHUNK_DATA_COLOR_1], TRUE, language_tag_length,
-                               _("Language tag"), NULL);
-
-    analyzer_utils_create_tag (file, &png_colors[CHUNK_DATA_COLOR_2], TRUE, 1,
-                               _("Null separator"), NULL);
-
-    analyzer_utils_create_tag (file, &png_colors[CHUNK_DATA_COLOR_1], TRUE, translated_keyword_length,
-                               _("Translated keyword"), NULL);
-
-    analyzer_utils_create_tag (file, &png_colors[CHUNK_DATA_COLOR_2], TRUE, 1,
-                               _("Null separator"), NULL);
+    analyzer_utils_add_text_tab (&tab, _("Keyword"), keyword, keyword_length);
 
     if (compression_flag == 0)
     {
-        analyzer_utils_create_tag (file, &png_colors[CHUNK_DATA_COLOR_1], TRUE, text_length,
-                           _("Uncompressed text string"), NULL);
+        description_message1 = _("Uncompressed text");
+
+        analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, text_length, _("Uncompressed text string"));
+        if (text)
+            analyzer_utils_add_text_tab (&tab, _("Text string"), text, text_length);
     }
     else if (compression_flag == 1)
     {
+        description_message1 = _("Compressed text");
+
         if (compression_method == 0) // zlib-format DEFLATE
         {
-            analyzer_utils_create_tag (file, &png_colors[CHUNK_DATA_COLOR_1], TRUE, 1,
-                                       _("ZLIB compression method and flags (CMF)\n"
-                                       "Lower four bits: compression method (CM)\n"
-                                       "Upper four bits: compression info (CINFO)"), NULL);
+            description_message2 = _("zlib-format DEFLATE");
 
-            analyzer_utils_create_tag (file, &png_colors[CHUNK_DATA_COLOR_2], TRUE, 1,
-                                       _("ZLIB flags (FLG)"), NULL);
+            analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 1,
+                                _("ZLIB compression method and flags (CMF)\n"
+                                "Lower four bits: compression method (CM)\n"
+                                "Upper four bits: compression info (CINFO)"));
+
+            analyzer_utils_tag (file, CHUNK_DATA_COLOR_2, 1, _("ZLIB flags (FLG)"));
 
             /* deflate size = text_length - ZLIB CMF (1) - ZLIB FLG (1) - ZLIB Adler32 chechsum (4) */
             expected_deflate_size = deflate_size = text_length - 6;
 
+            /* Skip ZLIB CMF and FLG */
             text += 2;
 
             if (!puff (NULL, NULL, NULL, NULL, &inflate_size, (guchar *) text, &deflate_size))
             {
                 inflate_text = g_malloc (inflate_size);
 
-                puff (NULL, NULL, NULL, inflate_text, &inflate_size, (guchar *) text, &deflate_size);
+                puff (NULL, NULL, NULL, (guchar *) inflate_text, &inflate_size, (guchar *) text, &deflate_size);
 
-                text = (gchar *) inflate_text;
-
-                analyzer_utils_create_tag (file, &png_colors[CHUNK_DATA_COLOR_1], TRUE, deflate_size,
-                                           _("ZLIB compressed text string"), NULL);
-                analyzer_utils_create_tag (file, &png_colors[CHUNK_DATA_COLOR_2], TRUE, 4,
-                                           _("ZLIB Adler32 checksum"), NULL);
+                analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, deflate_size, _("ZLIB compressed text string"));
+                analyzer_utils_tag (file, CHUNK_DATA_COLOR_2, 4, _("ZLIB Adler32 checksum"));
 
                 expected_deflate_size -= deflate_size;
                 if (expected_deflate_size)
-                    analyzer_utils_create_tag (file, &png_colors[ERROR_COLOR_1], FALSE, expected_deflate_size,
-                                           _("Unrecognized data"), NULL);
+                    analyzer_utils_tag_error (file, ERROR_COLOR_1, expected_deflate_size, _("Unrecognized data"));
+
+                analyzer_utils_add_text_tab (&tab, _("Text string"), inflate_text, inflate_size);
             }
             else
             {
-                analyzer_utils_create_tag (file, &png_colors[ERROR_COLOR_1], FALSE, text_length - 2,
-                                           _("ZLIB Compressed data (inflate failed)"), NULL);
+                analyzer_utils_tag_error (file, ERROR_COLOR_1, text_length - 2,
+                                    _("ZLIB Compressed data (inflate failed)"));
             }
         }
         else
         {
-            analyzer_utils_create_tag (file, &png_colors[ERROR_COLOR_1], FALSE, text_length,
-                                       _("Unrecognized data"), NULL);
+            description_message2 = _("<span foreground=\"red\">INVALID</span>");
+            analyzer_utils_tag_error (file, ERROR_COLOR_1, text_length, _("Unrecognized data"));
         }
     }
     else
     {
-        analyzer_utils_create_tag (file, &png_colors[ERROR_COLOR_1], FALSE, text_length,
-                                   _("Unrecognized data"), NULL);
+        description_message1 = _("<span foreground=\"red\">INVALID</span>");
+
+        analyzer_utils_tag_error (file, ERROR_COLOR_1, text_length, _("Unrecognized data"));
     }
 
-    if (file->description_notebook != NULL)
-    {
-        GtkWidget *scrolled, *grid, *box, *textview, *frame, *label;
-        GtkTextBuffer *buffer;
+    analyzer_utils_add_text_tab (&tab, _("Language tag"), language_tag, language_tag_length);
+    analyzer_utils_add_text_tab (&tab, _("Translated keyword"), translated_keyword, translated_keyword_length);
 
-        gchar *description_message;
+    analyzer_utils_describe_tooltip_tab (&tab, _("Compression flag"), description_message1,
+                                         _("Compression flag\n"
+                                         "<tt>00<sub>16</sub></tt>\tUncompressed text\n"
+                                         "<tt>01<sub>16</sub></tt>\tCompressed text"));
+    if (description_message2)
+        analyzer_utils_describe_tooltip_tab (&tab, _("Compression method"), description_message2,
+                                             _("Text string compression method\n"
+                                             "<tt>00<sub>16</sub></tt>\tzlib-format DEFLATE"));
 
-        guint description_lines_count = 0;
-
-        scrolled = gtk_scrolled_window_new (NULL, NULL);
-
-        box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 10);
-        gtk_widget_set_margin_start (box, 10);
-        gtk_widget_set_margin_end (box, 10);
-        gtk_widget_set_margin_bottom (box, 10);
-        gtk_widget_set_margin_top (box, 10);
-
-        grid = gtk_grid_new ();
-        gtk_grid_set_column_spacing (GTK_GRID (grid), 10);
-        gtk_widget_set_halign (grid, GTK_ALIGN_CENTER);
-
-        frame = gtk_frame_new (_("Keyword"));
-        gtk_frame_set_label_align (GTK_FRAME (frame), 0.5, 0.5);
-
-        textview = gtk_text_view_new ();
-        gtk_widget_set_margin_start (textview, 10);
-        gtk_widget_set_margin_end (textview, 10);
-        gtk_widget_set_margin_bottom (textview, 10);
-        gtk_widget_set_margin_top (textview, 10);
-        gtk_text_view_set_editable (GTK_TEXT_VIEW (textview), FALSE);
-        gtk_text_view_set_cursor_visible (GTK_TEXT_VIEW (textview), FALSE);
-        buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (textview));
-        gtk_text_buffer_set_text (buffer, keyword, keyword_length);
-
-        gtk_container_add (GTK_CONTAINER (frame), textview);
-
-        gtk_box_pack_start (GTK_BOX (box), frame, FALSE, FALSE, 0);
-
-        if (text != NULL)
-        {
-            frame = gtk_frame_new (_("Text string"));
-            gtk_frame_set_label_align (GTK_FRAME (frame), 0.5, 0.5);
-
-            textview = gtk_text_view_new ();
-            gtk_widget_set_margin_start (textview, 10);
-            gtk_widget_set_margin_end (textview, 10);
-            gtk_widget_set_margin_bottom (textview, 10);
-            gtk_widget_set_margin_top (textview, 10);
-            gtk_text_view_set_wrap_mode (GTK_TEXT_VIEW (textview), GTK_WRAP_WORD);
-            gtk_text_view_set_editable (GTK_TEXT_VIEW (textview), FALSE);
-            gtk_text_view_set_cursor_visible (GTK_TEXT_VIEW (textview), FALSE);
-            buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (textview));
-            gtk_text_buffer_set_text (buffer, text, text_length);
-
-            gtk_container_add (GTK_CONTAINER (frame), textview);
-
-            gtk_box_pack_start (GTK_BOX (box), frame, FALSE, FALSE, 0);
-        }
-
-        if (language_tag != NULL)
-        {
-            frame = gtk_frame_new (_("Language tag"));
-            gtk_frame_set_label_align (GTK_FRAME (frame), 0.5, 0.5);
-
-            textview = gtk_text_view_new ();
-            gtk_widget_set_margin_start (textview, 10);
-            gtk_widget_set_margin_end (textview, 10);
-            gtk_widget_set_margin_bottom (textview, 10);
-            gtk_widget_set_margin_top (textview, 10);
-            gtk_text_view_set_editable (GTK_TEXT_VIEW (textview), FALSE);
-            gtk_text_view_set_cursor_visible (GTK_TEXT_VIEW (textview), FALSE);
-            buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (textview));
-            gtk_text_buffer_set_text (buffer, language_tag, language_tag_length);
-
-            gtk_container_add (GTK_CONTAINER (frame), textview);
-
-            gtk_box_pack_start (GTK_BOX (box), frame, FALSE, FALSE, 0);
-        }
-        
-        if (translated_keyword != NULL)
-        {
-            frame = gtk_frame_new (_("Translated keyword"));
-            gtk_frame_set_label_align (GTK_FRAME (frame), 0.5, 0.5);
-
-            textview = gtk_text_view_new ();
-            gtk_widget_set_margin_start (textview, 10);
-            gtk_widget_set_margin_end (textview, 10);
-            gtk_widget_set_margin_bottom (textview, 10);
-            gtk_widget_set_margin_top (textview, 10);
-            gtk_text_view_set_editable (GTK_TEXT_VIEW (textview), FALSE);
-            gtk_text_view_set_cursor_visible (GTK_TEXT_VIEW (textview), FALSE);
-            buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (textview));
-            gtk_text_buffer_set_text (buffer, translated_keyword, translated_keyword_length);
-
-            gtk_container_add (GTK_CONTAINER (frame), textview);
-
-            gtk_box_pack_start (GTK_BOX (box), frame, FALSE, FALSE, 0);
-        }
-
-        if (compression_flag == 0)
-        {
-            analyzer_utils_add_description_here (GTK_GRID (grid), &description_lines_count,
-                 _("Compression flag"), _("Uncompressed text"),
-                 _("Compression flags\n"
-                   "<tt>00<sub>16</sub></tt>\tUncompressed text\n"
-                   "<tt>01<sub>16</sub></tt>\tCompressed text"),
-                 0, 10);
-        }
-        else if (compression_flag == 1)
-        {
-            analyzer_utils_add_description_here (GTK_GRID (grid), &description_lines_count,
-                 _("Compression flag"), _("Compressed text"),
-                 _("Compression flags\n"
-                   "<tt>00<sub>16</sub></tt>\tUncompressed text\n"
-                   "<tt>01<sub>16</sub></tt>\tCompressed text"),
-                 0, 10);
-
-            if (compression_method == 0) // zlib-format DEFLATE
-                description_message = _("zlib-format DEFLATE");
-            else
-                description_message = _("<span foreground=\"red\">INVALID</span>");
-
-            analyzer_utils_add_description_here (GTK_GRID (grid), &description_lines_count,
-                             _("Compression method"), description_message,
-                             _("Text string compression methods\n"
-                               "<tt>00<sub>16</sub></tt>\tzlib-format DEFLATE"),
-                             0, 10);
-        }
-        else
-        {
-            description_message = _("<span foreground=\"red\">INVALID</span>");
-            analyzer_utils_add_description_here (GTK_GRID (grid), &description_lines_count,
-                 _("Compression flag"), description_message,
-                 _("Compression flags\n"
-                   "<tt>00<sub>16</sub></tt>\tUncompressed text\n"
-                   "<tt>01<sub>16</sub></tt>\tCompressed text"),
-                 0, 10);
-        }
-
-        gtk_box_pack_start (GTK_BOX (box), grid, FALSE, FALSE, 0);
-
-        gtk_container_add (GTK_CONTAINER (scrolled), box);
-        gtk_widget_show_all (scrolled);
-
-        label = gtk_label_new ("iTXt");
-        gtk_notebook_insert_page (file->description_notebook, scrolled, label, -1);
-    }
+    analyzer_utils_insert_tab (file, &tab, chunk_types[iTXt]);
 
     return TRUE;
 }

@@ -26,7 +26,10 @@
 gboolean
 analyze_srgb_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts)
 {
-    gsize bytes_left = chunk_length;
+    AnalyzerTab tab;
+
+    gchar *description_message;
+
     guint8 intent;
 
     if (!chunk_length)
@@ -36,72 +39,48 @@ analyze_srgb_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts)
 
     if (!chunk_counts[IHDR])
     {
-        analyzer_utils_create_tag (file, &png_colors[ERROR_COLOR_1], FALSE, chunk_length,
-                                   _("The first chunk must be the IHDR chunk"), NULL);
+        analyzer_utils_tag_error (file, ERROR_COLOR_1, chunk_length,
+                                  _("The first chunk must be the IHDR chunk"));
         return TRUE;
     }
 
+    analyzer_utils_init_tab (&tab);
+
+    analyzer_utils_set_title_tab (&tab, _("<b>Standard RGB color space</b>"));
+
     if (!analyzer_utils_read (&intent, file , 1))
         return FALSE;
-    bytes_left -= 1;
-    analyzer_utils_create_tag (file, &png_colors[CHUNK_DATA_COLOR_1], TRUE, 1,
-                               _("Rendering intent"), NULL);
 
-    if (bytes_left > 0)
+    analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 1, _("Rendering intent"));
+
+    if (intent == 0)
+        description_message = _("Perceptual");
+    else if (intent == 1)
+        description_message = _("Relative colorimetric");
+    else if (intent == 2)
+        description_message = _("Saturation");
+    else if (intent == 3)
+        description_message = _("Absolute colorimetric");
+    else
+        description_message = _("<span foreground=\"red\">INVALID</span>");
+
+    analyzer_utils_describe_tooltip_tab (&tab, _("Rendering intent"), description_message,
+                                         _("Rendering intent\n"
+                                         "<tt>00<sub>16</sub></tt>\tPerceptual\n"
+                                         "<tt>01<sub>16</sub></tt>\tRelative colorimetric\n"
+                                         "<tt>02<sub>16</sub></tt>\tSaturation\n"
+                                         "<tt>03<sub>16</sub></tt>\tAbsolute colorimetric"));
+
+    /* Fixed length chunk */
+    if (chunk_length > 1)
     {
-        analyzer_utils_create_tag (file, &png_colors[ERROR_COLOR_1], FALSE, bytes_left,
-                                   _("Unrecognized data"), NULL);
-        /* Advance pointer */
-        file->file_contents_index += bytes_left;
+        chunk_length--;
+        analyzer_utils_tag_error (file, ERROR_COLOR_1, chunk_length, _("Unrecognized data"));
+
+        ADVANCE_POINTER (file, chunk_length);
     }
 
-    if (file->description_notebook != NULL)
-    {
-        GtkWidget *scrolled, *grid, *label;
-        gchar *description_message;
-
-        guint description_lines_count = 0;
-
-        scrolled = gtk_scrolled_window_new (NULL, NULL);
-
-        grid = gtk_grid_new ();
-        gtk_widget_set_margin_start (grid, 10);
-        gtk_widget_set_margin_end (grid, 10);
-        gtk_widget_set_margin_bottom (grid, 10);
-        gtk_widget_set_margin_top (grid, 10);
-        gtk_grid_set_column_spacing (GTK_GRID (grid), 10);
-        gtk_widget_set_halign (grid, GTK_ALIGN_CENTER);
-
-        analyzer_utils_add_description_here (GTK_GRID (grid), &description_lines_count,
-                                     _("<b>Standard RGB color space</b>"), NULL, NULL,
-                                     0, 20);
-
-        if (intent == 0)
-            description_message = _("Perceptual");
-        else if (intent == 1)
-            description_message = _("Relative colorimetric");
-        else if (intent == 2)
-            description_message = _("Saturation");
-        else if (intent == 3)
-            description_message = _("Absolute colorimetric");
-        else
-            description_message = _("<span foreground=\"red\">INVALID</span>");
-
-        analyzer_utils_add_description_here (GTK_GRID (grid), &description_lines_count,
-                                     _("Rendering intent"), description_message,
-                                     _("Rendering intents\n"
-                                       "<tt>00<sub>16</sub></tt>\tPerceptual\n"
-                                       "<tt>01<sub>16</sub></tt>\tRelative colorimetric\n"
-                                       "<tt>02<sub>16</sub></tt>\tSaturation\n"
-                                       "<tt>03<sub>16</sub></tt>\tAbsolute colorimetric"),
-                                     0, 0);
-
-        gtk_container_add (GTK_CONTAINER (scrolled), grid);
-        gtk_widget_show_all (scrolled);
-
-        label = gtk_label_new ("sRGB");
-        gtk_notebook_insert_page (file->description_notebook, scrolled, label, -1);
-    }
+    analyzer_utils_insert_tab (file, &tab, chunk_types[sRGB]);
 
     return TRUE;
 }

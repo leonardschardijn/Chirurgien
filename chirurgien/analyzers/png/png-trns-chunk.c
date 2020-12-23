@@ -28,10 +28,14 @@ gboolean
 analyze_trns_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts,
                     guint8 colortype, guint palette_entries)
 {
-    gsize bytes_left = chunk_length;
-    guint16 alpha[3];
+    AnalyzerTab tab;
+
+    gchar *description_message;
+
+    guint16 alpha;
 
     guint i;
+    gsize chunk_used = 0;
 
     if (!chunk_length)
         return TRUE;
@@ -40,175 +44,117 @@ analyze_trns_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts,
 
     if (!chunk_counts[IHDR])
     {
-        analyzer_utils_create_tag (file, &png_colors[ERROR_COLOR_1], FALSE, chunk_length,
-                                   _("The first chunk must be the IHDR chunk"), NULL);
+        analyzer_utils_tag_error (file, ERROR_COLOR_1, chunk_length,
+                                  _("The first chunk must be the IHDR chunk"));
         return TRUE;
     }
 
+    analyzer_utils_init_tab (&tab);
+
+    analyzer_utils_set_title_tab (&tab, _("<b>Transparency</b>"));
+
     if (colortype == 0)
     {
-        if (!analyzer_utils_read (&alpha[0], file , 2))
-        {
-            analyzer_utils_create_tag (file, &png_colors[ERROR_COLOR_1], FALSE, -1,
-                                       _("Unrecognized data"), NULL);
-            return FALSE;
-        }
-        alpha[0] = ntohs (alpha[0]);
-        analyzer_utils_create_tag (file, &png_colors[CHUNK_DATA_COLOR_1], TRUE, 2,
-                                   _("Grayscale alpha channel"), NULL);
-        bytes_left -= 2;
+        if (!analyzer_utils_read (&alpha, file , 2))
+            goto END_ERROR;
+
+        chunk_used += 2;
+        analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 2, _("Grayscale alpha channel"));
+
+        alpha = ntohs (alpha);
+        description_message = g_strdup_printf (_("%u bits"), alpha);
+        analyzer_utils_describe_tab (&tab, _("Grayscale alpha channel"), description_message);
+        g_free (description_message);
     }
     else if (colortype == 2)
     {
-        if (!analyzer_utils_read (&alpha[0], file , 2))
-        {
-            analyzer_utils_create_tag (file, &png_colors[ERROR_COLOR_1], FALSE, -1,
-                                       _("Unrecognized data"), NULL);
-            return FALSE;
-        }
-        alpha[0] = ntohs (alpha[0]);
-        analyzer_utils_create_tag (file, &png_colors[CHUNK_DATA_COLOR_1], TRUE, 2,
-                                   _("Red sample alpha channel"), NULL);
-        bytes_left -= 2;
-        
-        if (!analyzer_utils_read (&alpha[1], file , 2))
-        {
-            analyzer_utils_create_tag (file, &png_colors[ERROR_COLOR_1], FALSE, -1,
-                                       _("Unrecognized data"), NULL);
-            return FALSE;
-        }
-        alpha[1] = ntohs (alpha[1]);
-        analyzer_utils_create_tag (file, &png_colors[CHUNK_DATA_COLOR_1], TRUE, 2,
-                                   _("Green alpha channel"), NULL);
-        bytes_left -= 2;
-        
-        if (!analyzer_utils_read (&alpha[2], file , 2))
-        {
-            analyzer_utils_create_tag (file, &png_colors[ERROR_COLOR_1], FALSE, -1,
-                                       _("Unrecognized data"), NULL);
-            return FALSE;
-        }
-        alpha[2] = ntohs (alpha[2]);
-        analyzer_utils_create_tag (file, &png_colors[CHUNK_DATA_COLOR_1], TRUE, 2,
-                                   _("Blue alpha channel"), NULL);
-        bytes_left -= 2;
+        if (!analyzer_utils_read (&alpha, file , 2))
+            goto END_ERROR;
+
+        analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 2, _("Red alpha channel"));
+
+        alpha = ntohs (alpha);
+        description_message = g_strdup_printf (_("%u bits"), alpha);
+        analyzer_utils_describe_tab (&tab, _("Red alpha channel"), description_message);
+        g_free (description_message);
+
+        if (!analyzer_utils_read (&alpha, file , 2))
+            goto END_ERROR;
+
+        analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 2, _("Green alpha channel"));
+
+        alpha = ntohs (alpha);
+        description_message = g_strdup_printf (_("%u bits"), alpha);
+        analyzer_utils_describe_tab (&tab, _("Green alpha channel"), description_message);
+        g_free (description_message);
+
+        if (!analyzer_utils_read (&alpha, file , 2))
+            goto END_ERROR;
+
+        analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 2, _("Blue alpha channel"));
+
+        alpha = ntohs (alpha);
+        description_message = g_strdup_printf (_("%u bits"), alpha);
+        analyzer_utils_describe_tab (&tab, _("Blue alpha channel"), description_message);
+        g_free (description_message);
+
+        chunk_used += 6;
     }
     else if (colortype == 3)
     {
-        /* Advance pointer */
-        file->file_contents_index += chunk_length;
-
         if (palette_entries < chunk_length)
         {
-            analyzer_utils_create_tag (file, &png_colors[ERROR_COLOR_1], FALSE, chunk_length,
-                                       _("The tRNS chunk has more alpha values than palette entries"), NULL);
+            analyzer_utils_tag_error (file, ERROR_COLOR_1, chunk_length,
+                                      _("The tRNS chunk has more alpha values than palette entries"));
             return TRUE;
         }
 
         for (i = 0; i < chunk_length; i++)
         {
             if (i % 2)
-                analyzer_utils_create_tag (file, &png_colors[CHUNK_DATA_COLOR_2], TRUE, 1,
-                           _("Palette entry alpha"), NULL);
+                analyzer_utils_tag (file, CHUNK_DATA_COLOR_2, 1, _("Palette entry alpha"));
             else
-                analyzer_utils_create_tag (file, &png_colors[CHUNK_DATA_COLOR_1], TRUE, 1,
-                           _("Palette entry alpha"), NULL);
+                analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 1, _("Palette entry alpha"));
         }
-        bytes_left -= chunk_length;
+
+        ADVANCE_POINTER (file, chunk_length);
+        chunk_length -= chunk_length;
+
+        description_message = g_strdup_printf ("%u", palette_entries);
+        analyzer_utils_describe_tab (&tab, _("Palette entries"), description_message);
+        g_free (description_message);
+
+        description_message = g_strdup_printf ("%lu", chunk_length);
+        analyzer_utils_describe_tab (&tab, _("Alpha entries"), description_message);
+        g_free (description_message);
+
+        description_message = g_strdup_printf ("%lu", chunk_length - palette_entries);
+        analyzer_utils_describe_tab (&tab, _("Palette entries without alpha"), description_message);
+        g_free (description_message);
+
+        chunk_used += chunk_length;
     }
     else
     {
-        analyzer_utils_create_tag (file, &png_colors[ERROR_COLOR_1], FALSE, chunk_length,
-                           _("tRNS chunks are only valid in grayscale, RGB and indexed-color images"), NULL);
-        /* Advance pointer */
-        file->file_contents_index += bytes_left;
+        analyzer_utils_tag_error (file, ERROR_COLOR_1, chunk_length,
+                                  _("tRNS chunks are only valid in grayscale, RGB and indexed-color images"));
+        ADVANCE_POINTER (file, chunk_length);
         return TRUE;
     }
 
-    if (bytes_left > 0)
+    if (chunk_used < chunk_length)
     {
-        analyzer_utils_create_tag (file, &png_colors[ERROR_COLOR_1], FALSE, bytes_left,
-                                   _("Unrecognized data"), NULL);
-        /* Advance pointer */
-        file->file_contents_index += bytes_left;
+        chunk_length -= chunk_used;
+        analyzer_utils_tag_error (file, ERROR_COLOR_1, chunk_length, _("Unrecognized data"));
+
+        ADVANCE_POINTER (file, chunk_length);
     }
 
-    if (file->description_notebook != NULL)
-    {
-        GtkWidget *scrolled, *grid, *label;
-        gchar *description_message;
-
-        guint description_lines_count = 0;
-
-        scrolled = gtk_scrolled_window_new (NULL, NULL);
-
-        grid = gtk_grid_new ();
-        gtk_widget_set_margin_start (grid, 10);
-        gtk_widget_set_margin_end (grid, 10);
-        gtk_widget_set_margin_bottom (grid, 10);
-        gtk_widget_set_margin_top (grid, 10);
-        gtk_grid_set_column_spacing (GTK_GRID (grid), 10);
-        gtk_widget_set_halign (grid, GTK_ALIGN_CENTER);
-
-        analyzer_utils_add_description_here (GTK_GRID (grid), &description_lines_count,
-                                     _("<b>Transparency</b>"), NULL, NULL,
-                                     0, 20);
-
-        if (colortype == 0)
-        {
-            description_message = g_strdup_printf ("%u", alpha[0]);
-            analyzer_utils_add_description_here (GTK_GRID (grid), &description_lines_count,
-                                         _("Grayscale alpha"), description_message, NULL,
-                                         0, 0);
-            g_free (description_message);
-        }
-        else if (colortype == 2)
-        {
-            description_message = g_strdup_printf ("%u", alpha[0]);
-            analyzer_utils_add_description_here (GTK_GRID (grid), &description_lines_count,
-                                         _("Red channel alpha"), description_message, NULL,
-                                         0, 0);
-            g_free (description_message);
-
-            description_message = g_strdup_printf ("%u", alpha[1]);
-            analyzer_utils_add_description_here (GTK_GRID (grid), &description_lines_count,
-                                         _("Green channel alpha"), description_message, NULL,
-                                         0, 0);
-            g_free (description_message);
-
-            description_message = g_strdup_printf ("%u", alpha[2]);
-            analyzer_utils_add_description_here (GTK_GRID (grid), &description_lines_count,
-                                         _("Blue channel alpha"), description_message, NULL,
-                                         0, 0);
-            g_free (description_message);
-        }
-        else
-        {
-            description_message = g_strdup_printf ("%u", palette_entries);
-            analyzer_utils_add_description_here (GTK_GRID (grid), &description_lines_count,
-                                         _("Palette entries"), description_message, NULL,
-                                         0, 0);
-            g_free (description_message);
-
-            description_message = g_strdup_printf ("%lu", chunk_length);
-            analyzer_utils_add_description_here (GTK_GRID (grid), &description_lines_count,
-                                         _("Alpha entries"), description_message, NULL,
-                                         0, 0);
-            g_free (description_message);
-
-            description_message = g_strdup_printf ("%lu", chunk_length - palette_entries);
-            analyzer_utils_add_description_here (GTK_GRID (grid), &description_lines_count,
-                                         _("Palette entries without alpha"), description_message, NULL,
-                                         0, 0);
-            g_free (description_message);
-        }
-
-        gtk_container_add (GTK_CONTAINER (scrolled), grid);
-        gtk_widget_show_all (scrolled);
-
-        label = gtk_label_new ("tRNS");
-        gtk_notebook_insert_page (file->description_notebook, scrolled, label, -1);
-    }
+    analyzer_utils_insert_tab (file, &tab, chunk_types[tRNS]);
 
     return TRUE;
+
+    END_ERROR:
+    analyzer_utils_tag_error (file, ERROR_COLOR_1, -1, _("Unrecognized data"));
+    return FALSE;
 }

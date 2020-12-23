@@ -31,27 +31,26 @@ analyze_plte_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts,
     if (!chunk_length)
         return TRUE;
 
-    if (chunk_counts[PLTE])
+    chunk_counts[PLTE]++;
+
+    if (chunk_counts[PLTE] != 1)
     {
-        analyzer_utils_create_tag (file, &png_colors[ERROR_COLOR_1], FALSE, chunk_length,
-                                   _("Only one PLTE chunk is allowed"), NULL);
-        chunk_counts[PLTE]++;
+        analyzer_utils_tag_error (file, ERROR_COLOR_1, chunk_length,
+                                   _("Only one PLTE chunk is allowed"));
         return TRUE;
     }
 
-    chunk_counts[PLTE]++;
-
     if (!chunk_counts[IHDR])
     {
-        analyzer_utils_create_tag (file, &png_colors[ERROR_COLOR_1], FALSE, chunk_length,
-                                   _("The first chunk must be the IHDR chunk"), NULL);
+        analyzer_utils_tag_error (file, ERROR_COLOR_1, chunk_length,
+                                  _("The first chunk must be the IHDR chunk"));
         return TRUE;
     }
 
     if (chunk_length % 3)
     {
-        analyzer_utils_create_tag (file, &png_colors[ERROR_COLOR_1], FALSE, -1,
-                                   _("Incorrect palette length"), NULL);
+        analyzer_utils_tag_error (file, ERROR_COLOR_1, chunk_length,
+                                  _("Incorrect palette length"));
         return TRUE;
     }
 
@@ -59,8 +58,8 @@ analyze_plte_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts,
 
     if (*palette_entries > 256)
     {
-        analyzer_utils_create_tag (file, &png_colors[ERROR_COLOR_1], FALSE, chunk_length,
-                                   _("Palettes cannot have more than 256 entries"), NULL);
+        analyzer_utils_tag_error (file, ERROR_COLOR_1, chunk_length,
+                                  _("Palettes cannot have more than 256 entries"));
         return TRUE;
     }
 
@@ -68,26 +67,25 @@ analyze_plte_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts,
     {
         if (i % 2)
         {
-            analyzer_utils_create_tag (file, &png_colors[CHUNK_DATA_COLOR_2], TRUE, 1,
-                                       _("Palette entry red sample"), NULL);
-            analyzer_utils_create_tag (file, &png_colors[CHUNK_DATA_COLOR_1], TRUE, 1,
-                                       _("Palette entry green sample"), NULL);
-            analyzer_utils_create_tag (file, &png_colors[CHUNK_DATA_COLOR_2], TRUE, 1,
-                                       _("Palette entry blue sample"), NULL);
+            analyzer_utils_tag (file, CHUNK_DATA_COLOR_2, 1,
+                                _("Palette entry red sample"));
+            analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 1,
+                                _("Palette entry green sample"));
+            analyzer_utils_tag (file, CHUNK_DATA_COLOR_2, 1,
+                                _("Palette entry blue sample"));
         }
         else
         {
-            analyzer_utils_create_tag (file, &png_colors[CHUNK_DATA_COLOR_1], TRUE, 1,
-                                       _("Palette entry red sample"), NULL);
-            analyzer_utils_create_tag (file, &png_colors[CHUNK_DATA_COLOR_2], TRUE, 1,
-                                       _("Palette entry green sample"), NULL);
-            analyzer_utils_create_tag (file, &png_colors[CHUNK_DATA_COLOR_1], TRUE, 1,
-                                       _("Palette entry blue sample"), NULL);
+            analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 1,
+                                _("Palette entry red sample"));
+            analyzer_utils_tag (file, CHUNK_DATA_COLOR_2, 1,
+                                _("Palette entry green sample"));
+            analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 1,
+                                _("Palette entry blue sample"));
         }
     }
 
-    /* Advance pointer */
-    file->file_contents_index += chunk_length;
+    ADVANCE_POINTER (file, chunk_length);
 
     return TRUE;
 }

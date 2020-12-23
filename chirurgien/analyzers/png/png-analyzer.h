@@ -33,19 +33,14 @@ typedef struct
     gsize compressed_image_size;
 } ZlibData;
 
-
-enum {
-    SIGNATURE_COLOR,
-    CHUNK_LENGTH_COLOR,
-    CHUNK_TYPE_COLOR,
-    CHUNK_DATA_COLOR_1,
-    CHUNK_DATA_COLOR_2,
-    CHUNK_CRC_COLOR,
-    ERROR_COLOR_1,
-    ERROR_COLOR_2
-};
-
-extern GdkRGBA png_colors[8];
+#define SIGNATURE_COLOR &colors[0]
+#define CHUNK_TYPE_COLOR &colors[1]
+#define CHUNK_DATA_COLOR_1 &colors[2]
+#define CHUNK_DATA_COLOR_2 &colors[3]
+#define CHUNK_LENGTH_COLOR &colors[4]
+#define CHUNK_CRC_COLOR &colors[5]
+#define ERROR_COLOR_1 &colors[6]
+#define ERROR_COLOR_2 &colors[7]
 
 enum {
     IHDR,
@@ -69,6 +64,7 @@ enum {
     CHUNK_TYPES
 };
 
+extern gchar *chunk_types[CHUNK_TYPES];
 
 /* png-ihdr-chunk.c */
 gboolean     analyze_ihdr_chunk      (AnalyzerFile *,
@@ -115,7 +111,8 @@ gboolean     analyze_iccp_chunk      (AnalyzerFile *,
 /* png-sbit-chunk.c */
 gboolean     analyze_sbit_chunk      (AnalyzerFile *,
                                       gsize,
-                                      guint *);
+                                      guint *,
+                                      guint8);
 
 /* png-srgb-chunk.c */
 gboolean     analyze_srgb_chunk      (AnalyzerFile *,

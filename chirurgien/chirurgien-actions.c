@@ -201,16 +201,16 @@ chirurgien_actions_open (__attribute__((unused)) GSimpleAction *action,
 
     uri = gtk_file_chooser_get_uri (GTK_FILE_CHOOSER (dialog));
 
-    /* This is required if the application is running under flatpak, the recent files
-     * are not updated otherwise */
-    gtk_recent_manager_add_item (gtk_recent_manager_get_default (), uri);
-
     g_object_unref (dialog);
 
     if (result == GTK_RESPONSE_ACCEPT)
     {
         file = g_file_new_for_uri (uri);
         chirurgien_actions_analyze_file (window, file);
+
+        /* This is required if the application is running under flatpak, the recent files
+         * are not updated otherwise */
+        gtk_recent_manager_add_item (gtk_recent_manager_get_default (), uri);
     }
 
     /* Window Manager decorations: Update the recent files list, as it may have changed */
@@ -383,7 +383,7 @@ chirurgien_actions_analyze_file (ChirurgienWindow *window,
     gtk_widget_show_all (GTK_WIDGET (view));
 
     long_operation_window (window, TRUE);
-    chirurgien_analyzer_view_execute_analysis (view, TRUE);
+    chirurgien_analyzer_view_execute_analysis (view);
 
     notebook_index = gtk_notebook_append_page (GTK_NOTEBOOK (window->notebook), GTK_WIDGET (view), widget);
     gtk_notebook_set_current_page (GTK_NOTEBOOK (window->notebook), notebook_index);

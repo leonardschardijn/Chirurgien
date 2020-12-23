@@ -27,8 +27,11 @@
 gboolean
 analyze_phys_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts)
 {
-    gsize bytes_left = chunk_length;
-    guint32 x_axis, y_axis;
+    AnalyzerTab tab;
+
+    gchar *description_message;
+
+    guint32 axis;
     guint8 unit;
 
     if (!chunk_length)
@@ -38,100 +41,66 @@ analyze_phys_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts)
 
     if (!chunk_counts[IHDR])
     {
-        analyzer_utils_create_tag (file, &png_colors[ERROR_COLOR_1], FALSE, chunk_length,
-                                   _("The first chunk must be the IHDR chunk"), NULL);
+        analyzer_utils_tag_error (file, ERROR_COLOR_1, chunk_length,
+                                  _("The first chunk must be the IHDR chunk"));
         return TRUE;
     }
 
-    if (!analyzer_utils_read (&x_axis, file , 4))
-    {
-        analyzer_utils_create_tag (file, &png_colors[ERROR_COLOR_1], FALSE, -1,
-                                   _("Unrecognized data"), NULL);
-        return FALSE;
-    }
-    x_axis = ntohl (x_axis);
-    analyzer_utils_create_tag (file, &png_colors[CHUNK_DATA_COLOR_1], TRUE, 4,
-                               _("X axis (pixels per unit)"), NULL);
-    bytes_left -= 4;
+    analyzer_utils_init_tab (&tab);
 
-    if (!analyzer_utils_read (&y_axis, file , 4))
-    {
-        analyzer_utils_create_tag (file, &png_colors[ERROR_COLOR_1], FALSE, -1,
-                                   _("Unrecognized data"), NULL);
-        return FALSE;
-    }
-    y_axis = ntohl (y_axis);
-    analyzer_utils_create_tag (file, &png_colors[CHUNK_DATA_COLOR_2], TRUE, 4,
-                               _("Y axis (pixels per unit)"), NULL);
-    bytes_left -= 4;
+    analyzer_utils_set_title_tab (&tab, _("<b>Intended pixel size or aspect ratio</b>"));
+
+    if (!analyzer_utils_read (&axis, file , 4))
+        goto END_ERROR;
+
+    analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 4, _("X axis (pixels per unit)"));
+
+    axis = ntohl (axis);
+    description_message = g_strdup_printf ("%u", axis);
+    analyzer_utils_describe_tab (&tab, _("X axis"), description_message);
+    g_free (description_message);
+
+    if (!analyzer_utils_read (&axis, file , 4))
+            goto END_ERROR;
+
+    analyzer_utils_tag (file, CHUNK_DATA_COLOR_2, 4, _("Y axis (pixels per unit)"));
+
+    axis = ntohl (axis);
+    description_message = g_strdup_printf ("%u", axis);
+    analyzer_utils_describe_tab (&tab, _("Y axis"), description_message);
+    g_free (description_message);
 
     if (!analyzer_utils_read (&unit, file, 1))
         return FALSE;
-    bytes_left -= 1;
-    analyzer_utils_create_tag (file, &png_colors[CHUNK_DATA_COLOR_1], TRUE, 1,
-                               _("Unit specifier"), NULL);
 
-    if (bytes_left > 0)
+    analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 1, _("Unit specifier"));
+
+    if (unit == 0)
+        description_message = _("Unknown");
+    else if (unit == 1)
+        description_message = _("Meter");
+    else
+        description_message = _("<span foreground=\"red\">INVALID</span>");
+
+    analyzer_utils_describe_tooltip_tab (&tab, _("Unit specifier"), description_message,
+                                         _("Unit specifier\n"
+                                         "<tt>00<sub>16</sub></tt>\tUnknown (pHYs chunk defines aspect ratio)\n"
+                                         "<tt>01<sub>16</sub></tt>\tMeter"));
+
+    /* Fixed length chunk */
+    if (chunk_length > 9)
     {
-        analyzer_utils_create_tag (file, &png_colors[ERROR_COLOR_1], FALSE, bytes_left,
-                                   _("Unrecognized data"), NULL);
-        /* Advance pointer */
-        file->file_contents_index += bytes_left;
+        chunk_length -= 9;
+        analyzer_utils_tag_error (file, ERROR_COLOR_1, chunk_length, _("Unrecognized data"));
+
+        ADVANCE_POINTER (file, chunk_length);
     }
 
-    if (file->description_notebook != NULL)
-    {
-        GtkWidget *scrolled, *grid, *label;
-        gchar *description_message;
-
-        guint description_lines_count = 0;
-
-        scrolled = gtk_scrolled_window_new (NULL, NULL);
-
-        grid = gtk_grid_new ();
-        gtk_widget_set_margin_start (grid, 10);
-        gtk_widget_set_margin_end (grid, 10);
-        gtk_widget_set_margin_bottom (grid, 10);
-        gtk_widget_set_margin_top (grid, 10);
-        gtk_grid_set_column_spacing (GTK_GRID (grid), 10);
-        gtk_widget_set_halign (grid, GTK_ALIGN_CENTER);
-
-        analyzer_utils_add_description_here (GTK_GRID (grid), &description_lines_count,
-                                     _("<b>Intended pixel size or aspect ratio</b>"), NULL, NULL,
-                                     0, 20);
-
-        description_message = g_strdup_printf ("%u", x_axis);
-        analyzer_utils_add_description_here (GTK_GRID (grid), &description_lines_count,
-                                     _("X axis"), description_message, NULL,
-                                     0, 0);
-        g_free (description_message);
-
-        description_message = g_strdup_printf ("%u", y_axis);
-        analyzer_utils_add_description_here (GTK_GRID (grid), &description_lines_count,
-                                     _("Y axis"), description_message, NULL,
-                                     0, 0);
-        g_free (description_message);
-
-        if (unit == 0)
-            description_message = _("Unknown");
-        else if (unit == 1)
-            description_message = _("Meter");
-        else
-            description_message = _("<span foreground=\"red\">INVALID</span>");
-
-        analyzer_utils_add_description_here (GTK_GRID (grid), &description_lines_count,
-                                     _("Unit specifier"), description_message,
-                                     _("Unit specifiers\n"
-                                       "<tt>00<sub>16</sub></tt>\tUnknown (pHYs chunk defines aspect ratio)\n"
-                                       "<tt>01<sub>16</sub></tt>\tMeter"),
-                                     0, 0);
-
-        gtk_container_add (GTK_CONTAINER (scrolled), grid);
-        gtk_widget_show_all (scrolled);
-
-        label = gtk_label_new ("pHYs");
-        gtk_notebook_insert_page (file->description_notebook, scrolled, label, -1);
-    }
+    analyzer_utils_insert_tab (file, &tab, chunk_types[pHYs]);
 
     return TRUE;
+
+    END_ERROR:
+    analyzer_utils_tag_error (file, ERROR_COLOR_1, -1, _("Unrecognized data"));
+    return FALSE;
 }

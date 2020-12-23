@@ -18,6 +18,29 @@
 
 #include "analyzer-utils.h"
 
+#include <glib/gi18n.h>
+
+
+/* Colors available to analyzers */
+GdkRGBA colors[] =
+{
+    /* #2567C1 */
+    { 0.145, 0.403, 0.756, 1.0 },
+    /* #BB40CE */
+    { 0.733, 0.250, 0.807, 0.5 },
+    /* #1CAF08 */
+    { 0.109, 0.686, 0.031, 0.7 },
+    /* #1C6E11 */
+    { 0.109, 0.431, 0.066, 0.7 },
+    /* #DDE70D */
+    { 0.866, 0.905, 0.050, 0.5 },
+    /* #0DE7BA */
+    { 0.050, 0.905, 0.729, 0.5 },
+    /* #FF0000 */
+    { 1.0, 0.0, 0.0, 1.0 },
+    /* #E84FDB */
+    { 0.909, 0.309, 0.858, 1.0 }
+};
 
 /*
  * Change the tooltip on the hexadecimal/text view
@@ -55,7 +78,7 @@ analyzer_utils_create_tag (AnalyzerFile *file,
     gsize hex_buffer_count;
 
     if (count == -1)
-        count = file->file_size - file->file_contents_index;
+        count = file->file_size - (file->hex_buffer_index / 3);
 
     if (set_background)
     {
@@ -154,9 +177,6 @@ analyzer_utils_add_description (AnalyzerFile *file,
     GtkWidget *label1, *label2;
     GtkStyleContext *context;
 
-    if (file->file_description == NULL)
-        return;
-
     label1 = gtk_label_new (NULL);
     gtk_label_set_markup (GTK_LABEL (label1), field1);
     gtk_label_set_line_wrap (GTK_LABEL (label1), TRUE);
@@ -169,7 +189,7 @@ analyzer_utils_add_description (AnalyzerFile *file,
     if (tooltip)
         gtk_widget_set_tooltip_markup (GTK_WIDGET (label1), tooltip);
 
-    if (field2 == NULL)
+    if (!field2)
     {
         gtk_grid_attach(GTK_GRID (file->file_description), label1, 0, file->description_lines_count++, 2, 1);
     }
@@ -194,17 +214,16 @@ analyzer_utils_add_description (AnalyzerFile *file,
 }
 
 /*
- * Add a line to the specified grid using the supplied position
+ * Add a line to the supplied tab
  * Useful when an analyzer wants to add additional description tabs
  */
 void
-analyzer_utils_add_description_here (GtkGrid *description_grid,
-                                     guint *grid_position,
-                                     gchar *field1,
-                                     gchar *field2,
-                                     gchar *tooltip,
-                                     guint margin_top,
-                                     guint margin_bottom)
+analyzer_utils_add_description_tab (AnalyzerTab *description_tab,
+                                    gchar *field1,
+                                    gchar *field2,
+                                    gchar *tooltip,
+                                    guint margin_top,
+                                    guint margin_bottom)
 {
     GtkWidget *label1, *label2;
     GtkStyleContext *context;
@@ -222,7 +241,8 @@ analyzer_utils_add_description_here (GtkGrid *description_grid,
 
     if (field2 == NULL)
     {
-        gtk_grid_attach(description_grid, label1, 0, (*grid_position)++, 2, 1);
+        gtk_grid_attach(description_tab->description, label1, 0,
+                        description_tab->description_lines_count++, 2, 1);
     }
     else
     {
@@ -238,9 +258,158 @@ analyzer_utils_add_description_here (GtkGrid *description_grid,
         gtk_style_context_add_class (context, GTK_STYLE_CLASS_DIM_LABEL);
         gtk_widget_set_halign (label1, GTK_ALIGN_END);
 
-        gtk_grid_attach (description_grid, label1, 0, (*grid_position)++, 1, 1);
-        gtk_grid_attach_next_to (description_grid, label2, label1, GTK_POS_RIGHT, 1, 1);
+        gtk_grid_attach (description_tab->description, label1, 0,
+                         description_tab->description_lines_count++, 1, 1);
+        gtk_grid_attach_next_to (description_tab->description, label2, label1, GTK_POS_RIGHT, 1, 1);
     }
+}
+
+/*
+ * Add a text field to the description tab
+ */
+void
+analyzer_utils_add_text_tab (AnalyzerTab *tab,
+                             gchar *name,
+                             gchar *text,
+                             gsize text_size)
+{
+    GtkWidget *textview, *widget;
+    GtkTextBuffer *buffer;
+
+    widget = gtk_frame_new (name);
+    gtk_frame_set_label_align (GTK_FRAME (widget), 0.5, 0.5);
+
+    textview = gtk_text_view_new ();
+    gtk_widget_set_margin_start (textview, 10);
+    gtk_widget_set_margin_end (textview, 10);
+    gtk_widget_set_margin_bottom (textview, 10);
+    gtk_widget_set_margin_top (textview, 10);
+    gtk_text_view_set_editable (GTK_TEXT_VIEW (textview), FALSE);
+    gtk_text_view_set_cursor_visible (GTK_TEXT_VIEW (textview), FALSE);
+    buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (textview));
+
+    gtk_text_buffer_set_text (buffer, text, text_size);
+
+    gtk_container_add (GTK_CONTAINER (widget), textview);
+
+    if (tab->description_lines_count)
+    {
+        gtk_box_pack_start (GTK_BOX (tab->contents), GTK_WIDGET (tab->description), FALSE, FALSE, 0);
+        gtk_box_pack_start (GTK_BOX (tab->contents), widget, FALSE, FALSE, 0);
+
+        widget = gtk_grid_new ();
+        gtk_widget_set_halign (widget, GTK_ALIGN_CENTER);
+        gtk_grid_set_column_spacing (GTK_GRID (widget), 10);
+
+        tab->description = GTK_GRID (widget);
+        tab->description_lines_count = 0;
+    }
+    else
+    {
+        gtk_box_pack_start (GTK_BOX (tab->contents), widget, FALSE, FALSE, 0);
+    }
+}
+
+/*
+ * Add a footer to the description tab
+ */
+void
+analyzer_utils_add_footer_tab (AnalyzerTab *tab,
+                               gchar *footer)
+{
+    GtkWidget *widget;
+    GtkStyleContext *context;
+
+    widget = gtk_label_new (footer);
+    context = gtk_widget_get_style_context (widget);
+    gtk_style_context_add_class (context, GTK_STYLE_CLASS_DIM_LABEL);
+    gtk_label_set_line_wrap (GTK_LABEL (widget), GTK_WRAP_WORD);
+    gtk_label_set_xalign (GTK_LABEL (widget), 0.0);
+    gtk_widget_set_halign (widget, GTK_ALIGN_START);
+    gtk_widget_set_margin_top (widget, 10);
+
+    if (tab->description_lines_count)
+    {
+        gtk_box_pack_start (GTK_BOX (tab->contents), GTK_WIDGET (tab->description), FALSE, FALSE, 0);
+        gtk_box_pack_start (GTK_BOX (tab->contents), widget, FALSE, FALSE, 0);
+
+        widget = gtk_grid_new ();
+        gtk_widget_set_halign (widget, GTK_ALIGN_CENTER);
+        gtk_grid_set_column_spacing (GTK_GRID (widget), 10);
+
+        tab->description = GTK_GRID (widget);
+        tab->description_lines_count = 0;
+    }
+    else
+    {
+        gtk_box_pack_start (GTK_BOX (tab->contents), widget, FALSE, FALSE, 0);
+    }
+}
+
+/*
+ * Initialize the new description tab
+ */
+void
+analyzer_utils_init_tab (AnalyzerTab *tab)
+{
+    GtkWidget *box;
+    GtkGrid *grid;
+
+    box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 10);
+    gtk_widget_set_margin_start (box, 10);
+    gtk_widget_set_margin_end (box, 10);
+    gtk_widget_set_margin_bottom (box, 10);
+    gtk_widget_set_margin_top (box, 10);
+
+    grid = GTK_GRID (gtk_grid_new ());
+    gtk_widget_set_halign (GTK_WIDGET (grid), GTK_ALIGN_CENTER);
+    gtk_grid_set_column_spacing (grid, 10);
+
+    tab->contents = box;
+    tab->description = grid;
+    tab->description_lines_count = 0;
+}
+
+/*
+ * Add the description tab
+ */
+void
+analyzer_utils_insert_tab (AnalyzerFile *file,
+                           AnalyzerTab *tab,
+                           gchar *tab_name)
+{
+    GtkWidget *scrolled, *label;
+
+    scrolled = gtk_scrolled_window_new (NULL, NULL);
+
+    if (tab->description_lines_count)
+        gtk_box_pack_start (GTK_BOX (tab->contents), GTK_WIDGET (tab->description), FALSE, FALSE, 0);
+
+    gtk_container_add (GTK_CONTAINER (scrolled), GTK_WIDGET (tab->contents));
+    gtk_widget_show_all (scrolled);
+
+    label = gtk_label_new (tab_name);
+    gtk_notebook_insert_page (file->description_notebook, scrolled, label, -1);
+}
+
+
+/*
+ * Advance pointer until the supplied byte is found
+ */
+gsize
+analyzer_utils_advance_to (AnalyzerFile *file,
+                           guchar byte)
+{
+    gsize prev_index = file->file_contents_index;
+
+    while (file->file_contents_index <= file->file_size)
+    {
+        if (G_UNLIKELY (*(file->file_contents + file->file_contents_index) == byte))
+            return file->file_contents_index - prev_index;
+        file->file_contents_index++;
+    }
+
+    return 0;
 }
 
 /*

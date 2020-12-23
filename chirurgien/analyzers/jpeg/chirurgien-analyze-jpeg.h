@@ -1,4 +1,4 @@
-/* chirurgien-analyzer.c
+/* chirurgien-analyze-jpeg.h
  *
  * Copyright (C) 2020 - Daniel Léonard Schardijn
  *
@@ -16,25 +16,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "chirurgien-analyzer.h"
+#pragma once
 
-#include <glib/gi18n.h>
-#include "analyzer-utils.h"
+#include <gtk/gtk.h>
+#include <chirurgien-analyzer-file.h>
 
-#include "jpeg/chirurgien-analyze-jpeg.h"
-#include "png/chirurgien-analyze-png.h"
+G_BEGIN_DECLS
 
 
-void
-chirurgien_analyzer_analyze (AnalyzerFile *file)
-{
-    const guchar jpeg_jfif_magic_number[] = { 0xFF,0xD8 };
-    const guchar png_magic_number[] = { 0x89,0x50,0x4E,0x47,0x0D,0x0A,0x1A,0x0A };
+void chirurgien_analyze_jpeg (AnalyzerFile *file);
 
-    if (!memcmp (file->file_contents, jpeg_jfif_magic_number, 2))
-        chirurgien_analyze_jpeg (file);
-    else if (!memcmp (file->file_contents, png_magic_number, 8))
-        chirurgien_analyze_png (file);
-    else
-        analyzer_utils_set_subtitle (file, "<b>Unrecognized file format</b>");
-}
+
+G_END_DECLS

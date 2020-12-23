@@ -293,8 +293,7 @@ chirurgien_analyzer_view_prepare_analysis (ChirurgienAnalyzerView *view,
 }
 
 void
-chirurgien_analyzer_view_execute_analysis (ChirurgienAnalyzerView *view,
-                                           gboolean initial_analysis)
+chirurgien_analyzer_view_execute_analysis (ChirurgienAnalyzerView *view)
 {
     AnalyzerFile file;
 
@@ -302,8 +301,8 @@ chirurgien_analyzer_view_execute_analysis (ChirurgienAnalyzerView *view,
     file.text_buffer = gtk_text_view_get_buffer (view->text_view);
     file.hex_navigation_marks = NULL;
     file.text_navigation_marks = NULL;
-    file.file_description = initial_analysis ? view->file_description : NULL;
-    file.description_notebook = initial_analysis ? view->description_notebook : NULL;
+    file.file_description = view->file_description;
+    file.description_notebook = view->description_notebook;
     file.file_contents = view->file_contents;
     file.file_size = view->file_size;
     file.file_contents_index = 0;
@@ -320,9 +319,10 @@ chirurgien_analyzer_view_execute_analysis (ChirurgienAnalyzerView *view,
 void chirurgien_analyzer_view_update_lines (ChirurgienAnalyzerView *view)
 {
     gint bytes_prev;
-    gsize i;
+    gsize i, description_pages;
     gchar *hex_pointer, *text_pointer;
 
+    GtkWidget *file_description, *description_scrolled;
     GtkTextBuffer *hex_buffer, *text_buffer;
     GtkTextIter start, end;
     g_autofree gchar *hex_contents = NULL;
@@ -373,7 +373,27 @@ void chirurgien_analyzer_view_update_lines (ChirurgienAnalyzerView *view)
     gtk_container_foreach (GTK_CONTAINER (view->hex_navigation), destroy_navigation_buttons, NULL);
     gtk_container_foreach (GTK_CONTAINER (view->text_navigation), destroy_navigation_buttons, NULL);
 
-    chirurgien_analyzer_view_execute_analysis (view, FALSE);
+    description_pages = gtk_notebook_get_n_pages (view->description_notebook);
+    for (i = 1; i < description_pages; i++)
+        gtk_notebook_remove_page (view->description_notebook, -1);
+
+    file_description = gtk_grid_new ();
+    gtk_widget_set_halign (file_description, GTK_ALIGN_CENTER);
+    gtk_widget_set_margin_start (file_description, 10);
+    gtk_widget_set_margin_end (file_description, 10);
+    gtk_widget_set_margin_bottom (file_description, 10);
+    gtk_widget_set_margin_top (file_description, 10);
+    gtk_grid_set_column_spacing (GTK_GRID (file_description), 10);
+    gtk_widget_show (file_description);
+
+    view->file_description = GTK_GRID (file_description);
+
+    description_scrolled = gtk_notebook_get_nth_page (view->description_notebook, 0);
+    gtk_container_remove (GTK_CONTAINER (description_scrolled),
+                          gtk_bin_get_child (GTK_BIN (description_scrolled)));
+    gtk_container_add (GTK_CONTAINER (description_scrolled), file_description);
+
+    chirurgien_analyzer_view_execute_analysis (view);
 }
 
 const gchar *

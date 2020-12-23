@@ -28,6 +28,8 @@ struct _ChirurgienAnalyzerInfoDialog
     GtkDialog parent_instance;
 
     GtkStack *stack;
+    GtkRevealer *revealer;
+    GtkButton *button;
 };
 
 G_DEFINE_TYPE (ChirurgienAnalyzerInfoDialog, chirurgien_analyzer_info_dialog, GTK_TYPE_DIALOG)
@@ -40,25 +42,43 @@ chirurgien_analyzer_info_dialog_class_init(ChirurgienAnalyzerInfoDialogClass *cl
     gtk_widget_class_set_template_from_resource (gtkwidget_class,
                                                  "/io/github/leonardschardijn/chirurgien/ui/chirurgien-analyzer-info-dialog.ui");
     gtk_widget_class_bind_template_child (gtkwidget_class, ChirurgienAnalyzerInfoDialog, stack);
+}
 
+static void
+show_note (__attribute__((unused)) GtkButton *button,
+           gpointer user_data)
+{
+    ChirurgienAnalyzerInfoDialog *dialog = user_data;
+
+    gtk_revealer_set_reveal_child (dialog->revealer, !gtk_revealer_get_child_revealed (dialog->revealer));
 }
 
 static void
 chirurgien_analyzer_info_dialog_init (ChirurgienAnalyzerInfoDialog *dialog)
 {
     GtkBuilder *builder;
-    GtkWidget *tab;
+    GtkWidget *widget, *icon;
 
     gtk_widget_init_template (GTK_WIDGET (dialog));
 
     builder = gtk_builder_new_from_resource ("/io/github/leonardschardijn/chirurgien/analyzer-info/intro-tab.ui");
-    tab = GTK_WIDGET (gtk_builder_get_object (builder, "intro-tab"));
-    gtk_stack_add_titled (dialog->stack, tab, "Introduction", _("Introduction"));
+    widget = GTK_WIDGET (gtk_builder_get_object (builder, "intro-tab"));
+    gtk_stack_add_titled (dialog->stack, widget, "Introduction", _("Introduction"));
+    dialog->revealer = GTK_REVEALER (gtk_builder_get_object (builder, "revealer"));;
+    dialog->button = GTK_BUTTON (gtk_builder_get_object (builder, "button"));;
+    icon = gtk_image_new_from_icon_name ("dialog-question-symbolic", GTK_ICON_SIZE_BUTTON);
+    gtk_button_set_image (dialog->button, icon);
+    g_signal_connect (dialog->button, "clicked", G_CALLBACK (show_note), dialog);
+    g_object_unref (builder);
+
+    builder = gtk_builder_new_from_resource ("/io/github/leonardschardijn/chirurgien/analyzer-info/jpeg-tab.ui");
+    widget = GTK_WIDGET (gtk_builder_get_object (builder, "jpeg-tab"));
+    gtk_stack_add_titled (dialog->stack, widget, "JPEG", "JPEG");
     g_object_unref (builder);
 
     builder = gtk_builder_new_from_resource ("/io/github/leonardschardijn/chirurgien/analyzer-info/png-tab.ui");
-    tab = GTK_WIDGET (gtk_builder_get_object (builder, "png-tab"));
-    gtk_stack_add_titled (dialog->stack, tab, "PNG", "PNG");
+    widget = GTK_WIDGET (gtk_builder_get_object (builder, "png-tab"));
+    gtk_stack_add_titled (dialog->stack, widget, "PNG", "PNG");
     g_object_unref (builder);
 }
 

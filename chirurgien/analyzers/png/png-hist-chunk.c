@@ -28,7 +28,11 @@ gboolean
 analyze_hist_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts,
                     guint palette_entries)
 {
-    guint16 histogram[256];
+    AnalyzerTab tab;
+
+    gchar *description_message1, *description_message2;
+
+    guint16 frequency;
 
     guint i;
 
@@ -39,74 +43,45 @@ analyze_hist_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts,
 
     if (!chunk_counts[IHDR])
     {
-        analyzer_utils_create_tag (file, &png_colors[ERROR_COLOR_1], FALSE, chunk_length,
-                                   _("The first chunk must be the IHDR chunk"), NULL);
+        analyzer_utils_tag_error (file, ERROR_COLOR_1, chunk_length,
+                                  _("The first chunk must be the IHDR chunk"));
         return TRUE;
     }
 
     if (palette_entries << 1 != chunk_length)
     {
-        analyzer_utils_create_tag (file, &png_colors[ERROR_COLOR_1], FALSE, chunk_length,
-                                   _("The hIST chunk must have an entry for every palette entry"), NULL);
+        analyzer_utils_tag_error (file, ERROR_COLOR_1, chunk_length,
+                                  _("The hIST chunk must have an entry for every palette entry"));
         return TRUE;
     }
 
+    analyzer_utils_init_tab (&tab);
+
+    analyzer_utils_set_title_tab (&tab, _("<b>Palette entry frequency</b>"));
+
     for (i = 0; i < palette_entries; i++)
     {
-        if (!analyzer_utils_read (&histogram[i], file , 2))
-        {
-            analyzer_utils_create_tag (file, &png_colors[ERROR_COLOR_1], FALSE, -1,
-                                       _("Unrecognized data"), NULL);
-            return FALSE;
-        }
-        histogram[i] = ntohs (histogram[i]);
+        if (!analyzer_utils_read (&frequency, file , 2))
+            goto END_ERROR;
 
         if (i % 2)
-            analyzer_utils_create_tag (file, &png_colors[CHUNK_DATA_COLOR_2], TRUE, 2,
-                       _("Palette entry frequency"), NULL);
+            analyzer_utils_tag (file, CHUNK_DATA_COLOR_2, 2, _("Palette entry frequency"));
         else
-            analyzer_utils_create_tag (file, &png_colors[CHUNK_DATA_COLOR_1], TRUE, 2,
-                       _("Palette entry frequency"), NULL);
+            analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 2, _("Palette entry frequency"));
+
+        frequency = ntohs (frequency);
+        description_message1 = g_strdup_printf (_("Entry %u"), i);
+        description_message2 = g_strdup_printf ("%u", frequency);
+        analyzer_utils_describe_tab (&tab, description_message1, description_message2);
+        g_free (description_message1);
+        g_free (description_message2);
     }
 
-    if (file->description_notebook != NULL)
-    {
-        GtkWidget *scrolled, *grid, *label;
-        gchar *description_message1;
-        gchar *description_message2;
-
-        guint description_lines_count = 0;
-
-        scrolled = gtk_scrolled_window_new (NULL, NULL);
-
-        grid = gtk_grid_new ();
-        gtk_widget_set_margin_start (grid, 10);
-        gtk_widget_set_margin_end (grid, 10);
-        gtk_widget_set_margin_bottom (grid, 10);
-        gtk_widget_set_margin_top (grid, 10);
-        gtk_grid_set_column_spacing (GTK_GRID (grid), 40);
-        gtk_widget_set_halign (grid, GTK_ALIGN_CENTER);
-
-        analyzer_utils_add_description_here (GTK_GRID (grid), &description_lines_count,
-                                     _("<b>Palette entry frequency</b>"), NULL, NULL,
-                                     0, 20);
-        for (i = 0; i < palette_entries; i++)
-        {
-            description_message1 = g_strdup_printf (_("Entry %u"), i);
-            description_message2 = g_strdup_printf ("%u", histogram[i]);
-            analyzer_utils_add_description_here (GTK_GRID (grid), &description_lines_count,
-                                         description_message1, description_message2, NULL,
-                                         0, 0);
-            g_free (description_message1);
-            g_free (description_message2);
-        }
-
-        gtk_container_add (GTK_CONTAINER (scrolled), grid);
-        gtk_widget_show_all (scrolled);
-
-        label = gtk_label_new ("hIST");
-        gtk_notebook_insert_page (file->description_notebook, scrolled, label, -1);
-    }
+    analyzer_utils_insert_tab (file, &tab, chunk_types[hIST]);
 
     return TRUE;
+
+    END_ERROR:
+    analyzer_utils_tag_error (file, ERROR_COLOR_1, -1, _("Unrecognized data"));
+    return FALSE;
 }

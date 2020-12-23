@@ -24,11 +24,14 @@
 
 
 gboolean
-analyze_sbit_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts)
+analyze_sbit_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts, guint8 colortype)
 {
-    gboolean is_rgb = FALSE;
-    gsize bytes_left = chunk_length;
-    guint8 significant_bits[4] = {0, 0, 0, 0};
+    AnalyzerTab tab;
+
+    gchar *description_message;
+
+    guint8 significant_bits;
+    gsize chunk_used = 0;
 
     if (!chunk_length)
         return TRUE;
@@ -37,123 +40,83 @@ analyze_sbit_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts)
 
     if (!chunk_counts[IHDR])
     {
-        analyzer_utils_create_tag (file, &png_colors[ERROR_COLOR_1], FALSE, chunk_length,
-                                   _("The first chunk must be the IHDR chunk"), NULL);
+        analyzer_utils_tag_error (file, ERROR_COLOR_1, chunk_length,
+                                  _("The first chunk must be the IHDR chunk"));
         return TRUE;
     }
 
-    if (!analyzer_utils_read (&significant_bits[0], file, 1))
+    analyzer_utils_init_tab (&tab);
+
+    analyzer_utils_set_title_tab (&tab, _("<b>Original number of significant bits</b>"));
+
+    if (!analyzer_utils_read (&significant_bits, file, 1))
         return FALSE;
 
-    if (chunk_length <= 2)
+    if (colortype == 0 || colortype == 4)
     {
-        analyzer_utils_create_tag (file, &png_colors[CHUNK_DATA_COLOR_1], TRUE, 1,
-                                   _("Grayscale sample significant bits"), NULL);
+        chunk_used++;
+        analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 1,
+                            _("Grayscale sample significant bits"));
 
-        bytes_left -= 1;
+        description_message = g_strdup_printf (_("%u bits"), significant_bits);
+        analyzer_utils_describe_tab (&tab, _("Grayscale sample"), description_message);
+        g_free (description_message);
     }
-    else if (chunk_length <= 4)
+    else if (colortype == 2 || colortype == 3 || colortype == 6)
     {
-        analyzer_utils_create_tag (file, &png_colors[CHUNK_DATA_COLOR_1], TRUE, 1,
-                                   _("Red sample significant bits"), NULL);
+        analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 1,
+                            _("Red sample significant bits"));
 
-        if (!analyzer_utils_read (&significant_bits[1], file, 1))
+        description_message = g_strdup_printf (_("%u bits"), significant_bits);
+        analyzer_utils_describe_tab (&tab, _("Red sample"), description_message);
+        g_free (description_message);
+
+        if (!analyzer_utils_read (&significant_bits, file, 1))
             return FALSE;
-        analyzer_utils_create_tag (file, &png_colors[CHUNK_DATA_COLOR_2], TRUE, 1,
-                                   _("Green sample significant bits"), NULL);
 
-        if (!analyzer_utils_read (&significant_bits[2], file, 1))
+        analyzer_utils_tag (file, CHUNK_DATA_COLOR_2, 1,
+                            _("Green sample significant bits"));
+
+        description_message = g_strdup_printf (_("%u bits"), significant_bits);
+        analyzer_utils_describe_tab (&tab, _("Green sample"), description_message);
+        g_free (description_message);
+
+        if (!analyzer_utils_read (&significant_bits, file, 1))
             return FALSE;
-        analyzer_utils_create_tag (file, &png_colors[CHUNK_DATA_COLOR_1], TRUE, 1,
-                                   _("Blue sample significant bits"), NULL);
 
-        is_rgb = TRUE;
-        bytes_left -= 3;
+        analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 1,
+                            _("Blue sample significant bits"));
+
+        description_message = g_strdup_printf (_("%u bits"), significant_bits);
+        analyzer_utils_describe_tab (&tab, _("Blue sample"), description_message);
+        g_free (description_message);
+
+        chunk_used += 3;
     }
 
-    if (chunk_length == 2 || chunk_length == 4)
+    if (colortype == 4 || colortype == 6)
     {
-        if (!analyzer_utils_read (&significant_bits[3], file, 1))
+        if (!analyzer_utils_read (&significant_bits, file, 1))
             return FALSE;
-        analyzer_utils_create_tag (file, &png_colors[CHUNK_DATA_COLOR_2], TRUE, 1,
-                                   _("Alpha sample significant bits"), NULL);
 
-        bytes_left -= 1;
+        chunk_used++;
+        analyzer_utils_tag (file, CHUNK_DATA_COLOR_2, 1,
+                            _("Alpha sample significant bits"));
+
+        description_message = g_strdup_printf (_("%u bits"), significant_bits);
+        analyzer_utils_describe_tab (&tab, _("Alpha sample"), description_message);
+        g_free (description_message);
     }
 
-    if (bytes_left > 0)
+    if (chunk_used < chunk_length)
     {
-        analyzer_utils_create_tag (file, &png_colors[ERROR_COLOR_1], FALSE, bytes_left,
-                                   _("Unrecognized data"), NULL);
-        /* Advance pointer */
-        file->file_contents_index += bytes_left;
+        chunk_length -= chunk_used;
+        analyzer_utils_tag_error (file, ERROR_COLOR_1, chunk_length, _("Unrecognized data"));
+
+        ADVANCE_POINTER (file, chunk_length);
     }
 
-    if (file->description_notebook != NULL)
-    {
-        GtkWidget *scrolled, *grid, *label;
-        gchar *description_message;
-
-        guint description_lines_count = 0;
-
-        scrolled = gtk_scrolled_window_new (NULL, NULL);
-
-        grid = gtk_grid_new ();
-        gtk_widget_set_margin_start (grid, 10);
-        gtk_widget_set_margin_end (grid, 10);
-        gtk_widget_set_margin_bottom (grid, 10);
-        gtk_widget_set_margin_top (grid, 10);
-        gtk_grid_set_column_spacing (GTK_GRID (grid), 10);
-        gtk_widget_set_halign (grid, GTK_ALIGN_CENTER);
-
-        analyzer_utils_add_description_here (GTK_GRID (grid), &description_lines_count,
-                                     _("<b>Original number of significant bits</b>"), NULL, NULL,
-                                     0, 20);
-
-        if (is_rgb)
-        {
-            description_message = g_strdup_printf (_("%u bits"), significant_bits[0]);
-            analyzer_utils_add_description_here (GTK_GRID (grid), &description_lines_count,
-                                         _("Red sample"), description_message, NULL,
-                                         0, 0);
-            g_free (description_message);
-
-            description_message = g_strdup_printf (_("%u bits"), significant_bits[1]);
-            analyzer_utils_add_description_here (GTK_GRID (grid), &description_lines_count,
-                                         _("Green sample"), description_message, NULL,
-                                         0, 0);
-            g_free (description_message);
-
-            description_message = g_strdup_printf (_("%u bits"), significant_bits[2]);
-            analyzer_utils_add_description_here (GTK_GRID (grid), &description_lines_count,
-                                         _("Blue sample"), description_message, NULL,
-                                         0, 0);
-            g_free (description_message);
-        }
-        else
-        {
-            description_message = g_strdup_printf (_("%u bits"), significant_bits[0]);
-            analyzer_utils_add_description_here (GTK_GRID (grid), &description_lines_count,
-                                         _("Grayscale sample"), description_message, NULL,
-                                         0, 0);
-            g_free (description_message);
-        }
-
-        if (significant_bits[3])
-        {
-            description_message = g_strdup_printf (_("%u bits"), significant_bits[3]);
-            analyzer_utils_add_description_here (GTK_GRID (grid), &description_lines_count,
-                                         _("Alpha sample"), description_message, NULL,
-                                         0, 0);
-            g_free (description_message);
-        }
-
-        gtk_container_add (GTK_CONTAINER (scrolled), grid);
-        gtk_widget_show_all (scrolled);
-
-        label = gtk_label_new ("sBIT");
-        gtk_notebook_insert_page (file->description_notebook, scrolled, label, -1);
-    }
+    analyzer_utils_insert_tab (file, &tab, chunk_types[sBIT]);
 
     return TRUE;
 }

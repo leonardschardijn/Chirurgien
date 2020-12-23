@@ -25,29 +25,29 @@ G_BEGIN_DECLS
 typedef struct
 {
     /* Hexadecimal/text view buffers */
-    GtkTextBuffer *hex_buffer;
-    GtkTextBuffer *text_buffer;
+    GtkTextBuffer   *hex_buffer;
+    GtkTextBuffer   *text_buffer;
 
     /* Navigation mark lists, used to create the navigation buttons */
-    GSList *hex_navigation_marks;
-    GSList *text_navigation_marks;
+    GSList          *hex_navigation_marks;
+    GSList          *text_navigation_marks;
 
     /* The main description tab */
-    GtkGrid *file_description;
+    GtkGrid         *file_description;
 
     /* Notebook with all description tab, used by some analyzers to add further tabs */
-    GtkNotebook *description_notebook;
+    GtkNotebook     *description_notebook;
 
     /* Analyzed file contents and size */
-    guchar *file_contents;
-    gsize file_size;
+    guchar          *file_contents;
+    gsize           file_size;
 
     /* How many bytes have been used: file and hex/text buffers */
-    gsize file_contents_index;
-    gsize hex_buffer_index;
+    gsize           file_contents_index;
+    gsize           hex_buffer_index;
 
-    /* Added lines in the main description tab */
-    guint description_lines_count;
+    /* Lines in the main description tab */
+    guint           description_lines_count;
 
 } AnalyzerFile;
 

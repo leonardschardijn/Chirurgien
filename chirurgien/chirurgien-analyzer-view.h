@@ -32,8 +32,7 @@ ChirurgienAnalyzerView *   chirurgien_analyzer_view_new                     (Chi
 
 void                       chirurgien_analyzer_view_prepare_analysis        (ChirurgienAnalyzerView *,
                                                                              GFile *);
-void                       chirurgien_analyzer_view_execute_analysis        (ChirurgienAnalyzerView *,
-                                                                             gboolean);
+void                       chirurgien_analyzer_view_execute_analysis        (ChirurgienAnalyzerView *);
 
 
 void                       chirurgien_analyzer_view_update_lines            (ChirurgienAnalyzerView *);

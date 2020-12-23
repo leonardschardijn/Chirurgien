@@ -82,24 +82,23 @@ collect_idat_chunk (AnalyzerFile *file,
 
     if (!chunk_counts[IHDR])
     {
-        analyzer_utils_create_tag (file, &png_colors[ERROR_COLOR_1], FALSE, chunk_length,
-                                   _("The first chunk must be the IHDR chunk"), NULL);
+        analyzer_utils_tag_error (file, ERROR_COLOR_1, chunk_length,
+                                  _("The first chunk must be the IHDR chunk"));
         return TRUE;
     }
 
-    if ((file->file_contents_index + chunk_length) <= file->file_size)
+    if (FILE_HAS_DATA_N (file, chunk_length))
     {
         zlib_data->idat_chunks = g_slist_append (zlib_data->idat_chunks, GSIZE_TO_POINTER (file->file_contents_index));
         zlib_data->idat_chunks = g_slist_append (zlib_data->idat_chunks, GSIZE_TO_POINTER (chunk_length));
         zlib_data->compressed_image_size += chunk_length;
 
-        file->file_contents_index += chunk_length;
-        file->hex_buffer_index += chunk_length * 3;
+        SKIP_DATA (file, chunk_length);
 
         return TRUE;
     }
-    analyzer_utils_create_tag (file, &png_colors[ERROR_COLOR_1], FALSE, -1,
-                               _("Chunk length exceeds available data"), NULL);
+    analyzer_utils_tag_error (file, ERROR_COLOR_1, -1,
+                              _("Chunk length exceeds available data"));
     return FALSE;
 }
 
@@ -144,9 +143,7 @@ analyze_idat_chunk (AnalyzerFile *file,
 
         if (zlib_data->compressed_image_size > 7) /* Minimum zlib format size? */
         {
-            analyzer_utils_add_description (file, 
-                                            _("<b>ZLIB Compressed image</b>"),
-                                            NULL, NULL, 20, 20);
+            analyzer_utils_set_subtitle (file, _("<b>ZLIB compressed image</b>"));
 
             compressed_data_pointer = compressed_data;
 
@@ -155,11 +152,10 @@ analyze_idat_chunk (AnalyzerFile *file,
             info_flags = (*compressed_data_pointer & 0xF0) >> 4;
             if (compression_method == 8)
             {
-                analyzer_utils_add_description (file, _("Compression method"), "DEFLATE",
-                                                _("Compression method (CM): Lower four bits of CMF\n"
-                                                "Compression methods\n"
-                                                "<tt>8<sub>16</sub></tt>\tDEFLATE"),
-                                                0, 0);
+                analyzer_utils_describe_tooltip (file, _("Compression method"), "DEFLATE",
+                                                 _("Compression method (CM): Lower four bits of CMF\n"
+                                                 "Compression method\n"
+                                                 "<tt>8<sub>16</sub></tt>\tDEFLATE"));
                 if (info_flags > 7)
                 {
                     description_message = g_strdup_printf ("%s", _("<span foreground=\"red\">INVALID</span>"));
@@ -169,23 +165,21 @@ analyze_idat_chunk (AnalyzerFile *file,
                     slidingwindow_size = 1 << (info_flags + 8);
                     description_message = g_strdup_printf ("%u", slidingwindow_size);
                 }
-                analyzer_utils_add_description (file, _("LZ77 sliding window size"), description_message,
-                                                _("Compression info (CINFO): Upper four bits of CMF, only valid when CM = 8\n"
-                                                "Used to calculate the sliding window size as:\n"
-                                                "2<sup>CINFO + 8</sup> if CINFO &lt; 8"),
-                                                0, 0);
+                analyzer_utils_describe_tooltip (file, _("LZ77 sliding window size"), description_message,
+                                                 _("Compression info (CINFO): Upper four bits of CMF, only valid when CM = 8\n"
+                                                 "Used to calculate the sliding window size as:\n"
+                                                 "2<sup>CINFO + 8</sup> if CINFO &lt; 8"));
                 g_free (description_message);
             }
             else
             {
-                analyzer_utils_add_description (file, _("Compression method"), 
-                                                _("<span foreground=\"red\">INVALID</span>"),
-                                                _("Compression method (CM): Lower four bits of CMF\n"
-                                                "Compression methods\n"
-                                                "<tt>8<sub>16</sub></tt>\tDEFLATE"),
-                                                0, 0);
+                analyzer_utils_describe_tooltip (file, _("Compression method"),
+                                                 _("<span foreground=\"red\">INVALID</span>"),
+                                                 _("Compression method (CM): Lower four bits of CMF\n"
+                                                 "Compression method\n"
+                                                 "<tt>8<sub>16</sub></tt>\tDEFLATE"));
             }
-            idat_chunk_create_tag (&tagger, file, &png_colors[CHUNK_DATA_COLOR_1], TRUE, 1,
+            idat_chunk_create_tag (&tagger, file, CHUNK_DATA_COLOR_1, TRUE, 1,
                                    _("ZLIB compression method and flags (CMF)\n"
                                    "Lower four bits: compression method (CM)\n"
                                    "Upper four bits: compression info (CINFO)"));
@@ -217,7 +211,7 @@ analyze_idat_chunk (AnalyzerFile *file,
                                     "<tt>2</tt>\tCompressor used default algorithm\n"
                                     "<tt>3</tt>\tCompressor used maximum compression, slowest algorithm"),
                                     10, 10);
-            idat_chunk_create_tag (&tagger, file, &png_colors[CHUNK_DATA_COLOR_2], TRUE, 1,
+            idat_chunk_create_tag (&tagger, file, CHUNK_DATA_COLOR_2, TRUE, 1,
                                    _("ZLIB flags (FLG)"));
 
             compressed_data_pointer++;
@@ -227,57 +221,50 @@ analyze_idat_chunk (AnalyzerFile *file,
             if (!puff (&no_compression_blocks, &fixed_blocks, &dynamic_blocks,
                        NULL, &inflate_size, compressed_data_pointer, &deflate_size))
             {
-                idat_chunk_create_tag (&tagger, file, &png_colors[CHUNK_DATA_COLOR_1], TRUE, deflate_size,
+                idat_chunk_create_tag (&tagger, file, CHUNK_DATA_COLOR_1, TRUE, deflate_size,
                                        _("ZLIB compressed image"));
-                idat_chunk_create_tag (&tagger, file, &png_colors[CHUNK_DATA_COLOR_2], TRUE, 4,
+                idat_chunk_create_tag (&tagger, file, CHUNK_DATA_COLOR_2, TRUE, 4,
                                        _("ZLIB Adler32 checksum"));
 
                 description_message = g_strdup_printf ("%lu", inflate_size);
-                analyzer_utils_add_description (file, _("Inflate size"), description_message,
-                                                _("Size of the raw data"),
-                                                0, 0);
+                analyzer_utils_describe_tooltip (file, _("Inflate size"), description_message,
+                                                 _("Size of the raw data"));
                 g_free (description_message);
 
                 description_message = g_strdup_printf ("%lu", deflate_size);
-                analyzer_utils_add_description (file, _("Deflate size"), description_message,
-                                                _("Size of the compressed data"),
-                                                0, 0);
+                analyzer_utils_describe_tooltip (file, _("Deflate size"), description_message,
+                                                 _("Size of the compressed data"));
                 g_free (description_message);
 
                 description_message = g_strdup_printf ("%.2f", (double) inflate_size / deflate_size);
-                analyzer_utils_add_description (file, _("Compression ratio"), description_message,
-                                                NULL, 0, 0);
+                analyzer_utils_describe (file, _("Compression ratio"), description_message);
                 g_free (description_message);
 
-                analyzer_utils_add_description (file, 
-                                                _("<b>DEFLATE block count</b>"), NULL, NULL, 20, 20);
+                analyzer_utils_set_subtitle (file, _("<b>DEFLATE block count</b>"));
 
                 description_message = g_strdup_printf ("%u", no_compression_blocks);
-                analyzer_utils_add_description (file, _("No compression blocks"), description_message,
-                                                _("Number of blocks without compression"),
-                                                0, 0);
+                analyzer_utils_describe_tooltip (file, _("No compression blocks"), description_message,
+                                                 _("Number of blocks without compression"));
                 g_free (description_message);
 
                 description_message = g_strdup_printf ("%u", fixed_blocks);
-                analyzer_utils_add_description (file, _("Fixed Huffman code blocks"), description_message,
-                                                _("Number of blocks using the implicit fixed alphabets"),
-                                                0, 0);
+                analyzer_utils_describe_tooltip (file, _("Fixed Huffman code blocks"), description_message,
+                                                 _("Number of blocks using the implicit fixed alphabets"));
                 g_free (description_message);
 
                 description_message = g_strdup_printf ("%u", dynamic_blocks);
-                analyzer_utils_add_description (file, _("Dynamic Huffman code blocks"), description_message,
-                                                _("Number of blocks using dynamically created alphabets"),
-                                                0, 0);
+                analyzer_utils_describe_tooltip (file, _("Dynamic Huffman code blocks"), description_message,
+                                                 _("Number of blocks using dynamically created alphabets"));
                 g_free (description_message);
 
                 expected_deflate_size -= deflate_size;
                 if (expected_deflate_size)
-                    idat_chunk_create_tag (&tagger, file, &png_colors[ERROR_COLOR_1], FALSE, expected_deflate_size,
+                    idat_chunk_create_tag (&tagger, file, ERROR_COLOR_1, FALSE, expected_deflate_size,
                                            _("Unrecognized data"));
             }
             else
             {
-                idat_chunk_create_tag (&tagger, file, &png_colors[ERROR_COLOR_1], FALSE, zlib_data->compressed_image_size - 2,
+                idat_chunk_create_tag (&tagger, file, ERROR_COLOR_1, FALSE, zlib_data->compressed_image_size - 2,
                                        _("ZLIB Compressed data (inflate failed)"));
             }
             g_slist_free (zlib_data->idat_chunks);

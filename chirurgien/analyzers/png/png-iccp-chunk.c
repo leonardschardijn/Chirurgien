@@ -27,6 +27,8 @@
 gboolean
 analyze_iccp_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts)
 {
+    AnalyzerTab tab;
+
     g_autofree guchar *iccp_chunk = NULL;
 
     g_autofree gchar *profile_name = NULL;
@@ -46,29 +48,24 @@ analyze_iccp_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts)
 
     if (!chunk_counts[IHDR])
     {
-        analyzer_utils_create_tag (file, &png_colors[ERROR_COLOR_1], FALSE, chunk_length,
-                                   _("The first chunk must be the IHDR chunk"), NULL);
+        analyzer_utils_tag_error (file, ERROR_COLOR_1, chunk_length,
+                                  _("The first chunk must be the IHDR chunk"));
         return TRUE;
     }
+
+    analyzer_utils_init_tab (&tab);
 
     iccp_chunk = g_malloc (chunk_length);
 
     if (!analyzer_utils_read (iccp_chunk, file, chunk_length))
     {
-        analyzer_utils_create_tag (file, &png_colors[ERROR_COLOR_1], FALSE, -1,
-                                   _("Chunk length exceeds available data"), NULL);
+        analyzer_utils_tag_error (file, ERROR_COLOR_1, -1,
+                                  _("Chunk length exceeds available data"));
         return FALSE;
     }
 
     /* The null character separes the profile name and the compression method + compressed profile */
     /* The profile name must the 1-79 bytes long */
-    if (*iccp_chunk == '\0')
-    {
-        analyzer_utils_create_tag (file, &png_colors[ERROR_COLOR_1], FALSE, chunk_length,
-                                   _("Invalid ICC profile name length"), NULL);
-        return TRUE;
-    }
-
     for (i = 0; i < chunk_length; i++)
     {
         if (iccp_chunk[i] == '\0')
@@ -90,33 +87,35 @@ analyze_iccp_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts)
 
     if (profile_name_length == 0 || profile_name_length >= 80)
     {
-        analyzer_utils_create_tag (file, &png_colors[ERROR_COLOR_1], FALSE, chunk_length,
-                                   _("Invalid profile name length"), NULL);
+        analyzer_utils_tag_error (file, ERROR_COLOR_1, chunk_length,
+                                  _("Invalid ICC profile name length"));
         profile_name = NULL;
 
         return TRUE;
     }
 
-    profile_name = g_convert (profile_name, profile_name_length, "UTF-8", "ISO-8859-1", 
-                         NULL, &profile_name_length_utf8, NULL);
+    profile_name = g_convert (profile_name, profile_name_length, "UTF-8", "ISO-8859-1",
+                              NULL, &profile_name_length_utf8, NULL);
 
-    analyzer_utils_create_tag (file, &png_colors[CHUNK_DATA_COLOR_1], TRUE, profile_name_length,
-                               _("Profile name"), NULL);
-    analyzer_utils_create_tag (file, &png_colors[CHUNK_DATA_COLOR_2], TRUE, 1,
-                               _("Null separator"), NULL);
+    analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, profile_name_length, _("Profile name"));
+    analyzer_utils_tag (file, CHUNK_DATA_COLOR_2, 1, _("Null separator"));
+
+    analyzer_utils_add_text_tab (&tab, _("ICC profile name"), profile_name, profile_name_length);
 
     if (compression_method == 0) // zlib-format DEFLATE
     {
-        analyzer_utils_create_tag (file, &png_colors[CHUNK_DATA_COLOR_1], TRUE, 1,
-                                   _("Compression method"), NULL);
+        analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 1, _("Compression method"));
 
-        analyzer_utils_create_tag (file, &png_colors[CHUNK_DATA_COLOR_2], TRUE, 1,
-                                   _("ZLIB compression method and flags (CMF)\n"
-                                   "Lower four bits: compression method (CM)\n"
-                                   "Upper four bits: compression info (CINFO)"), NULL);
+        analyzer_utils_tag (file, CHUNK_DATA_COLOR_2, 1,
+                            _("ZLIB compression method and flags (CMF)\n"
+                            "Lower four bits: compression method (CM)\n"
+                            "Upper four bits: compression info (CINFO)"));
 
-        analyzer_utils_create_tag (file, &png_colors[CHUNK_DATA_COLOR_1], TRUE, 1,
-                                   _("ZLIB flags (FLG)"), NULL);
+        analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 1, _("ZLIB flags (FLG)"));
+
+        analyzer_utils_describe_tooltip_tab (&tab, _("Compression method"), _("zlib-format DEFLATE"),
+                                             _("ICC profile compression method\n"
+                                             "<tt>00<sub>16</sub></tt>\tzlib-format DEFLATE"));
 
         /* deflate profile size = chunk_length - profile_name - null separator (1) -
          * compression method (1) - ZLIB CMF (1) - ZLIB FLG (1) - ZLIB Adler32 chechsum (4) */
@@ -124,96 +123,36 @@ analyze_iccp_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts)
 
         if (!puff (NULL, NULL, NULL, NULL, &inflate_size, compressed_profile, &deflate_size))
         {
-            analyzer_utils_create_tag (file, &png_colors[CHUNK_DATA_COLOR_2], TRUE, deflate_size,
-                                       _("ZLIB compressed ICC profile"), NULL);
-            analyzer_utils_create_tag (file, &png_colors[CHUNK_DATA_COLOR_1], TRUE, 4,
-                                       _("ZLIB Adler32 checksum"), NULL);
+            analyzer_utils_tag (file, CHUNK_DATA_COLOR_2, deflate_size,
+                                _("ZLIB compressed ICC profile"));
+            analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 4,
+                                _("ZLIB Adler32 checksum"));
 
             expected_deflate_size -= deflate_size;
             if (expected_deflate_size)
-                analyzer_utils_create_tag (file, &png_colors[ERROR_COLOR_1], FALSE, expected_deflate_size,
-                                       _("Unrecognized data"), NULL);
+                analyzer_utils_tag_error (file, ERROR_COLOR_1, expected_deflate_size, _("Unrecognized data"));
         }
         else
         {
-            analyzer_utils_create_tag (file, &png_colors[ERROR_COLOR_1], FALSE, chunk_length - profile_name_length - 4,
-                                       _("ZLIB Compressed data (inflate failed)"), NULL);
+            analyzer_utils_tag_error (file, ERROR_COLOR_1, chunk_length - profile_name_length - 4,
+                                      _("ZLIB Compressed data (inflate failed)"));
         }
     }
     else
     {
-        analyzer_utils_create_tag (file, &png_colors[ERROR_COLOR_2], FALSE, 1,
-                                   _("Compression method"), NULL);
-        analyzer_utils_create_tag (file, &png_colors[ERROR_COLOR_1], FALSE, chunk_length - profile_name_length - 2,
-                                   _("Unrecognized data"), NULL);
+        analyzer_utils_tag_error (file, ERROR_COLOR_2, 1, _("Compression method"));
+        analyzer_utils_tag_error (file, ERROR_COLOR_1, chunk_length - profile_name_length - 2,
+                                  _("Unrecognized data"));
+
+        analyzer_utils_describe_tooltip_tab (&tab, _("Compression method"),
+                                             _("<span foreground=\"red\">INVALID</span>"),
+                                             _("ICC profile compression method\n"
+                                             "<tt>00<sub>16</sub></tt>\tzlib-format DEFLATE"));
     }
 
-    if (file->description_notebook != NULL)
-    {
-        GtkWidget *scrolled, *grid, *box, *textview, *frame, *label;
-        GtkTextBuffer *buffer;
-        GtkStyleContext *context;
+    analyzer_utils_add_footer_tab (&tab, _("NOTE: ICC profile names are encoded using ISO-8859-1"));
 
-        gchar *description_message;
-
-        guint description_lines_count = 0;
-
-        scrolled = gtk_scrolled_window_new (NULL, NULL);
-
-        box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 10);
-        gtk_widget_set_margin_start (box, 10);
-        gtk_widget_set_margin_end (box, 10);
-        gtk_widget_set_margin_bottom (box, 10);
-        gtk_widget_set_margin_top (box, 10);
-
-        grid = gtk_grid_new ();
-        gtk_grid_set_column_spacing (GTK_GRID (grid), 10);
-        gtk_widget_set_halign (grid, GTK_ALIGN_CENTER);
-
-        frame = gtk_frame_new (_("ICC profile name"));
-        gtk_frame_set_label_align (GTK_FRAME (frame), 0.5, 0.5);
-
-        textview = gtk_text_view_new ();
-        gtk_widget_set_margin_start (textview, 10);
-        gtk_widget_set_margin_end (textview, 10);
-        gtk_widget_set_margin_bottom (textview, 10);
-        gtk_widget_set_margin_top (textview, 10);
-        gtk_text_view_set_editable (GTK_TEXT_VIEW (textview), FALSE);
-        gtk_text_view_set_cursor_visible (GTK_TEXT_VIEW (textview), FALSE);
-        buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (textview));
-        gtk_text_buffer_set_text (buffer, profile_name, profile_name_length_utf8);
-
-        gtk_container_add (GTK_CONTAINER (frame), textview);
-
-        gtk_box_pack_start (GTK_BOX (box), frame, FALSE, FALSE, 0);
-
-        if (compression_method == 0) // zlib-format DEFLATE
-            description_message = _("zlib-format DEFLATE");
-        else
-            description_message = _("<span foreground=\"red\">INVALID</span>");
-
-        analyzer_utils_add_description_here (GTK_GRID (grid), &description_lines_count,
-                         _("Compression method"), description_message,
-                         _("ICC profile compression methods\n"
-                           "<tt>00<sub>16</sub></tt>\tzlib-format DEFLATE"),
-                         0, 10);
-
-        gtk_box_pack_start (GTK_BOX (box), grid, FALSE, FALSE, 0);
-
-        label = gtk_label_new (_("NOTE: ICC profile names are encoded using ISO-8859-1"));
-        context = gtk_widget_get_style_context (label);
-        gtk_style_context_add_class (context, GTK_STYLE_CLASS_DIM_LABEL);
-        gtk_label_set_line_wrap (GTK_LABEL (label), GTK_WRAP_WORD);
-        gtk_label_set_xalign (GTK_LABEL (label), 0.0);
-        gtk_widget_set_halign (label, GTK_ALIGN_START);
-        gtk_box_pack_start (GTK_BOX (box), label, FALSE, FALSE, 0);
-
-        gtk_container_add (GTK_CONTAINER (scrolled), box);
-        gtk_widget_show_all (scrolled);
-
-        label = gtk_label_new ("iCCP");
-        gtk_notebook_insert_page (file->description_notebook, scrolled, label, -1);
-    }
+    analyzer_utils_insert_tab (file, &tab, chunk_types[iCCP]);
 
     return TRUE;
 }

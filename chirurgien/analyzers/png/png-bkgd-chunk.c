@@ -28,9 +28,14 @@ gboolean
 analyze_bkgd_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts,
                     guint8 colortype)
 {
-    gsize bytes_left = chunk_length;
-    guint16 color[3];
+    AnalyzerTab tab;
+
+    gchar *description_message;
+
+    guint16 color;
     guint8 palette_index;
+
+    gsize chunk_used = 0;
 
     if (!chunk_length)
         return TRUE;
@@ -39,148 +44,95 @@ analyze_bkgd_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts,
 
     if (!chunk_counts[IHDR])
     {
-        analyzer_utils_create_tag (file, &png_colors[ERROR_COLOR_1], FALSE, chunk_length,
-                                   _("The first chunk must be the IHDR chunk"), NULL);
+        analyzer_utils_tag_error (file, ERROR_COLOR_1, chunk_length,
+                                  _("The first chunk must be the IHDR chunk"));
         return TRUE;
     }
 
+    analyzer_utils_init_tab (&tab);
+
+    analyzer_utils_set_title_tab (&tab, _("<b>Background color</b>"));
+
     if (colortype == 0 || colortype == 4)
     {
-        if (!analyzer_utils_read (&color[0], file , 2))
-        {
-            analyzer_utils_create_tag (file, &png_colors[ERROR_COLOR_1], FALSE, -1,
-                                       _("Unrecognized data"), NULL);
-            return FALSE;
-        }
-        color[0] = ntohs (color[0]);
-        analyzer_utils_create_tag (file, &png_colors[CHUNK_DATA_COLOR_1], TRUE, 2,
-                                   _("Grayscale background"), NULL);
-        bytes_left -= 2;
+        if (!analyzer_utils_read (&color, file , 2))
+            goto END_ERROR;
+
+        chunk_used += 2;
+        analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 2, _("Grayscale background"));
+
+        color = ntohs (color);
+        description_message = g_strdup_printf ("%u", color);
+        analyzer_utils_describe_tab (&tab, _("Grayscale background"), description_message);
+        g_free (description_message);
     }
     else if (colortype == 2 || colortype == 6)
     {
-        if (!analyzer_utils_read (&color[0], file , 2))
-        {
-            analyzer_utils_create_tag (file, &png_colors[ERROR_COLOR_1], FALSE, -1,
-                                       _("Unrecognized data"), NULL);
-            return FALSE;
-        }
-        color[0] = ntohs (color[0]);
-        analyzer_utils_create_tag (file, &png_colors[CHUNK_DATA_COLOR_1], TRUE, 2,
-                                   _("Background red sample"), NULL);
-        bytes_left -= 2;
-        
-        if (!analyzer_utils_read (&color[1], file , 2))
-        {
-            analyzer_utils_create_tag (file, &png_colors[ERROR_COLOR_1], FALSE, -1,
-                                       _("Unrecognized data"), NULL);
-            return FALSE;
-        }
-        color[1] = ntohs (color[1]);
-        analyzer_utils_create_tag (file, &png_colors[CHUNK_DATA_COLOR_2], TRUE, 2,
-                                   _("Background green sample"), NULL);
-        bytes_left -= 2;
-        
-        if (!analyzer_utils_read (&color[2], file , 2))
-        {
-            analyzer_utils_create_tag (file, &png_colors[ERROR_COLOR_1], FALSE, -1,
-                                       _("Unrecognized data"), NULL);
-            return FALSE;
-        }
-        color[2] = ntohs (color[2]);
-        analyzer_utils_create_tag (file, &png_colors[CHUNK_DATA_COLOR_1], TRUE, 2,
-                                   _("Background blue sample"), NULL);
-        bytes_left -= 2;
+        if (!analyzer_utils_read (&color, file , 2))
+            goto END_ERROR;
+
+        analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 2, _("Background red sample"));
+
+        color = ntohs (color);
+        description_message = g_strdup_printf ("%u", color);
+        analyzer_utils_describe_tab (&tab, _("Background red sample"), description_message);
+        g_free (description_message);
+
+        if (!analyzer_utils_read (&color, file , 2))
+            goto END_ERROR;
+
+        analyzer_utils_tag (file, CHUNK_DATA_COLOR_2, 2, _("Background green sample"));
+
+        color = ntohs (color);
+        description_message = g_strdup_printf ("%u", color);
+        analyzer_utils_describe_tab (&tab, _("Background green sample"), description_message);
+        g_free (description_message);
+
+        if (!analyzer_utils_read (&color, file , 2))
+            goto END_ERROR;
+
+        analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 2, _("Background blue sample"));
+
+        color = ntohs (color);
+        description_message = g_strdup_printf ("%u", color);
+        analyzer_utils_describe_tab (&tab, _("Background blue sample"), description_message);
+        g_free (description_message);
+
+        chunk_used += 6;
     }
     else if (colortype == 3)
     {
         if (!analyzer_utils_read (&palette_index, file , 1))
             return FALSE;
-        analyzer_utils_create_tag (file, &png_colors[CHUNK_DATA_COLOR_1], TRUE, 1,
-                                   _("Background palette index"), NULL);
-        bytes_left -= 1;
+
+        chunk_used++;
+        analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 1, _("Background palette index"));
+
+        description_message = g_strdup_printf ("%u", palette_index);
+        analyzer_utils_describe_tab (&tab, _("Background palette index"), description_message);
+        g_free (description_message);
     }
     else
     {
-        analyzer_utils_create_tag (file, &png_colors[ERROR_COLOR_1], FALSE, chunk_length,
-                           _("Invalid color type"), NULL);
-        /* Advance pointer */
-        file->file_contents_index += bytes_left;
+        analyzer_utils_tag_error (file, ERROR_COLOR_1, chunk_length, _("Invalid color type"));
+
+        ADVANCE_POINTER (file, chunk_length);
         return TRUE;
     }
 
-    if (bytes_left > 0)
+    if (chunk_used < chunk_length)
     {
-        analyzer_utils_create_tag (file, &png_colors[ERROR_COLOR_1], FALSE, bytes_left,
-                                   _("Unrecognized data"), NULL);
-        /* Advance pointer */
-        file->file_contents_index += bytes_left;
+        chunk_length -= chunk_used;
+        analyzer_utils_tag_error (file, ERROR_COLOR_1, chunk_length, _("Unrecognized data"));
+
+        ADVANCE_POINTER (file, chunk_length);
     }
 
-    if (file->description_notebook != NULL)
-    {
-        GtkWidget *scrolled, *grid, *label;
-        gchar *description_message;
-
-        guint description_lines_count = 0;
-
-        scrolled = gtk_scrolled_window_new (NULL, NULL);
-
-        grid = gtk_grid_new ();
-        gtk_widget_set_margin_start (grid, 10);
-        gtk_widget_set_margin_end (grid, 10);
-        gtk_widget_set_margin_bottom (grid, 10);
-        gtk_widget_set_margin_top (grid, 10);
-        gtk_grid_set_column_spacing (GTK_GRID (grid), 10);
-        gtk_widget_set_halign (grid, GTK_ALIGN_CENTER);
-
-        analyzer_utils_add_description_here (GTK_GRID (grid), &description_lines_count,
-                                     _("<b>Background color</b>"), NULL, NULL,
-                                     0, 20);
-
-        if (colortype == 0 || colortype == 4)
-        {
-            description_message = g_strdup_printf ("%u", color[0]);
-            analyzer_utils_add_description_here (GTK_GRID (grid), &description_lines_count,
-                                         _("Grayscale background"), description_message, NULL,
-                                         0, 0);
-            g_free (description_message);
-        }
-        else if (colortype == 2 || colortype == 6)
-        {
-            description_message = g_strdup_printf ("%u", color[0]);
-            analyzer_utils_add_description_here (GTK_GRID (grid), &description_lines_count,
-                                         _("Background red sample"), description_message, NULL,
-                                         0, 0);
-            g_free (description_message);
-
-            description_message = g_strdup_printf ("%u", color[1]);
-            analyzer_utils_add_description_here (GTK_GRID (grid), &description_lines_count,
-                                         _("Background green sample"), description_message, NULL,
-                                         0, 0);
-            g_free (description_message);
-
-            description_message = g_strdup_printf ("%u", color[2]);
-            analyzer_utils_add_description_here (GTK_GRID (grid), &description_lines_count,
-                                         _("Background blue sample"), description_message, NULL,
-                                         0, 0);
-            g_free (description_message);
-        }
-        else
-        {
-            description_message = g_strdup_printf ("%u", palette_index);
-            analyzer_utils_add_description_here (GTK_GRID (grid), &description_lines_count,
-                                         _("Background palette index"), description_message, NULL,
-                                         0, 0);
-            g_free (description_message);
-        }
-
-        gtk_container_add (GTK_CONTAINER (scrolled), grid);
-        gtk_widget_show_all (scrolled);
-
-        label = gtk_label_new ("bKGD");
-        gtk_notebook_insert_page (file->description_notebook, scrolled, label, -1);
-    }
+    analyzer_utils_insert_tab (file, &tab, chunk_types[bKGD]);
 
     return TRUE;
+
+    END_ERROR:
+    analyzer_utils_tag_error (file, ERROR_COLOR_1, -1, _("Unrecognized data"));
+    return FALSE;
 }
