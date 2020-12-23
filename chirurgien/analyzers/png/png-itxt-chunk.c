@@ -132,9 +132,11 @@ analyze_itxt_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts)
     analyzer_utils_tag (file, CHUNK_DATA_COLOR_2, 1, _("Null separator"));
     analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 1, _("Compression flag"));
     analyzer_utils_tag (file, CHUNK_DATA_COLOR_2, 1, _("Compression method"));
-    analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, language_tag_length, _("Language tag"));
+    if (language_tag_length)
+        analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, language_tag_length, _("Language tag"));
     analyzer_utils_tag (file, CHUNK_DATA_COLOR_2, 1, _("Null separator"));
-    analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, translated_keyword_length, _("Translated keyword"));
+    if (translated_keyword_length)
+        analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, translated_keyword_length, _("Translated keyword"));
     analyzer_utils_tag (file, CHUNK_DATA_COLOR_2, 1, _("Null separator"));
 
     analyzer_utils_add_text_tab (&tab, _("Keyword"), keyword, keyword_length);
