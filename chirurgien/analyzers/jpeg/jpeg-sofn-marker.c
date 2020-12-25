@@ -57,7 +57,8 @@ analyze_sofn_marker (AnalyzerFile *file, guint *marker_counts, gint sof_marker)
     analyzer_utils_tag (file, MARKER_DATA_COLOR_1, 1, _("Sample precision"));
 
     description_message = g_strdup_printf (_("%hhu bits"), one_byte);
-    analyzer_utils_describe (file, _("Sample precision"), description_message);
+    analyzer_utils_describe_tooltip (file, _("Sample precision"), description_message,
+                             _("Number of bits in the samples of the components"));
     g_free (description_message);
 
     /* Image height */
@@ -100,7 +101,10 @@ analyze_sofn_marker (AnalyzerFile *file, guint *marker_counts, gint sof_marker)
     else
         description_message = g_strdup_printf ("%s", _("<span foreground=\"red\">INVALID</span>"));
 
-    analyzer_utils_describe (file, _("Number of components"), description_message);
+    analyzer_utils_describe_tooltip (file, _("Number of components"), description_message,
+                                     _("Scan components in the image\n"
+                                     "Progressive DCT\t1-4 components\n"
+                                     "All other cases\t1-255 components"));
     g_free (description_message);
 
     analyzer_utils_add_description (file, _("<b>Components</b>"), NULL, NULL, 20, 10);

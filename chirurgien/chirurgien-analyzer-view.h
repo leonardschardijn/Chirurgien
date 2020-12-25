@@ -27,18 +27,25 @@ G_BEGIN_DECLS
 
 G_DECLARE_FINAL_TYPE (ChirurgienAnalyzerView, chirurgien_analyzer_view, CHIRURGIEN, ANALYZER_VIEW, GtkPaned)
 
-ChirurgienAnalyzerView *   chirurgien_analyzer_view_new                     (ChirurgienWindow *);
+ChirurgienAnalyzerView *   chirurgien_analyzer_view_new                        (ChirurgienWindow *);
 
 
-void                       chirurgien_analyzer_view_prepare_analysis        (ChirurgienAnalyzerView *,
-                                                                             GFile *);
-void                       chirurgien_analyzer_view_execute_analysis        (ChirurgienAnalyzerView *);
+void                       chirurgien_analyzer_view_prepare_analysis           (ChirurgienAnalyzerView *,
+                                                                                GFile *);
+gchar *                    chirurgien_analyzer_view_prepare_analysis_embedded  (ChirurgienAnalyzerView *,
+                                                                                guchar *,
+                                                                                gsize,
+                                                                                const gchar *);
+void                       chirurgien_analyzer_view_execute_analysis           (ChirurgienAnalyzerView *);
+
+gsize                      chirurgien_analyzer_view_get_embedded_file          (ChirurgienAnalyzerView *,
+                                                                                guint,
+                                                                                guchar **);
+
+void                       chirurgien_analyzer_view_update_lines               (ChirurgienAnalyzerView *);
 
 
-void                       chirurgien_analyzer_view_update_lines            (ChirurgienAnalyzerView *);
-
-
-const gchar *              chirurgien_analyzer_view_get_file_path           (ChirurgienAnalyzerView *);
-GtkNotebook *              chirurgien_analyzer_view_get_hex_text_notebook   (ChirurgienAnalyzerView *);
+const gchar *              chirurgien_analyzer_view_get_file_path              (ChirurgienAnalyzerView *);
+GtkNotebook *              chirurgien_analyzer_view_get_hex_text_notebook      (ChirurgienAnalyzerView *);
 
 G_END_DECLS

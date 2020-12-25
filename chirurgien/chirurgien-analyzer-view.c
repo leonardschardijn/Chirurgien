@@ -18,6 +18,8 @@
 
 #include "chirurgien-analyzer-view.h"
 
+#include <glib/gi18n.h>
+
 #include <chirurgien-analyzer.h>
 
 #include "chirurgien-navigation-button.h"
@@ -40,6 +42,8 @@ struct _ChirurgienAnalyzerView
     guchar         *file_contents;
     gsize          file_size;
 
+    GSList         *embedded_files;
+
     gint           bytes_per_line;
 
     GSettings      *preferences_settings;
@@ -56,6 +60,7 @@ chirurgien_analyzer_view_dispose (GObject *object)
     view = CHIRURGIEN_ANALYZER_VIEW (object);
     g_free (view->file_contents);
     g_free (view->file_path);
+    g_slist_free (view->embedded_files);
     view->file_contents = NULL;
     view->file_path = NULL;
 
@@ -308,9 +313,12 @@ chirurgien_analyzer_view_execute_analysis (ChirurgienAnalyzerView *view)
     file.file_contents_index = 0;
     file.hex_buffer_index = 0;
     file.description_lines_count = 0;
+    file.embedded_files = NULL;
+    file.embedded_files_count = 0;
 
     chirurgien_analyzer_analyze (&file);
 
+    view->embedded_files = file.embedded_files;
     build_navigation_buttons (view, file.hex_navigation_marks, file.text_navigation_marks);
     g_slist_free (file.hex_navigation_marks);
     g_slist_free (file.text_navigation_marks);
@@ -394,6 +402,77 @@ void chirurgien_analyzer_view_update_lines (ChirurgienAnalyzerView *view)
     gtk_container_add (GTK_CONTAINER (description_scrolled), file_description);
 
     chirurgien_analyzer_view_execute_analysis (view);
+}
+
+gsize
+chirurgien_analyzer_view_get_embedded_file (ChirurgienAnalyzerView *view,
+                                            guint selected_file,
+                                            guchar **file_contents)
+{
+    GSList *index = view->embedded_files;
+
+    gsize offset, file_size;
+
+    for (guint i = 0; i < selected_file; i++)
+        index = index->next->next;
+
+    offset = GPOINTER_TO_SIZE (index->data);
+    file_size = GPOINTER_TO_SIZE (index->next->data);
+
+    *file_contents = g_malloc (file_size);
+    memmove (*file_contents, view->file_contents + offset, file_size);
+
+    return file_size;
+}
+
+char *
+chirurgien_analyzer_view_prepare_analysis_embedded (ChirurgienAnalyzerView *view,
+                                                    guchar *file_contents,
+                                                    gsize file_size,
+                                                    const gchar *file_path)
+{
+    g_autofree gchar *hex_contents = NULL;
+    g_autofree gchar *text_contents = NULL;
+
+    gsize hex_text_size;
+
+    GtkTextBuffer *hex_buffer, *text_buffer;
+
+    view->file_path = g_strdup_printf (_("%s [EMBEDDED FILE]"), file_path);
+
+    hex_text_size = file_size * 3;
+    hex_contents = g_malloc (hex_text_size);
+    text_contents = g_malloc (hex_text_size);
+
+    hex_buffer = gtk_text_view_get_buffer (view->hex_view);
+    text_buffer = gtk_text_view_get_buffer (view->text_view);
+
+    file_print (view, hex_contents, text_contents, hex_text_size, file_contents, file_size);
+    gtk_text_buffer_set_text (hex_buffer, hex_contents, hex_text_size - 1);
+    gtk_text_buffer_set_text (text_buffer, text_contents, hex_text_size - 1);
+
+    view->file_contents = file_contents;
+    view->file_size = file_size;
+
+    g_settings_bind (view->window_settings, "position", view, "position", G_SETTINGS_BIND_DEFAULT);
+
+    g_settings_bind (view->preferences_settings, "file-justification",
+                     view->hex_view, "justification", G_SETTINGS_BIND_GET);
+    g_settings_bind (view->preferences_settings, "file-justification",
+                     view->text_view, "justification", G_SETTINGS_BIND_GET);
+
+    /* Bind the visible property of the GtkScrolledWindow */
+    /* GtkScrolledWindow <- GtkViewport <- GtkFrame <- GtkButtonBox (hex/text_navigation) */
+    g_settings_bind (view->preferences_settings, "show-navigation",
+                     gtk_widget_get_parent (gtk_widget_get_parent
+                     (gtk_widget_get_parent (GTK_WIDGET (view->hex_navigation)))),
+                     "visible", G_SETTINGS_BIND_GET);
+    g_settings_bind (view->preferences_settings, "show-navigation",
+                     gtk_widget_get_parent (gtk_widget_get_parent
+                     (gtk_widget_get_parent (GTK_WIDGET (view->text_navigation)))),
+                     "visible", G_SETTINGS_BIND_GET);
+
+    return view->file_path;
 }
 
 const gchar *

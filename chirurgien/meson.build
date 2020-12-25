@@ -22,7 +22,6 @@ subdir('analyzers')
 
 executable('chirurgien', chirurgien_sources,
   dependencies: chirurgien_deps,
-  include_directories: [ root_include_dir,
-                         analyzers_include_dir ],
+  include_directories: [ analyzers_include_dir ],
   install: true
 )

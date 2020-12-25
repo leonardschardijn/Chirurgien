@@ -19,7 +19,7 @@
 #pragma once
 
 #include <gtk/gtk.h>
-#include "chirurgien-analyzer.h"
+#include "chirurgien-analyzer-file.h"
 
 G_BEGIN_DECLS
 
@@ -162,6 +162,9 @@ void       analyzer_utils_add_text_tab           (AnalyzerTab *,
                                                   gsize);
 void       analyzer_utils_add_footer_tab         (AnalyzerTab *,
                                                   gchar *);
+void       analyzer_utils_embedded_file          (AnalyzerFile *,
+                                                  AnalyzerTab *,
+                                                  gsize);
 void       analyzer_utils_init_tab               (AnalyzerTab *);
 void       analyzer_utils_insert_tab             (AnalyzerFile *,
                                                   AnalyzerTab *,

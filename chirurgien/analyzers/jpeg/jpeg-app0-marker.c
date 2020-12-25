@@ -199,8 +199,12 @@ analyze_app0_marker (AnalyzerFile *file, guint *marker_counts)
 
             if (data_length)
             {
-                analyzer_utils_tag (file, MARKER_DATA_COLOR_1, data_length, _("Thumbnail image"));
-                ADVANCE_POINTER (file, data_length);
+                analyzer_utils_tag (file, MARKER_DATA_COLOR_1, data_length, _("Embedded JPEG image"));
+
+                analyzer_utils_add_description_tab (&tab, _("There is an embedded JPEG file, analyze it in another tab"),
+                                                    NULL, NULL, 10, 0);
+                analyzer_utils_embedded_file (file, &tab, data_length);
+
                 data_used = 8 + data_length;
             }
         }

@@ -5,6 +5,7 @@ data/io.github.leonardschardijn.Chirurgien.gschema.xml
 # Application strings
 chirurgien/chirurgien-actions.c
 chirurgien/chirurgien-analyzer-info-dialog.c
+chirurgien/chirurgien-analyzer-view.c
 chirurgien/chirurgien-window.c
 chirurgien/analyzers/chirurgien-analyzer.c
 chirurgien/resources/menus/menu-csd.ui
@@ -16,7 +17,21 @@ chirurgien/resources/ui/chirurgien-shortcuts-dialog.ui
 
 # Analyzer information strings
 chirurgien/resources/analyzer-info/intro-tab.ui
+chirurgien/resources/analyzer-info/jpeg-tab.ui
 chirurgien/resources/analyzer-info/png-tab.ui
+
+# JPEG analyzer strings
+chirurgien/analyzers/jpeg/jpeg-analyzer.c
+chirurgien/analyzers/jpeg/jpeg-app0-marker.c
+chirurgien/analyzers/jpeg/jpeg-app2-marker.c
+chirurgien/analyzers/jpeg/jpeg-dqt-marker.c
+chirurgien/analyzers/jpeg/jpeg-dht-marker.c
+chirurgien/analyzers/jpeg/jpeg-dac-marker.c
+chirurgien/analyzers/jpeg/jpeg-sofn-marker.c
+chirurgien/analyzers/jpeg/jpeg-dri-marker.c
+chirurgien/analyzers/jpeg/jpeg-sos-marker.c
+chirurgien/analyzers/jpeg/jpeg-dnl-marker.c
+chirurgien/analyzers/jpeg/jpeg-com-marker.c
 
 # PNG analyzer strings
 chirurgien/analyzers/png/png-analyzer.c

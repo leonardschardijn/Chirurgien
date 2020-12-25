@@ -49,6 +49,11 @@ typedef struct
     /* Lines in the main description tab */
     guint           description_lines_count;
 
+    /* List of (offset, size) embedded file pairs */
+    GSList          *embedded_files;
+
+    /* Number of embedded files */
+    guint           embedded_files_count;
 } AnalyzerFile;
 
 G_END_DECLS

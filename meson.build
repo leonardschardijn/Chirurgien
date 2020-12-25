@@ -7,8 +7,6 @@ project('chirurgien', 'c',
 
 i18n = import('i18n')
 
-root_include_dir = include_directories('.')
-
 config_h = configuration_data()
 config_h.set_quoted('VERSION', meson.project_version())
 config_h.set_quoted('GETTEXT_PACKAGE', meson.project_name())

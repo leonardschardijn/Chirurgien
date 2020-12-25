@@ -20,6 +20,8 @@
 
 #include <glib/gi18n.h>
 
+#include <chirurgien-actions-analyzer.h>
+
 
 /* Colors available to analyzers */
 GdkRGBA colors[] =
@@ -327,6 +329,45 @@ analyzer_utils_add_footer_tab (AnalyzerTab *tab,
     gtk_label_set_xalign (GTK_LABEL (widget), 0.0);
     gtk_widget_set_halign (widget, GTK_ALIGN_START);
     gtk_widget_set_margin_top (widget, 10);
+
+    if (tab->description_lines_count)
+    {
+        gtk_box_pack_start (GTK_BOX (tab->contents), GTK_WIDGET (tab->description), FALSE, FALSE, 0);
+        gtk_box_pack_start (GTK_BOX (tab->contents), widget, FALSE, FALSE, 0);
+
+        widget = gtk_grid_new ();
+        gtk_widget_set_halign (widget, GTK_ALIGN_CENTER);
+        gtk_grid_set_column_spacing (GTK_GRID (widget), 10);
+
+        tab->description = GTK_GRID (widget);
+        tab->description_lines_count = 0;
+    }
+    else
+    {
+        gtk_box_pack_start (GTK_BOX (tab->contents), widget, FALSE, FALSE, 0);
+    }
+}
+
+/*
+ * Add a button to analyze an embedded file to the description tab
+ */
+void
+analyzer_utils_embedded_file (AnalyzerFile *file,
+                              AnalyzerTab *tab,
+                              gsize file_size)
+{
+    GtkWidget *widget;
+
+    file->embedded_files = g_slist_append (file->embedded_files, GSIZE_TO_POINTER (file->file_contents_index));
+    file->embedded_files = g_slist_append (file->embedded_files, GSIZE_TO_POINTER (file_size));
+    file->file_contents_index += file_size;
+
+    widget = gtk_button_new_with_label (_("Analyze!"));
+    gtk_widget_set_halign (widget, GTK_ALIGN_CENTER);
+    gtk_widget_set_margin_top (widget, 5);
+
+    g_signal_connect (widget, "clicked", G_CALLBACK (chirurgien_actions_embedded_file),
+                      GUINT_TO_POINTER (file->embedded_files_count++));
 
     if (tab->description_lines_count)
     {

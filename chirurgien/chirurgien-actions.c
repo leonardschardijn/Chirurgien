@@ -19,6 +19,7 @@
 #include <config.h>
 
 #include "chirurgien-actions.h"
+#include "chirurgien-actions-analyzer.h"
 
 #include <amtk/amtk.h>
 #include <glib/gi18n.h>
@@ -386,6 +387,61 @@ chirurgien_actions_analyze_file (ChirurgienWindow *window,
     chirurgien_analyzer_view_execute_analysis (view);
 
     notebook_index = gtk_notebook_append_page (GTK_NOTEBOOK (window->notebook), GTK_WIDGET (view), widget);
+    gtk_notebook_set_current_page (GTK_NOTEBOOK (window->notebook), notebook_index);
+}
+
+void
+chirurgien_actions_embedded_file (__attribute__((unused)) GtkButton *analyze_button,
+                                  gpointer user_data)
+{
+    ChirurgienWindow *window;
+    ChirurgienAnalyzerView *view, *embedded_view;
+
+    GtkWidget *label, *button, *widget;
+    GtkStyleContext *context;
+
+    gint notebook_index;
+
+    guchar *embedded_file_contents;
+    gsize embedded_file_size;
+    gchar *embedded_file_name;
+
+    g_autofree gchar *original_file_name;
+
+    window = CHIRURGIEN_WINDOW (gtk_application_get_active_window
+                               (GTK_APPLICATION (g_application_get_default ())));
+
+    view = CHIRURGIEN_ANALYZER_VIEW (gtk_notebook_get_nth_page (GTK_NOTEBOOK (window->notebook),
+                                     gtk_notebook_get_current_page (GTK_NOTEBOOK (window->notebook))));
+
+    embedded_file_size = chirurgien_analyzer_view_get_embedded_file (view, GPOINTER_TO_UINT (user_data), &embedded_file_contents);
+
+    original_file_name = g_path_get_basename (chirurgien_analyzer_view_get_file_path (view));
+
+    embedded_view = chirurgien_analyzer_view_new (window);
+    embedded_file_name = chirurgien_analyzer_view_prepare_analysis_embedded (embedded_view, embedded_file_contents,
+                                                                             embedded_file_size, original_file_name);
+
+    label = gtk_label_new (embedded_file_name);
+    gtk_widget_set_tooltip_text (label, embedded_file_name);
+
+    button = gtk_button_new_from_icon_name ("window-close-symbolic", GTK_ICON_SIZE_BUTTON);
+    g_signal_connect (button, "button-release-event", G_CALLBACK (close_tab), embedded_view);
+
+    context = gtk_widget_get_style_context (button);
+    gtk_style_context_add_class (context, GTK_STYLE_CLASS_FLAT);
+
+    widget = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 5);
+    gtk_box_pack_start (GTK_BOX (widget), label, FALSE, FALSE, 0);
+    gtk_box_pack_end (GTK_BOX (widget), button, FALSE, FALSE, 0);
+
+    gtk_widget_show_all (widget);
+    gtk_widget_show_all (GTK_WIDGET (embedded_view));
+
+    long_operation_window (window, TRUE);
+    chirurgien_analyzer_view_execute_analysis (embedded_view);
+
+    notebook_index = gtk_notebook_append_page (GTK_NOTEBOOK (window->notebook), GTK_WIDGET (embedded_view), widget);
     gtk_notebook_set_current_page (GTK_NOTEBOOK (window->notebook), notebook_index);
 }
 
