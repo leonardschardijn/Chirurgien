@@ -1,5 +1,10 @@
 Changelog
 
+v0.3 - 2021-01-03
+------------------------
+- Added TIFF analyzer
+- Added JPEG APP1 (Exif) marker
+
 v0.2 - 2020-12-24
 ------------------------
 - Added JPEG analyzer
