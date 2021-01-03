@@ -18,14 +18,15 @@
 
 #include <config.h>
 
-#include <arpa/inet.h>
 #include <glib/gi18n.h>
 
 #include "png-analyzer.h"
 
 
 gboolean
-analyze_gama_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts)
+analyze_gama_chunk (AnalyzerFile *file,
+                    gsize chunk_length,
+                    guint *chunk_counts)
 {
     AnalyzerTab tab;
 
@@ -54,7 +55,7 @@ analyze_gama_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts)
 
     analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 4, _("Image gamma"));
 
-    gamma = ntohl (gamma);
+    gamma = g_ntohl (gamma);
     description_message = g_strdup_printf ("%u", gamma);
     analyzer_utils_describe_tab (&tab, _("Gamma"), description_message);
     g_free (description_message);

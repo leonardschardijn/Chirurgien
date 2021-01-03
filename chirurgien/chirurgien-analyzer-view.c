@@ -63,6 +63,7 @@ chirurgien_analyzer_view_dispose (GObject *object)
     g_slist_free (view->embedded_files);
     view->file_contents = NULL;
     view->file_path = NULL;
+    view->embedded_files = NULL;
 
     G_OBJECT_CLASS (chirurgien_analyzer_view_parent_class)->dispose (object);
 }

@@ -18,14 +18,15 @@
 
 #include <config.h>
 
-#include <arpa/inet.h>
 #include <glib/gi18n.h>
 
 #include "png-analyzer.h"
 
 
 gboolean
-analyze_bkgd_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts,
+analyze_bkgd_chunk (AnalyzerFile *file,
+                    gsize chunk_length,
+                    guint *chunk_counts,
                     guint8 colortype)
 {
     AnalyzerTab tab;
@@ -61,7 +62,7 @@ analyze_bkgd_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts,
         chunk_used += 2;
         analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 2, _("Grayscale background"));
 
-        color = ntohs (color);
+        color = g_ntohs (color);
         description_message = g_strdup_printf ("%u", color);
         analyzer_utils_describe_tab (&tab, _("Grayscale background"), description_message);
         g_free (description_message);
@@ -73,7 +74,7 @@ analyze_bkgd_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts,
 
         analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 2, _("Background red sample"));
 
-        color = ntohs (color);
+        color = g_ntohs (color);
         description_message = g_strdup_printf ("%u", color);
         analyzer_utils_describe_tab (&tab, _("Background red sample"), description_message);
         g_free (description_message);
@@ -83,7 +84,7 @@ analyze_bkgd_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts,
 
         analyzer_utils_tag (file, CHUNK_DATA_COLOR_2, 2, _("Background green sample"));
 
-        color = ntohs (color);
+        color = g_ntohs (color);
         description_message = g_strdup_printf ("%u", color);
         analyzer_utils_describe_tab (&tab, _("Background green sample"), description_message);
         g_free (description_message);
@@ -93,7 +94,7 @@ analyze_bkgd_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts,
 
         analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 2, _("Background blue sample"));
 
-        color = ntohs (color);
+        color = g_ntohs (color);
         description_message = g_strdup_printf ("%u", color);
         analyzer_utils_describe_tab (&tab, _("Background blue sample"), description_message);
         g_free (description_message);

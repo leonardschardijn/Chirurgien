@@ -37,6 +37,7 @@ G_BEGIN_DECLS
 enum {
     SOI,
     APP0,
+    APP1,
     APP2,
     DQT,
     DHT,
@@ -67,6 +68,10 @@ extern gchar *marker_names[MARKER_TYPES];
 
 /* jpeg-app0-marker.c */
 gboolean     analyze_app0_marker      (AnalyzerFile *,
+                                       guint *);
+
+/* jpeg-app1-marker.c */
+gboolean     analyze_app1_marker      (AnalyzerFile *,
                                        guint *);
 
 /* jpeg-app2-marker.c */

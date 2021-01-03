@@ -18,14 +18,15 @@
 
 #include <config.h>
 
-#include <arpa/inet.h>
 #include <glib/gi18n.h>
 
 #include "jpeg-analyzer.h"
 
 
 gboolean
-analyze_sofn_marker (AnalyzerFile *file, guint *marker_counts, gint sof_marker)
+analyze_sofn_marker (AnalyzerFile *file,
+                     guint *marker_counts,
+                     gint sof_marker)
 {
     gchar *description_message;
 
@@ -39,7 +40,7 @@ analyze_sofn_marker (AnalyzerFile *file, guint *marker_counts, gint sof_marker)
     if (!analyzer_utils_read (&data_length, file , 2))
         goto END_ERROR;
 
-    data_length = ntohs (data_length);
+    data_length = g_ntohs (data_length);
     analyzer_utils_tag (file, MARKER_LENGTH_COLOR, 2, _("Data length"));
 
     if (marker_counts[sof_marker])
@@ -67,7 +68,7 @@ analyze_sofn_marker (AnalyzerFile *file, guint *marker_counts, gint sof_marker)
 
     analyzer_utils_tag (file, MARKER_DATA_COLOR_2, 2, _("Image height"));
 
-    two_bytes = ntohs (two_bytes);
+    two_bytes = g_ntohs (two_bytes);
     description_message = g_strdup_printf ("%hu", two_bytes);
     analyzer_utils_describe_tooltip (file, _("Image height"), description_message,
                                      _("Minimum value: 0 (DNL marker defines height)\n"
@@ -81,7 +82,7 @@ analyze_sofn_marker (AnalyzerFile *file, guint *marker_counts, gint sof_marker)
     analyzer_utils_create_tag (file, MARKER_DATA_COLOR_1, TRUE, 2,
                                _("Image width"), NULL);
 
-    two_bytes = ntohs (two_bytes);
+    two_bytes = g_ntohs (two_bytes);
     description_message = g_strdup_printf ("%hu", two_bytes);
     analyzer_utils_describe_tooltip (file, _("Image width"), description_message,
                                      _("Minimum value: 1\n"

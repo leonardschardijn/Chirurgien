@@ -80,6 +80,11 @@ chirurgien_analyzer_info_dialog_init (ChirurgienAnalyzerInfoDialog *dialog)
     widget = GTK_WIDGET (gtk_builder_get_object (builder, "png-tab"));
     gtk_stack_add_titled (dialog->stack, widget, "PNG", "PNG");
     g_object_unref (builder);
+
+    builder = gtk_builder_new_from_resource ("/io/github/leonardschardijn/chirurgien/analyzer-info/tiff-tab.ui");
+    widget = GTK_WIDGET (gtk_builder_get_object (builder, "tiff-tab"));
+    gtk_stack_add_titled (dialog->stack, widget, "TIFF", "TIFF");
+    g_object_unref (builder);
 }
 
 GtkWidget *

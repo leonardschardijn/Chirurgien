@@ -1,4 +1,4 @@
-/* chirurgien-analyze-jpeg.h
+/* chirurgien-analyze-tiff.h
  *
  * Copyright (C) 2020 - Daniel Léonard Schardijn
  *
@@ -24,7 +24,7 @@
 G_BEGIN_DECLS
 
 
-void chirurgien_analyze_jpeg (AnalyzerFile *);
+void chirurgien_analyze_tiff (AnalyzerFile *);
 
 
 G_END_DECLS

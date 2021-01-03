@@ -21,7 +21,6 @@
 #include "jpeg-analyzer.h"
 
 #include <string.h>
-#include <arpa/inet.h>
 #include <glib/gi18n.h>
 
 #include "chirurgien-analyze-jpeg.h"
@@ -30,6 +29,7 @@
 gchar *marker_names[MARKER_TYPES] = {
     "SOI",
     "APP0",
+    "APP1",
     "APP2",
     "DQT",
     "DHT",
@@ -61,6 +61,7 @@ chirurgien_analyze_jpeg (AnalyzerFile *file)
     {
         { 0xFF,0xD8 }, // SOI
         { 0xFF,0xE0 }, // APP0
+        { 0xFF,0xE1 }, // APP1
         { 0xFF,0xE2 }, // APP2
         { 0xFF,0xDB }, // DQT
         { 0xFF,0xC4 }, // DHT
@@ -124,6 +125,13 @@ chirurgien_analyze_jpeg (AnalyzerFile *file)
             analyzer_utils_tag_navigation (file, MARKER_TYPE_COLOR, 2, _("Marker type: APP0"), marker_names[APP0]);
 
             if (!analyze_app0_marker (file, marker_counts))
+                break;
+        }
+        else if (!memcmp (marker_type, marker_types[APP1], 2))
+        {
+            analyzer_utils_tag_navigation (file, MARKER_TYPE_COLOR, 2, _("Marker type: APP1"), marker_names[APP1]);
+
+            if (!analyze_app1_marker (file, marker_counts))
                 break;
         }
         else if (!memcmp (marker_type, marker_types[APP2], 2))
@@ -329,7 +337,7 @@ chirurgien_analyze_jpeg (AnalyzerFile *file)
             }
             analyzer_utils_tag_error (file, ERROR_COLOR_1, 2, _("Unknown marker data length"));
 
-            unrecognized_data = ntohs (unrecognized_data);
+            unrecognized_data = g_ntohs (unrecognized_data);
             if (unrecognized_data > 2)
             {
                 analyzer_utils_tag_error (file, ERROR_COLOR_1, unrecognized_data - 2, _("Unrecognized data"));

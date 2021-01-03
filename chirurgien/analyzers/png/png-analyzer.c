@@ -21,7 +21,6 @@
 #include "png-analyzer.h"
 
 #include <string.h>
-#include <arpa/inet.h>
 #include <glib/gi18n.h>
 
 #include "chirurgien-analyze-png.h"
@@ -91,7 +90,7 @@ chirurgien_analyze_png (AnalyzerFile *file)
             analyzer_utils_tag_error (file, ERROR_COLOR_1, -1, _("Unrecognized data"));
             break;
         }
-        four_bytes = ntohl (four_bytes);
+        four_bytes = g_ntohl (four_bytes);
         analyzer_utils_tag (file, CHUNK_LENGTH_COLOR, 4, _("Chunk length"));
 
         /* Chunk type */

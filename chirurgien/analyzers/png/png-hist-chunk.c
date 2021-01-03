@@ -18,14 +18,15 @@
 
 #include <config.h>
 
-#include <arpa/inet.h>
 #include <glib/gi18n.h>
 
 #include "png-analyzer.h"
 
 
 gboolean
-analyze_hist_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts,
+analyze_hist_chunk (AnalyzerFile *file,
+                    gsize chunk_length,
+                    guint *chunk_counts,
                     guint palette_entries)
 {
     AnalyzerTab tab;
@@ -69,7 +70,7 @@ analyze_hist_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts,
         else
             analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 2, _("Palette entry frequency"));
 
-        frequency = ntohs (frequency);
+        frequency = g_ntohs (frequency);
         description_message1 = g_strdup_printf (_("Entry %u"), i);
         description_message2 = g_strdup_printf ("%u", frequency);
         analyzer_utils_describe_tab (&tab, description_message1, description_message2);

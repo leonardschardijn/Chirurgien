@@ -18,14 +18,14 @@
 
 #include <config.h>
 
-#include <arpa/inet.h>
 #include <glib/gi18n.h>
 
 #include "jpeg-analyzer.h"
 
 
 gboolean
-analyze_app0_marker (AnalyzerFile *file, guint *marker_counts)
+analyze_app0_marker (AnalyzerFile *file,
+                     guint *marker_counts)
 {
     const guchar jfif_identifier[] = { 0x4A,0x46,0x49,0x46,0x00 }; // JFIF\0
     const guchar jfxx_identifier[] = { 0x4A,0x46,0x58,0x58,0x00 }; // JFXX\0
@@ -49,7 +49,7 @@ analyze_app0_marker (AnalyzerFile *file, guint *marker_counts)
     if (!analyzer_utils_read (&data_length, file , 2))
         goto END_ERROR;
 
-    data_length = ntohs (data_length);
+    data_length = g_ntohs (data_length);
     analyzer_utils_tag (file, MARKER_LENGTH_COLOR, 2, _("Data length"));
 
     /* Identifier */
@@ -117,7 +117,7 @@ analyze_app0_marker (AnalyzerFile *file, guint *marker_counts)
 
         analyzer_utils_tag (file, MARKER_DATA_COLOR_1, 2, _("Xdensity"));
 
-        two_bytes = ntohs (two_bytes);
+        two_bytes = g_ntohs (two_bytes);
         description_message = g_strdup_printf ("%u", two_bytes);
         analyzer_utils_describe_tooltip (file, _("Xdensity"), description_message,
                                          _("Must not be zero"));
@@ -129,7 +129,7 @@ analyze_app0_marker (AnalyzerFile *file, guint *marker_counts)
 
         analyzer_utils_tag (file, MARKER_DATA_COLOR_2, 2, _("Ydensity"));
 
-        two_bytes = ntohs (two_bytes);
+        two_bytes = g_ntohs (two_bytes);
         description_message = g_strdup_printf ("%u", two_bytes);
         analyzer_utils_describe_tooltip (file, _("Ydensity"), description_message,
                                          _("Must not be zero"));
@@ -322,12 +322,15 @@ analyze_app0_marker (AnalyzerFile *file, guint *marker_counts)
         analyzer_utils_insert_tab (file, &tab, "JFXX");
     }
 
+    if (!data_used)
+        data_used = 2;
+
     if (data_used < data_length)
     {
         data_length -= data_used;
         analyzer_utils_tag_error (file, ERROR_COLOR_1, data_length, _("Unrecognized data"));
 
-        ADVANCE_POINTER (file, data_length);
+        ADVANCE_POINTER (file, data_length - 5);
     }
 
     return TRUE;

@@ -24,7 +24,10 @@
 
 
 gboolean
-analyze_sbit_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts, guint8 colortype)
+analyze_sbit_chunk (AnalyzerFile *file,
+                    gsize chunk_length,
+                    guint *chunk_counts,
+                    guint8 colortype)
 {
     AnalyzerTab tab;
 

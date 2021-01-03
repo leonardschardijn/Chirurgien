@@ -23,18 +23,23 @@
 
 #include "jpeg/chirurgien-analyze-jpeg.h"
 #include "png/chirurgien-analyze-png.h"
+#include "tiff/chirurgien-analyze-tiff.h"
 
 
 void
 chirurgien_analyzer_analyze (AnalyzerFile *file)
 {
-    const guchar jpeg_jfif_magic_number[] = { 0xFF,0xD8 };
+    const guchar jpeg_magic_number[] = { 0xFF,0xD8 };
     const guchar png_magic_number[] = { 0x89,0x50,0x4E,0x47,0x0D,0x0A,0x1A,0x0A };
+    const guchar tiff_magic_number1[] = { 0x49,0x49,0x2A,0x00 };
+    const guchar tiff_magic_number2[] = { 0x4D,0x4D,0x00,0x2A };
 
-    if (!memcmp (file->file_contents, jpeg_jfif_magic_number, 2))
+    if (!memcmp (file->file_contents, jpeg_magic_number, 2))
         chirurgien_analyze_jpeg (file);
     else if (!memcmp (file->file_contents, png_magic_number, 8))
         chirurgien_analyze_png (file);
+    else if (!memcmp (file->file_contents, tiff_magic_number1, 4) || !memcmp (file->file_contents, tiff_magic_number2, 4))
+        chirurgien_analyze_tiff (file);
     else
         analyzer_utils_set_subtitle (file, "<b>Unrecognized file format</b>");
 }

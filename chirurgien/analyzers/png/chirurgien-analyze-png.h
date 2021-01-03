@@ -24,7 +24,7 @@
 G_BEGIN_DECLS
 
 
-void chirurgien_analyze_png (AnalyzerFile *file);
+void chirurgien_analyze_png (AnalyzerFile *);
 
 
 G_END_DECLS

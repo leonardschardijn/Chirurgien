@@ -24,7 +24,9 @@
 
 
 gboolean
-analyze_srgb_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts)
+analyze_srgb_chunk (AnalyzerFile *file,
+                    gsize chunk_length,
+                    guint *chunk_counts)
 {
     AnalyzerTab tab;
 

@@ -41,7 +41,9 @@ GdkRGBA colors[] =
     /* #FF0000 */
     { 1.0, 0.0, 0.0, 1.0 },
     /* #E84FDB */
-    { 0.909, 0.309, 0.858, 1.0 }
+    { 0.909, 0.309, 0.858, 1.0 },
+    /* #0C67B6 */
+    { 0.047, 0.403, 0.713, 1.0 }
 };
 
 /*
@@ -79,8 +81,13 @@ analyzer_utils_create_tag (AnalyzerFile *file,
 
     gsize hex_buffer_count;
 
+    hex_buffer_count = file->hex_buffer_index / 3;
+
+    if (hex_buffer_count >= file->file_size)
+        return;
+
     if (count == -1)
-        count = file->file_size - (file->hex_buffer_index / 3);
+        count = file->file_size - hex_buffer_count;
 
     if (set_background)
     {
@@ -149,7 +156,7 @@ analyzer_utils_create_tag_index (AnalyzerFile *file,
         hex_tag = gtk_text_buffer_create_tag (file->hex_buffer, NULL, "foreground-rgba", color, NULL);
         text_tag = gtk_text_buffer_create_tag (file->text_buffer, NULL, "foreground-rgba", color, NULL);
     }
-    
+
     g_signal_connect (hex_tag, "event", G_CALLBACK (handle_tag_events), tooltip);
     g_signal_connect (text_tag, "event", G_CALLBACK (handle_tag_events), tooltip);
 
@@ -213,6 +220,31 @@ analyzer_utils_add_description (AnalyzerFile *file,
         gtk_grid_attach (GTK_GRID (file->file_description), label1, 0, file->description_lines_count++, 1, 1);
         gtk_grid_attach_next_to (GTK_GRID (file->file_description), label2, label1, GTK_POS_RIGHT, 1, 1);
     }
+}
+
+/*
+ * Insert a notice at the start of the main Overview tab
+ */
+void
+analyzer_utils_insert_notice (AnalyzerFile *file,
+                              gchar *notice,
+                              guint margin_top,
+                              guint margin_bottom)
+{
+    GtkWidget *label;
+
+    label = gtk_label_new (NULL);
+    gtk_label_set_markup (GTK_LABEL (label), notice);
+    gtk_label_set_line_wrap (GTK_LABEL (label), TRUE);
+    gtk_widget_set_halign (label, GTK_ALIGN_CENTER);
+    gtk_widget_set_margin_top (label, margin_top);
+    gtk_widget_set_margin_bottom (label, margin_bottom);
+    gtk_widget_show (label);
+
+    gtk_grid_insert_row (GTK_GRID (file->file_description), 0);
+    file->description_lines_count++;
+
+    gtk_grid_attach (GTK_GRID (file->file_description), label, 0, 0, 2, 1);
 }
 
 /*
@@ -461,13 +493,15 @@ analyzer_utils_read (void *buffer,
                      AnalyzerFile *file,
                      gsize count)
 {
+    gboolean success = TRUE;
+
     if ((file->file_contents_index + count) <= file->file_size)
         memmove (buffer, file->file_contents + file->file_contents_index, count);
     else
-        return FALSE;
+        success = FALSE;
 
     file->file_contents_index += count;
 
-    return TRUE;
+    return success;
 }
 

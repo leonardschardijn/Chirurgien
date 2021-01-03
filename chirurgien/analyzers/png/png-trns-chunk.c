@@ -18,15 +18,17 @@
 
 #include <config.h>
 
-#include <arpa/inet.h>
 #include <glib/gi18n.h>
 
 #include "png-analyzer.h"
 
 
 gboolean
-analyze_trns_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts,
-                    guint8 colortype, guint palette_entries)
+analyze_trns_chunk (AnalyzerFile *file,
+                    gsize chunk_length,
+                    guint *chunk_counts,
+                    guint8 colortype,
+                    guint palette_entries)
 {
     AnalyzerTab tab;
 
@@ -61,7 +63,7 @@ analyze_trns_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts,
         chunk_used += 2;
         analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 2, _("Grayscale alpha channel"));
 
-        alpha = ntohs (alpha);
+        alpha = g_ntohs (alpha);
         description_message = g_strdup_printf (_("%u bits"), alpha);
         analyzer_utils_describe_tab (&tab, _("Grayscale alpha channel"), description_message);
         g_free (description_message);
@@ -73,7 +75,7 @@ analyze_trns_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts,
 
         analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 2, _("Red alpha channel"));
 
-        alpha = ntohs (alpha);
+        alpha = g_ntohs (alpha);
         description_message = g_strdup_printf (_("%u bits"), alpha);
         analyzer_utils_describe_tab (&tab, _("Red alpha channel"), description_message);
         g_free (description_message);
@@ -83,7 +85,7 @@ analyze_trns_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts,
 
         analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 2, _("Green alpha channel"));
 
-        alpha = ntohs (alpha);
+        alpha = g_ntohs (alpha);
         description_message = g_strdup_printf (_("%u bits"), alpha);
         analyzer_utils_describe_tab (&tab, _("Green alpha channel"), description_message);
         g_free (description_message);
@@ -93,7 +95,7 @@ analyze_trns_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts,
 
         analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 2, _("Blue alpha channel"));
 
-        alpha = ntohs (alpha);
+        alpha = g_ntohs (alpha);
         description_message = g_strdup_printf (_("%u bits"), alpha);
         analyzer_utils_describe_tab (&tab, _("Blue alpha channel"), description_message);
         g_free (description_message);

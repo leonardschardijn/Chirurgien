@@ -162,7 +162,7 @@ chirurgien_actions_about (__attribute__((unused)) GSimpleAction *action,
                     "program-name", "Chirurgien",
                     "authors", authors,
                     "comments", _("Chirurgien is a simple tool that helps to understand file formats"),
-                    "copyright", "Copyright 2020 – Daniel Léonard Schardijn",
+                    "copyright", "Copyright 2020-2021 – Daniel Léonard Schardijn",
                     "license-type", GTK_LICENSE_GPL_3_0,
                     "logo-icon-name", "io.github.leonardschardijn.Chirurgien",
                     "version", VERSION,
@@ -295,8 +295,8 @@ chirurgien_actions_next_tab (__attribute__((unused)) GSimpleAction *action,
 
 void
 chirurgien_actions_previous_tab (__attribute__((unused)) GSimpleAction *action,
-                             __attribute__((unused)) GVariant *parameter,
-                             gpointer user_data)
+                                 __attribute__((unused)) GVariant *parameter,
+                                 gpointer user_data)
 {
     ChirurgienWindow *window;
     gint page;

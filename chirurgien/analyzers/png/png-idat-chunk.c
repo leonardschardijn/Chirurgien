@@ -236,7 +236,7 @@ analyze_idat_chunk (AnalyzerFile *file,
                                                  _("Size of the compressed data"));
                 g_free (description_message);
 
-                description_message = g_strdup_printf ("%.2f", (double) inflate_size / deflate_size);
+                description_message = g_strdup_printf ("%.2f", (gfloat) inflate_size / deflate_size);
                 analyzer_utils_describe (file, _("Compression ratio"), description_message);
                 g_free (description_message);
 

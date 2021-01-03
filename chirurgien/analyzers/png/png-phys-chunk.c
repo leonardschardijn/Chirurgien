@@ -18,14 +18,15 @@
 
 #include <config.h>
 
-#include <arpa/inet.h>
 #include <glib/gi18n.h>
 
 #include "png-analyzer.h"
 
 
 gboolean
-analyze_phys_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts)
+analyze_phys_chunk (AnalyzerFile *file,
+                    gsize chunk_length,
+                    guint *chunk_counts)
 {
     AnalyzerTab tab;
 
@@ -55,7 +56,7 @@ analyze_phys_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts)
 
     analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 4, _("X axis (pixels per unit)"));
 
-    axis = ntohl (axis);
+    axis = g_ntohl (axis);
     description_message = g_strdup_printf ("%u", axis);
     analyzer_utils_describe_tab (&tab, _("X axis"), description_message);
     g_free (description_message);
@@ -65,7 +66,7 @@ analyze_phys_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts)
 
     analyzer_utils_tag (file, CHUNK_DATA_COLOR_2, 4, _("Y axis (pixels per unit)"));
 
-    axis = ntohl (axis);
+    axis = g_ntohl (axis);
     description_message = g_strdup_printf ("%u", axis);
     analyzer_utils_describe_tab (&tab, _("Y axis"), description_message);
     g_free (description_message);

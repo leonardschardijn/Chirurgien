@@ -53,3 +53,15 @@ chirurgien/analyzers/png/png-phys-chunk.c
 chirurgien/analyzers/png/png-splt-chunk.c
 chirurgien/analyzers/png/png-time-chunk.c
 
+# TIFF analyzer strings
+chirurgien/analyzers/tiff/tiff-analyzer.c
+chirurgien/analyzers/tiff/exif-analyzer.c
+chirurgien/analyzers/tiff/exif-gpsinfo-analyzer.c
+chirurgien/analyzers/tiff/tiff-ascii-tag.c
+chirurgien/analyzers/tiff/tiff-short-tag.c
+chirurgien/analyzers/tiff/tiff-shortlong-tag.c
+chirurgien/analyzers/tiff/tiff-long-tag.c
+chirurgien/analyzers/tiff/tiff-rational-tag.c
+chirurgien/analyzers/tiff/tiff-undefined-tag.c
+chirurgien/analyzers/tiff/tiff-byte-tag.c
+

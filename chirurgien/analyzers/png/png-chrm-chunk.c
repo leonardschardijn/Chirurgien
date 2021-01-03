@@ -18,14 +18,15 @@
 
 #include <config.h>
 
-#include <arpa/inet.h>
 #include <glib/gi18n.h>
 
 #include "png-analyzer.h"
 
 
 gboolean
-analyze_chrm_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts)
+analyze_chrm_chunk (AnalyzerFile *file,
+                    gsize chunk_length,
+                    guint *chunk_counts)
 {
     AnalyzerTab tab;
 
@@ -34,14 +35,14 @@ analyze_chrm_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts)
     guint32 chromaticity;
 
     gchar *chromaticities[] = {
-        _("White point x chromaticity"),
-        _("White point y chromaticity"),
-        _("Red x chromaticity"),
-        _("Red y chromaticity"),
-        _("Green x chromaticity"),
-        _("Green y chromaticity"),
-        _("Blue x chromaticity"),
-        _("Blue y chromaticity")
+        _("White point x"),
+        _("White point y"),
+        _("Red x"),
+        _("Red y"),
+        _("Green x"),
+        _("Green y"),
+        _("Blue x"),
+        _("Blue y")
     };
 
     guint i;
@@ -72,7 +73,7 @@ analyze_chrm_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts)
         else
             analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 4, chromaticities[i]);
 
-        chromaticity = ntohl (chromaticity);
+        chromaticity = g_ntohl (chromaticity);
         description_message = g_strdup_printf ("%u", chromaticity);
         analyzer_utils_describe_tab (&tab, chromaticities[i], description_message);
         g_free (description_message);

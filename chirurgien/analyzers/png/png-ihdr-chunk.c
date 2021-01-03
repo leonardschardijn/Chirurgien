@@ -18,14 +18,16 @@
 
 #include <config.h>
 
-#include <arpa/inet.h>
 #include <glib/gi18n.h>
 
 #include "png-analyzer.h"
 
 
 gboolean
-analyze_ihdr_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts, guint8 *colortype)
+analyze_ihdr_chunk (AnalyzerFile *file,
+                    gsize chunk_length,
+                    guint *chunk_counts,
+                    guint8 *colortype)
 {
     const guint8 bitdepths_for_colortype_0[5] = { 1, 2, 4, 8, 16 };
     const guint8 bitdepths_for_colortype_2_4_6[2] = { 8, 16 };
@@ -52,7 +54,7 @@ analyze_ihdr_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts,
 
     analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 4, _("Image width"));
 
-    four_bytes = ntohl (four_bytes);
+    four_bytes = g_ntohl (four_bytes);
     description_message = g_strdup_printf ("%u", four_bytes);
     analyzer_utils_describe_tooltip (file, _("Image width"), description_message,
                                      _("Minimum value: 1\n"
@@ -65,7 +67,7 @@ analyze_ihdr_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts,
 
     analyzer_utils_tag (file, CHUNK_DATA_COLOR_2, 4, _("Image height"));
 
-    four_bytes = ntohl (four_bytes);
+    four_bytes = g_ntohl (four_bytes);
     description_message = g_strdup_printf ("%u", four_bytes);
     analyzer_utils_describe_tooltip (file, _("Image height"), description_message,
                                      _("Minimum value: 1\n"
@@ -198,7 +200,7 @@ analyze_ihdr_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts,
 
     END_INTERLACE:
     analyzer_utils_describe_tooltip (file, _("Interlace method"), description_message,
-                                     _("Interlace methods\n"
+                                     _("Interlace method\n"
                                      "<tt>00<sub>16</sub></tt>\tNo interlace\n"
                                      "<tt>01<sub>16</sub></tt>\tAdam7 interlace"));
 

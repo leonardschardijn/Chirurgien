@@ -18,14 +18,15 @@
 
 #include <config.h>
 
-#include <arpa/inet.h>
 #include <glib/gi18n.h>
 
 #include "png-analyzer.h"
 
 
 gboolean
-analyze_time_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts)
+analyze_time_chunk (AnalyzerFile *file,
+                    gsize chunk_length,
+                    guint *chunk_counts)
 {
     AnalyzerTab tab;
 
@@ -65,7 +66,7 @@ analyze_time_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts)
 
     analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 2, _("Year"));
 
-    year = ntohs (year);
+    year = g_ntohs (year);
     description_message = g_strdup_printf ("%u", year);
     analyzer_utils_describe_tab (&tab, _("Year"), description_message);
     g_free (description_message);

@@ -24,7 +24,10 @@
 
 
 gboolean
-analyze_plte_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts, guint *palette_entries)
+analyze_plte_chunk (AnalyzerFile *file,
+                    gsize chunk_length,
+                    guint *chunk_counts,
+                    guint *palette_entries)
 {
     guint i;
 

@@ -18,14 +18,14 @@
 
 #include <config.h>
 
-#include <arpa/inet.h>
 #include <glib/gi18n.h>
 
 #include "jpeg-analyzer.h"
 
 
 gboolean
-analyze_dnl_marker (AnalyzerFile *file, guint *marker_counts)
+analyze_dnl_marker (AnalyzerFile *file,
+                    guint *marker_counts)
 {
     AnalyzerTab tab;
 
@@ -44,7 +44,7 @@ analyze_dnl_marker (AnalyzerFile *file, guint *marker_counts)
     if (!analyzer_utils_read (&data_length, file , 2))
         goto END_ERROR;
 
-    data_length = ntohs (data_length);
+    data_length = g_ntohs (data_length);
     analyzer_utils_tag (file, MARKER_LENGTH_COLOR, 2, _("Data length"));
 
     /* Number of lines */
@@ -53,7 +53,7 @@ analyze_dnl_marker (AnalyzerFile *file, guint *marker_counts)
 
     analyzer_utils_tag (file, MARKER_DATA_COLOR_1, 2, _("Number of lines"));
 
-    lines = ntohs (lines);
+    lines = g_ntohs (lines);
     description_message = g_strdup_printf ("%hu", lines);
     analyzer_utils_describe_tab (&tab, _("Number of lines"), description_message);
     g_free (description_message);

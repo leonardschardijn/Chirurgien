@@ -1,4 +1,4 @@
-/* chirurgien-analyze-jpeg.h
+/* exif-gpsinfo-analyzer.h
  *
  * Copyright (C) 2020 - Daniel Léonard Schardijn
  *
@@ -18,13 +18,21 @@
 
 #pragma once
 
-#include <gtk/gtk.h>
-#include <chirurgien-analyzer-file.h>
+#include "tiff-analyzer.h"
 
 G_BEGIN_DECLS
 
+enum {
+    GPSVersionID,
+    GPSLatitudeRef,
+    EXIF_GPSINFO_TAGS
+};
 
-void chirurgien_analyze_jpeg (AnalyzerFile *);
 
+void         analyze_gpsversionid_tag                (AnalyzerFile *,
+                                                      AnalyzerTab *,
+                                                      guint16,
+                                                      guint32,
+                                                      guint32);
 
 G_END_DECLS

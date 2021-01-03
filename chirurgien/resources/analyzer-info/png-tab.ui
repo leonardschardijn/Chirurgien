@@ -4,6 +4,7 @@
   <object class="GtkGrid" id="png-tab">
     <property name="visible">True</property>
     <property name="column-spacing">30</property>
+    <property name="halign">GTK_ALIGN_CENTER</property>
     <child>
       <object class="GtkLabel">
         <property name="visible">True</property>

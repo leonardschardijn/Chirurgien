@@ -8,6 +8,7 @@ chirurgien_sources += [
 chirurgien_sources += [
   'analyzers/jpeg/jpeg-analyzer.c',
   'analyzers/jpeg/jpeg-app0-marker.c',
+  'analyzers/jpeg/jpeg-app1-marker.c',
   'analyzers/jpeg/jpeg-app2-marker.c',
   'analyzers/jpeg/jpeg-dqt-marker.c',
   'analyzers/jpeg/jpeg-dht-marker.c',
@@ -39,5 +40,18 @@ chirurgien_sources += [
   'analyzers/png/png-splt-chunk.c',
   'analyzers/png/png-time-chunk.c',
   'analyzers/png/puff.c'
+]
+
+chirurgien_sources += [
+  'analyzers/tiff/tiff-analyzer.c',
+  'analyzers/tiff/exif-analyzer.c',
+  'analyzers/tiff/exif-gpsinfo-analyzer.c',
+  'analyzers/tiff/tiff-byte-tag.c',
+  'analyzers/tiff/tiff-ascii-tag.c',
+  'analyzers/tiff/tiff-short-tag.c',
+  'analyzers/tiff/tiff-shortlong-tag.c',
+  'analyzers/tiff/tiff-long-tag.c',
+  'analyzers/tiff/tiff-rational-tag.c',
+  'analyzers/tiff/tiff-undefined-tag.c'
 ]
 

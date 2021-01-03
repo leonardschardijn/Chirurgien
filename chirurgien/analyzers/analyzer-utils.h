@@ -108,6 +108,22 @@ typedef struct
 /* Additional macros */
 
 /*
+ * Get file size
+ */
+#define GET_FILE_SZIE(file) file->file_size
+
+/*
+ * Get contents pointer
+ */
+#define GET_POINTER(file) file->file_contents_index
+
+/*
+ * Sets the contents pointer and the hex/text color tags pointer
+ */
+#define SET_POINTER(file, count) file->file_contents_index = count;\
+                                 file->hex_buffer_index = (count) * 3
+
+/*
  * Advance contents pointer, useful when the data is of no interest as a substitute of analyzer_utils_read
  */
 #define ADVANCE_POINTER(file, count) file->file_contents_index += count
@@ -116,7 +132,7 @@ typedef struct
  * Skip data, advances the contents pointer and the hex/text color tags pointer
  */
 #define SKIP_DATA(file, count) file->file_contents_index += count;\
-                               file->hex_buffer_index += count * 3
+                               file->hex_buffer_index += (count) * 3
 
 /*
  * If the file has data
@@ -128,7 +144,7 @@ typedef struct
  */
 #define FILE_HAS_DATA_N(file, count) (file->file_contents_index + chunk_length) <= file->file_size
 
-extern GdkRGBA colors[8];
+extern GdkRGBA colors[9];
 
 void       analyzer_utils_create_tag             (AnalyzerFile *,
                                                   GdkRGBA *,
@@ -146,6 +162,10 @@ void       analyzer_utils_create_tag_index       (AnalyzerFile *,
 void       analyzer_utils_add_description        (AnalyzerFile *,
                                                   gchar *,
                                                   gchar *,
+                                                  gchar *,
+                                                  guint,
+                                                  guint);
+void       analyzer_utils_insert_notice          (AnalyzerFile *,
                                                   gchar *,
                                                   guint,
                                                   guint);

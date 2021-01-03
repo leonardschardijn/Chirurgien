@@ -18,14 +18,14 @@
 
 #include <config.h>
 
-#include <arpa/inet.h>
 #include <glib/gi18n.h>
 
 #include "jpeg-analyzer.h"
 
 
 gboolean
-analyze_app2_marker (AnalyzerFile *file, guint *marker_counts)
+analyze_app2_marker (AnalyzerFile *file,
+                     guint *marker_counts)
 {
     const guchar icc_profile_identifier[] = { 0x49,0x43,0x43,0x5F,0x50,0x52,0x4F,0x46,0x49,0x4C,0x45,0x00 }; // ICC_PROFILE\0
 
@@ -40,7 +40,7 @@ analyze_app2_marker (AnalyzerFile *file, guint *marker_counts)
     if (!analyzer_utils_read (&data_length, file , 2))
         goto END_ERROR;
 
-    data_length = ntohs (data_length);
+    data_length = g_ntohs (data_length);
     analyzer_utils_tag (file, MARKER_LENGTH_COLOR, 2, _("Data length"));
 
     /* Identifier */

@@ -25,7 +25,9 @@
 
 
 gboolean
-analyze_ztxt_chunk (AnalyzerFile *file, gsize chunk_length, guint *chunk_counts)
+analyze_ztxt_chunk (AnalyzerFile *file,
+                    gsize chunk_length,
+                    guint *chunk_counts)
 {
     AnalyzerTab tab;
 

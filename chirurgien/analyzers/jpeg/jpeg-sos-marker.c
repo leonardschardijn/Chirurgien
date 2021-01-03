@@ -18,14 +18,14 @@
 
 #include <config.h>
 
-#include <arpa/inet.h>
 #include <glib/gi18n.h>
 
 #include "jpeg-analyzer.h"
 
 
 gboolean
-analyze_sos_marker (AnalyzerFile *file, guint *marker_counts)
+analyze_sos_marker (AnalyzerFile *file,
+                    guint *marker_counts)
 {
     AnalyzerTab tab;
 
@@ -48,7 +48,7 @@ analyze_sos_marker (AnalyzerFile *file, guint *marker_counts)
     if (!analyzer_utils_read (&data_length, file , 2))
         goto END_ERROR;
 
-    data_length = ntohs (data_length);
+    data_length = g_ntohs (data_length);
     analyzer_utils_tag (file, MARKER_LENGTH_COLOR, 2, _("Data length"));
 
     /* Number of components in scan */
