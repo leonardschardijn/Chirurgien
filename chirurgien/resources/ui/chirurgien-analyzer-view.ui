@@ -28,7 +28,7 @@
             </child>
             <child>
               <object class="GtkScrolledWindow">
-                <property name="width-request">100</property>
+                <property name="hscrollbar-policy">GTK_POLICY_NEVER</property>
                 <child>
                   <object class="GtkViewport">
                     <child>
@@ -80,7 +80,7 @@
             </child>
             <child>
               <object class="GtkScrolledWindow">
-                <property name="width-request">100</property>
+                <property name="hscrollbar-policy">GTK_POLICY_NEVER</property>
                 <child>
                   <object class="GtkViewport">
                     <child>

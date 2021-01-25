@@ -20,6 +20,11 @@ chirurgien/resources/analyzer-info/intro-tab.ui
 chirurgien/resources/analyzer-info/jpeg-tab.ui
 chirurgien/resources/analyzer-info/png-tab.ui
 
+# ELF analyzer strings
+chirurgien/analyzers/elf/elf-analyzer.c
+chirurgien/analyzers/elf/elf-program-header.c
+chirurgien/analyzers/elf/elf-section-header.c
+
 # JPEG analyzer strings
 chirurgien/analyzers/jpeg/jpeg-analyzer.c
 chirurgien/analyzers/jpeg/jpeg-app0-marker.c

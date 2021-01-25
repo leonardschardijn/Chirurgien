@@ -6,6 +6,12 @@ chirurgien_sources += [
 ]
 
 chirurgien_sources += [
+  'analyzers/elf/elf-analyzer.c',
+  'analyzers/elf/elf-program-header.c',
+  'analyzers/elf/elf-section-header.c'
+]
+
+chirurgien_sources += [
   'analyzers/jpeg/jpeg-analyzer.c',
   'analyzers/jpeg/jpeg-app0-marker.c',
   'analyzers/jpeg/jpeg-app1-marker.c',

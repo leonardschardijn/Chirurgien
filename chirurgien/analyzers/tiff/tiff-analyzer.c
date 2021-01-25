@@ -25,18 +25,6 @@
 #include "chirurgien-analyze-tiff.h"
 
 
-static gint
-tagged_bytes_compare (gconstpointer a,
-                      gconstpointer b)
-{
-    if (a < b)
-        return -1;
-    else if (a > b)
-        return 1;
-    else
-        return 0;
-}
-
 void
 chirurgien_analyze_tiff (AnalyzerFile *file)
 {
@@ -520,7 +508,7 @@ chirurgien_analyze_tiff (AnalyzerFile *file)
 
     /* Add the tagged area boundaries: 8 (as the initial 8 bytes are already tagged) and file size */
     tagged_bytes = g_slist_append (tagged_bytes, GUINT_TO_POINTER (8));
-    tagged_bytes = g_slist_append (tagged_bytes, GUINT_TO_POINTER (GET_FILE_SZIE (file)));
+    tagged_bytes = g_slist_append (tagged_bytes, GUINT_TO_POINTER (GET_FILE_SIZE (file)));
 
     /* Sort the tagged area file indices */
     tagged_bytes = g_slist_sort (tagged_bytes, tagged_bytes_compare);
@@ -530,7 +518,7 @@ chirurgien_analyze_tiff (AnalyzerFile *file)
     index = index->next->next)
     {
         /* Malformed file: offset/file index exceeds file size */
-        if (GPOINTER_TO_UINT (index->data) > GET_FILE_SZIE (file))
+        if (GPOINTER_TO_UINT (index->data) > GET_FILE_SIZE (file))
             break;
 
         /* All pairs must have the same file index */

@@ -505,3 +505,17 @@ analyzer_utils_read (void *buffer,
     return success;
 }
 
+/*
+ * Order tagged area indices
+ */
+gint
+tagged_bytes_compare (gconstpointer a,
+                      gconstpointer b)
+{
+    if (a < b)
+        return -1;
+    else if (a > b)
+        return 1;
+    else
+        return 0;
+}

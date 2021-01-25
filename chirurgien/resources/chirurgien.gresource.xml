@@ -13,6 +13,7 @@
 
     <!-- Analyzer information tabs -->
     <file preprocess="xml-stripblanks">analyzer-info/intro-tab.ui</file>
+    <file preprocess="xml-stripblanks">analyzer-info/elf-tab.ui</file>
     <file preprocess="xml-stripblanks">analyzer-info/jpeg-tab.ui</file>
     <file preprocess="xml-stripblanks">analyzer-info/png-tab.ui</file>
     <file preprocess="xml-stripblanks">analyzer-info/tiff-tab.ui</file>

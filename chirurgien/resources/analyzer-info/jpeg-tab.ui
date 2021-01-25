@@ -4,7 +4,7 @@
   <object class="GtkGrid" id="jpeg-tab">
     <property name="visible">True</property>
     <property name="column-spacing">30</property>
-    <property name="halign">GTK_ALIGN_CENTER</property>
+    <property name="halign">GTK_ALIGN_FILL</property>
     <child>
       <object class="GtkLabel">
         <property name="visible">True</property>
@@ -312,17 +312,25 @@
       </packing>
     </child>
     <child>
-      <object class="GtkTextView">
+      <object class="GtkScrolledWindow">
         <property name="visible">True</property>
-        <property name="left-margin">10</property>
-        <property name="right-margin">10</property>
-        <property name="top-margin">7</property>
-        <property name="bottom-margin">7</property>
-        <property name="sensitive">False</property>
-        <property name="editable">False</property>
-        <property name="cursor-visible">False</property>
-        <property name="halign">GTK_ALIGN_START</property>
-        <property name="buffer">jpeg-does</property>
+        <property name="expand">True</property>
+        <property name="hscrollbar-policy">GTK_POLICY_NEVER</property>
+        <child>
+          <object class="GtkTextView">
+            <property name="visible">True</property>
+            <property name="left-margin">10</property>
+            <property name="right-margin">10</property>
+            <property name="top-margin">7</property>
+            <property name="bottom-margin">7</property>
+            <property name="sensitive">False</property>
+            <property name="editable">False</property>
+            <property name="cursor-visible">False</property>
+            <property name="halign">GTK_ALIGN_FILL</property>
+            <property name="wrap-mode">GTK_WRAP_WORD</property>
+            <property name="buffer">jpeg-does</property>
+          </object>
+        </child>
       </object>
       <packing>
         <property name="left-attach">0</property>
@@ -348,17 +356,25 @@
       </packing>
     </child>
     <child>
-     <object class="GtkTextView">
+      <object class="GtkScrolledWindow">
         <property name="visible">True</property>
-        <property name="left-margin">10</property>
-        <property name="right-margin">10</property>
-        <property name="top-margin">7</property>
-        <property name="bottom-margin">7</property>
-        <property name="sensitive">False</property>
-        <property name="editable">False</property>
-        <property name="cursor-visible">False</property>
-        <property name="halign">GTK_ALIGN_START</property>
-        <property name="buffer">jpeg-does-not</property>
+        <property name="expand">True</property>
+        <property name="hscrollbar-policy">GTK_POLICY_NEVER</property>
+        <child>
+          <object class="GtkTextView">
+            <property name="visible">True</property>
+            <property name="left-margin">10</property>
+            <property name="right-margin">10</property>
+            <property name="top-margin">7</property>
+            <property name="bottom-margin">7</property>
+            <property name="sensitive">False</property>
+            <property name="editable">False</property>
+            <property name="cursor-visible">False</property>
+            <property name="halign">GTK_ALIGN_FILL</property>
+            <property name="wrap-mode">GTK_WRAP_WORD</property>
+            <property name="buffer">jpeg-does-not</property>
+          </object>
+        </child>
       </object>
       <packing>
         <property name="left-attach">1</property>
@@ -371,19 +387,15 @@
   <object class="GtkTextBuffer" id="jpeg-does">
     <property name="text" translatable="yes">
 <![CDATA[Recognize the following marker types:
-  SOI, APP0 (JFIF/JFXX), APP1 (Exif),
-  APP2 (ICC_PROFILE), DQT, DHT, DAC,
-  SOFn, DRI, SOS, DNL, COM, EOI
+SOI, APP0 (JFIF/JFXX), APP1 (Exif), APP2 (ICC_PROFILE), DQT, DHT, DAC, SOFn, DRI, SOS, DNL, COM, EOI
 Identify the EOI marker as end of file
-Assume that the COM segment is encoded using UTF-8
-(this will not be the case in many cases)]]>
+Assume that the COM segment is encoded using UTF-8 (this will not be the case in many cases)]]>
     </property>
   </object>
   <object class="GtkTextBuffer" id="jpeg-does-not">
     <property name="text" translatable="yes">
 <![CDATA[Recognize the APP1 (XMP) marker or any other
-Verify that APP0 (or APP1) is the first segment,
-or if one is even defined]]>
+Verify that APP0 (or APP1) is the first segment, or if one is even defined]]>
     </property>
   </object>
 </interface>

@@ -194,7 +194,7 @@ chirurgien_actions_open (__attribute__((unused)) GSimpleAction *action,
 
     window = CHIRURGIEN_WINDOW (user_data);
 
-    dialog = gtk_file_chooser_native_new (_("Analyze file"), GTK_WINDOW (window),
+    dialog = gtk_file_chooser_native_new (_("Analyze file (max. file size: 10MiB)"), GTK_WINDOW (window),
                                           GTK_FILE_CHOOSER_ACTION_OPEN,
                                           NULL, NULL);
 
@@ -341,8 +341,8 @@ chirurgien_actions_analyze_file (ChirurgienWindow *window,
 
     GError *error = NULL;
 
-    file_info = g_file_query_info (file, G_FILE_ATTRIBUTE_STANDARD_DISPLAY_NAME","G_FILE_ATTRIBUTE_STANDARD_SIZE,
-                                   G_FILE_QUERY_INFO_NONE, NULL, &error);
+    file_info = g_file_query_info (file, G_FILE_ATTRIBUTE_STANDARD_DISPLAY_NAME","G_FILE_ATTRIBUTE_STANDARD_SIZE
+                                   ","G_FILE_ATTRIBUTE_ACCESS_CAN_READ, G_FILE_QUERY_INFO_NONE, NULL, &error);
     /* The file was probably deleted */
     if (file_info == NULL)
     {
@@ -357,6 +357,15 @@ chirurgien_actions_analyze_file (ChirurgienWindow *window,
     {
         widget = gtk_message_dialog_new (GTK_WINDOW (window), GTK_DIALOG_MODAL, GTK_MESSAGE_INFO,
                                          GTK_BUTTONS_CLOSE, _("The selected file is empty."));
+        gtk_dialog_run (GTK_DIALOG (widget));
+        gtk_widget_destroy (widget);
+        return;
+    }
+    /* The file cannot be read */
+    if (!g_file_info_get_attribute_boolean (file_info, G_FILE_ATTRIBUTE_ACCESS_CAN_READ))
+    {
+        widget = gtk_message_dialog_new (GTK_WINDOW (window), GTK_DIALOG_MODAL, GTK_MESSAGE_INFO,
+                                         GTK_BUTTONS_CLOSE, _("The selected file cannot be read."));
         gtk_dialog_run (GTK_DIALOG (widget));
         gtk_widget_destroy (widget);
         return;

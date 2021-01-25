@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
   <!-- interface-requires gtk+ 3.0 -->
-  <object class="GtkGrid" id="tiff-tab">
+  <object class="GtkGrid" id="elf-tab">
     <property name="visible">True</property>
     <property name="column-spacing">30</property>
     <property name="halign">GTK_ALIGN_FILL</property>
     <child>
       <object class="GtkLabel">
         <property name="visible">True</property>
-        <property name="label">Tag Image File Format</property>
+        <property name="label">Executable and Linkable Format</property>
         <property name="margin-bottom">10</property>
         <attributes>
           <attribute name="weight" value="PANGO_WEIGHT_BOLD"/>
@@ -71,7 +71,7 @@
             <object class="GtkLabel">
               <property name="visible">True</property>
               <property name="halign">GTK_ALIGN_START</property>
-              <property name="label" translatable="yes">IFD offset, entries and end</property>
+              <property name="label" translatable="yes">ELF file signature</property>
               <property name="margin-bottom">2</property>
             </object>
             <packing>
@@ -112,7 +112,7 @@
             <object class="GtkLabel">
               <property name="visible">True</property>
               <property name="halign">GTK_ALIGN_START</property>
-              <property name="label" translatable="yes">Tag field type</property>
+              <property name="label" translatable="yes">Segment type</property>
               <property name="margin-bottom">2</property>
             </object>
             <packing>
@@ -153,7 +153,7 @@
             <object class="GtkLabel">
               <property name="visible">True</property>
               <property name="halign">GTK_ALIGN_START</property>
-              <property name="label" translatable="yes">Endianness and tag identifier</property>
+              <property name="label" translatable="yes">Section name</property>
               <property name="margin-bottom">2</property>
             </object>
             <packing>
@@ -175,10 +175,11 @@
                   <property name="margin-right">3</property>
                   <property name="margin-top">3</property>
                   <property name="margin-bottom">3</property>
-                  <property name="label">        </property>
+                  <property name="label">                </property>
                   <property name="opacity">0.7</property>
                   <attributes>
-                    <attribute name="background" value="#1CAF08"/>
+                    <attribute name="background" value="#1CAF08" end="8"/>
+                    <attribute name="background" value="#1C6E11" start="8"/>
                   </attributes>
                 </object>
               </child>
@@ -194,52 +195,11 @@
             <object class="GtkLabel">
               <property name="visible">True</property>
               <property name="halign">GTK_ALIGN_START</property>
-              <property name="label" translatable="yes">Tag value/offset and tag data at offset</property>
+              <property name="label" translatable="yes">Header fields and section contents</property>
               <property name="margin-bottom">2</property>
             </object>
             <packing>
               <property name="left-attach">1</property>
-              <property name="top-attach">1</property>
-              <property name="height">1</property>
-              <property name="width">1</property>
-            </packing>
-          </child>
-          <child>
-            <object class="GtkFrame">
-              <property name="visible">True</property>
-              <property name="halign">GTK_ALIGN_END</property>
-              <property name="margin-bottom">2</property>
-              <child>
-                <object class="GtkLabel">
-                  <property name="visible">True</property>
-                  <property name="margin-left">3</property>
-                  <property name="margin-right">3</property>
-                  <property name="margin-top">3</property>
-                  <property name="margin-bottom">3</property>
-                  <property name="label">        </property>
-                  <property name="opacity">0.7</property>
-                  <attributes>
-                    <attribute name="background" value="#1C6E11"/>
-                  </attributes>
-                </object>
-              </child>
-            </object>
-            <packing>
-              <property name="left-attach">2</property>
-              <property name="top-attach">1</property>
-              <property name="height">1</property>
-              <property name="width">1</property>
-            </packing>
-          </child>
-          <child>
-            <object class="GtkLabel">
-              <property name="visible">True</property>
-              <property name="halign">GTK_ALIGN_START</property>
-              <property name="label" translatable="yes">Start of tag offset data</property>
-              <property name="margin-bottom">2</property>
-            </object>
-            <packing>
-              <property name="left-attach">3</property>
               <property name="top-attach">1</property>
               <property name="height">1</property>
               <property name="width">1</property>
@@ -266,7 +226,7 @@
               </child>
             </object>
             <packing>
-              <property name="left-attach">4</property>
+              <property name="left-attach">2</property>
               <property name="top-attach">1</property>
               <property name="height">1</property>
               <property name="width">1</property>
@@ -276,11 +236,11 @@
             <object class="GtkLabel">
               <property name="visible">True</property>
               <property name="halign">GTK_ALIGN_START</property>
-              <property name="label" translatable="yes">Tag count (length)</property>
+              <property name="label" translatable="yes">Start of section contents</property>
               <property name="margin-bottom">2</property>
             </object>
             <packing>
-              <property name="left-attach">5</property>
+              <property name="left-attach">3</property>
               <property name="top-attach">1</property>
               <property name="height">1</property>
               <property name="width">1</property>
@@ -298,17 +258,16 @@
                   <property name="margin-right">3</property>
                   <property name="margin-top">3</property>
                   <property name="margin-bottom">3</property>
-                  <property name="label">### ###</property>
+                  <property name="label">###</property>
                   <attributes>
-                    <attribute name="foreground" value="#FF0000" end="3"/>
-                    <attribute name="foreground" value="#E84FDB" start="3"/>
+                    <attribute name="foreground" value="#FF0000"/>
                   </attributes>
                 </object>
               </child>
             </object>
             <packing>
-              <property name="left-attach">0</property>
-              <property name="top-attach">2</property>
+              <property name="left-attach">4</property>
+              <property name="top-attach">1</property>
               <property name="height">1</property>
               <property name="width">1</property>
             </packing>
@@ -321,8 +280,8 @@
               <property name="margin-bottom">2</property>
             </object>
             <packing>
-              <property name="left-attach">1</property>
-              <property name="top-attach">2</property>
+              <property name="left-attach">5</property>
+              <property name="top-attach">1</property>
               <property name="height">1</property>
               <property name="width">1</property>
             </packing>
@@ -347,7 +306,7 @@
               </child>
             </object>
             <packing>
-              <property name="left-attach">2</property>
+              <property name="left-attach">0</property>
               <property name="top-attach">2</property>
               <property name="height">1</property>
               <property name="width">1</property>
@@ -361,7 +320,7 @@
               <property name="margin-bottom">2</property>
             </object>
             <packing>
-              <property name="left-attach">3</property>
+              <property name="left-attach">1</property>
               <property name="top-attach">2</property>
               <property name="height">1</property>
               <property name="width">1</property>
@@ -375,12 +334,12 @@
         <property name="width">2</property>
       </packing>
     </child>
-    <!-- What the TIFF analyzer does do -->
+    <!-- What the ELF analyzer does do -->
     <child>
       <object class="GtkLabel">
         <property name="visible">True</property>
         <property name="halign">GTK_ALIGN_START</property>
-        <property name="label" translatable="yes"><![CDATA[The TIFF analyzer <span foreground="green">DOES</span>:]]></property>
+        <property name="label" translatable="yes"><![CDATA[The ELF analyzer <span foreground="green">DOES</span>:]]></property>
         <property name="use-markup">True</property>
         <property name="margin-bottom">10</property>
       </object>
@@ -408,7 +367,7 @@
             <property name="cursor-visible">False</property>
             <property name="halign">GTK_ALIGN_FILL</property>
             <property name="wrap-mode">GTK_WRAP_WORD</property>
-            <property name="buffer">tiff-does</property>
+            <property name="buffer">elf-does</property>
           </object>
         </child>
       </object>
@@ -419,12 +378,12 @@
         <property name="width">1</property>
       </packing>
     </child>
-    <!-- What the TIFF analyzer does not do -->
+    <!-- What the ELF analyzer does not do -->
     <child>
       <object class="GtkLabel">
         <property name="visible">True</property>
         <property name="halign">GTK_ALIGN_START</property>
-        <property name="label" translatable="yes"><![CDATA[The TIFF analyzer <span foreground="red">DOES NOT</span>:]]></property>
+        <property name="label" translatable="yes"><![CDATA[The ELF analyzer <span foreground="red">DOES NOT</span>:]]></property>
         <property name="use-markup">True</property>
         <property name="margin-bottom">10</property>
       </object>
@@ -452,7 +411,7 @@
             <property name="cursor-visible">False</property>
             <property name="halign">GTK_ALIGN_FILL</property>
             <property name="wrap-mode">GTK_WRAP_WORD</property>
-            <property name="buffer">tiff-does-not</property>
+            <property name="buffer">elf-does-not</property>
           </object>
         </child>
       </object>
@@ -464,20 +423,33 @@
       </packing>
     </child>
   </object>
-  <object class="GtkTextBuffer" id="tiff-does">
+  <object class="GtkTextBuffer" id="elf-does">
     <property name="text" translatable="yes">
-<![CDATA[Recognize the following tags (in hex):
-Standard TIFF: FE-103, 106-10A, 10D-112, 115-11F, 128, 129, 131, 132, 13B-13F, 201, 202, 211-214, 8298, 8769, 8825
-Exif-specific: 829A, 829D, 8822, 8824, 8827, 8830-8835, 9000, 9003, 9004, 9101, 9102, 9201-920A, 927C, 9286, 9290-9292, A000-A004, A210, A214, A215, A217, A300-A302, A401-A40A, A40C, A420, A430-A435, A500
-Exif GPSInfo-specific: 0, 1
-Treat the MakerNote and UserComment tags as ASCII tags, even though they are UNDEFINED]]>
+<![CDATA[Recognize standard object file types, segment types, segment flags, section types and section flags]]>
     </property>
   </object>
-  <object class="GtkTextBuffer" id="tiff-does-not">
+  <object class="GtkTextBuffer" id="elf-does-not">
     <property name="text" translatable="yes">
-<![CDATA[Recognize any other tag
-Verify that tags in an IFD are in ascending order
-Make any effort to interpret the MakerNote tag, of any manufacturer]]>
+<![CDATA[Interpret the ABI version field
+Recognize the section type SHT_SYMTAB_SHNDX
+Interpret the sh_info field of a section
+Have the logic to process ELF files with more than FF00 (65280) sections
+Recognize object file types in the reserved ranges:
+FE00-FEFF (OS-specific)
+FF00-FFFF (processor-specific)
+Recognize segment types in the reserved ranges:
+60000000-6FFFFFFF (OS-specific)
+70000000-7FFFFFFF (processor-specific)
+Recognize segment flags in the reserved bit masks:
+FF00000 (OS-specific)
+F0000000 (processor-specific)
+Recognize section types in the reserved ranges:
+60000000-6FFFFFFF (OS-specific)
+70000000-7FFFFFFF (processor-specific)
+80000000-FFFFFFFF (application-specific)
+Recognize section flags in the reserved bit masks:
+FF00000 (OS-specific)
+F0000000 (processor-specific)]]>
     </property>
   </object>
 </interface>

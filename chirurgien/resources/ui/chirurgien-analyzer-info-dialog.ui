@@ -4,6 +4,7 @@
     <property name="title" translatable="yes">Analyzers</property>
     <property name="type_hint">dialog</property>
     <property name="resizable">False</property>
+    <property name="height-request">600</property>
     <property name="modal">True</property>
     <child internal-child="vbox">
       <object class="GtkBox">

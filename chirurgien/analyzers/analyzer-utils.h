@@ -110,7 +110,7 @@ typedef struct
 /*
  * Get file size
  */
-#define GET_FILE_SZIE(file) file->file_size
+#define GET_FILE_SIZE(file) file->file_size
 
 /*
  * Get contents pointer
@@ -137,12 +137,12 @@ typedef struct
 /*
  * If the file has data
  */
-#define FILE_HAS_DATA(file) file->file_contents_index < file->file_size
+#define FILE_HAS_DATA(file) (file->file_contents_index < file->file_size)
 
 /*
- * If the file has 'count' bytes avaialable
+ * If the file has 'count' bytes available
  */
-#define FILE_HAS_DATA_N(file, count) (file->file_contents_index + chunk_length) <= file->file_size
+#define FILE_HAS_DATA_N(file, count) ((file->file_contents_index + count) <= file->file_size)
 
 extern GdkRGBA colors[9];
 
@@ -196,5 +196,8 @@ gboolean   analyzer_utils_read                   (void *,
                                                   AnalyzerFile *,
                                                   gsize);
 
-G_END_DECLS
+gint       tagged_bytes_compare                  (gconstpointer,
+                                                  gconstpointer);
 
+
+G_END_DECLS
