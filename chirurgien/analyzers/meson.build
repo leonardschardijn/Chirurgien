@@ -52,12 +52,10 @@ chirurgien_sources += [
   'analyzers/tiff/tiff-analyzer.c',
   'analyzers/tiff/exif-analyzer.c',
   'analyzers/tiff/exif-gpsinfo-analyzer.c',
-  'analyzers/tiff/tiff-byte-tag.c',
+  'analyzers/tiff/tiff-byte-undefined-tag.c',
   'analyzers/tiff/tiff-ascii-tag.c',
   'analyzers/tiff/tiff-short-tag.c',
-  'analyzers/tiff/tiff-shortlong-tag.c',
   'analyzers/tiff/tiff-long-tag.c',
-  'analyzers/tiff/tiff-rational-tag.c',
-  'analyzers/tiff/tiff-undefined-tag.c'
+  'analyzers/tiff/tiff-rational-tag.c'
 ]
 

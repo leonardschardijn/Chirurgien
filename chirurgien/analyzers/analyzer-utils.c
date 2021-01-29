@@ -493,16 +493,14 @@ analyzer_utils_read (void *buffer,
                      AnalyzerFile *file,
                      gsize count)
 {
-    gboolean success = TRUE;
-
     if ((file->file_contents_index + count) <= file->file_size)
         memmove (buffer, file->file_contents + file->file_contents_index, count);
     else
-        success = FALSE;
+        return FALSE;
 
     file->file_contents_index += count;
 
-    return success;
+    return TRUE;
 }
 
 /*

@@ -24,125 +24,77 @@
 
 
 void
-analyze_ascii_tag (AnalyzerFile *file,
+process_ascii_tag (AnalyzerFile *file,
+                   AnalyzerTab *tab,
+                   gchar *tag_name_tag,
+                   gchar *tag_name,
                    guint16 field_type,
                    guint32 count,
+                   guint32 expected_count,
                    guint32 value_offset,
                    gboolean is_little_endian,
-                   GSList **tagged_bytes,
-                   gint ascii_tag,
-                   AnalyzerTab *tab)
+                   GSList **tagged_bytes)
 {
-    gchar *ascii_tag_types[] = {
-        /* TIFF ASCII Tags */
-        _("Tag: DocumentName"),
-        _("Tag: ImageDescription"),
-        _("Tag: Make"),
-        _("Tag: Model"),
-        _("Tag: PageName"),
-        _("Tag: Software"),
-        _("Tag: DateTime"),
-        _("Tag: Artist"),
-        _("Tag: HostComputer"),
-        _("Tag: Copyright"),
-        /* Exif ASCII Tags */
-        _("Tag: SpectralSensitivity"),
-        _("Tag: DateTimeOriginal"),
-        _("Tag: DateTimeDigitized"),
-        _("Tag: SubSecTime"),
-        _("Tag: SubSecTimeOriginal"),
-        _("Tag: SubSecTimeDigitized"),
-        _("Tag: RelatedSoundFile"),
-        _("Tag: ImageUniqueID"),
-        _("Tag: CameraOwnerName"),
-        _("Tag: BodySerialNumber"),
-        _("Tag: LensMake"),
-        _("Tag: LensModel"),
-        _("Tag: LensSerialNumber"),
-        /* Exif ASCII Tags*/
-        _("Tag: GPSLatitudeRef")
-    };
-
-    gchar *ascii_tags[] = {
-        /* TIFF ASCII Tags */
-        "DocumentName",
-        "ImageDescription",
-        "Make",
-        "Model",
-        "PageName",
-        "Software",
-        "DateTime",
-        "Artist",
-        "HostComputer",
-        "Copyright",
-        /* Exif ASCII Tags */
-        "SpectralSensitivity",
-        "DateTimeOriginal",
-        "DateTimeDigitized",
-        "SubSecTime",
-        "SubSecTimeOriginal",
-        "SubSecTimeDigitized",
-        "RelatedSoundFile",
-        "ImageUniqueID",
-        "CameraOwnerName",
-        "BodySerialNumber",
-        "LensMake",
-        "LensModel",
-        "LensSerialNumber",
-        /* Exif GPSInfo ASCII Tags */
-        "GPSLatitudeRef"
-    };
-
-    gboolean read_success;
     gsize save_pointer;
-    g_autofree gchar *ascii_text;
+    gchar *ascii_text = NULL;
+    gboolean valid_ascii_tag = FALSE;
 
-    analyzer_utils_tag (file, TIFF_TAG_COLOR, 2, ascii_tag_types[ascii_tag]);
+    analyzer_utils_tag (file, TIFF_TAG_COLOR, 2, tag_name_tag);
 
-    if (field_type == 2) // ASCII
+    if (field_type == ASCII)
         analyzer_utils_tag (file, FIELD_TYPE_COLOR, 2, _("Field type: ASCII"));
     else
         analyzer_utils_tag_error (file, ERROR_COLOR_1, 2, _("Invalid field type"));
 
-    if (ascii_tag == ASCII_DateTime && count != 20)
+    if (expected_count && count != expected_count)
+        analyzer_utils_tag (file, COUNT_COLOR, 4, _("Invalid count"));
+    else
+        analyzer_utils_tag (file, COUNT_COLOR, 4, _("Count"));
+
+    if (count <= 4)
     {
-        analyzer_utils_tag_error (file, ERROR_COLOR_1, 4, _("Invalid count"));
-        goto END_COUNT;
-    }
-    analyzer_utils_tag (file, COUNT_COLOR, 4, _("Count"));
-
-    END_COUNT:
-    analyzer_utils_tag (file, VALUE_OFFSET_COLOR_1, 4, _("Tag offset"));
-
-    ascii_text = g_malloc (count);
-
-    if (!is_little_endian)
-        value_offset = g_ntohl (value_offset);
-
-    save_pointer = GET_POINTER (file);
-
-    SET_POINTER (file, value_offset);
-    *tagged_bytes = g_slist_append (*tagged_bytes, GUINT_TO_POINTER (GET_POINTER (file)));
-
-    read_success = analyzer_utils_read (ascii_text, file, count);
-    analyzer_utils_tag (file, VALUE_OFFSET_COLOR_1, count, ascii_tags[ascii_tag]);
-
-    *tagged_bytes = g_slist_append (*tagged_bytes, GUINT_TO_POINTER (GET_POINTER (file)));
-
-    SET_POINTER (file, value_offset);
-    analyzer_utils_tag (file, VALUE_OFFSET_COLOR_2, 1, ascii_tags[ascii_tag]);
-
-    SET_POINTER (file, save_pointer);
-
-    if (read_success)
-    {
-        if (ascii_text[count - 1] == '\0')
-            count--;
+        analyzer_utils_tag (file, VALUE_OFFSET_COLOR_1, 4, _("Tag value"));
+        ascii_text = (gchar *) &value_offset;
     }
     else
     {
-        count = 0;
+        analyzer_utils_tag (file, VALUE_OFFSET_COLOR_1, 4, _("Tag offset"));
+
+        if (!is_little_endian)
+            value_offset = g_ntohl (value_offset);
+
+        save_pointer = GET_POINTER (file);
+
+        SET_POINTER (file, value_offset);
+
+        if (FILE_HAS_DATA_N (file, count))
+        {
+            *tagged_bytes = g_slist_append (*tagged_bytes, GUINT_TO_POINTER (GET_POINTER (file)));
+            ascii_text = (gchar *) file->file_contents + value_offset;
+
+            analyzer_utils_tag (file, VALUE_OFFSET_COLOR_1, count, tag_name);
+
+            *tagged_bytes = g_slist_append (*tagged_bytes, GUINT_TO_POINTER (GET_POINTER (file) + count));
+
+            SET_POINTER (file, value_offset);
+            analyzer_utils_tag (file, VALUE_OFFSET_COLOR_2, 1, tag_name);
+        }
+
+        SET_POINTER (file, save_pointer);
     }
 
-    analyzer_utils_add_text_tab (tab, ascii_tags[ascii_tag], ascii_text, count);
+    if (ascii_text && count)
+    {
+        if (ascii_text[count - 1] == '\0')
+            count--;
+
+        if (g_utf8_validate (ascii_text, count, NULL))
+        {
+            analyzer_utils_add_text_tab (tab, tag_name, ascii_text, count);
+            valid_ascii_tag = TRUE;
+        }
+    }
+
+    if (!valid_ascii_tag)
+        analyzer_utils_add_text_tab (tab, tag_name, "", 0);
 }

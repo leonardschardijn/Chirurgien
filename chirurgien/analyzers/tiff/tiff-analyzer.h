@@ -85,284 +85,109 @@ enum {
     TIFF_TAGS
 };
 
-/* All recognized ASCII tags */
+/* Field types */
 enum {
-    /* TIFF ASCII Tags*/
-    ASCII_DocumentName,
-    ASCII_ImageDescription,
-    ASCII_Make,
-    ASCII_Model,
-    ASCII_PageName,
-    ASCII_Software,
-    ASCII_DateTime,
-    ASCII_Artist,
-    ASCII_HostComputer,
-    ASCII_Copyright,
-    /* Exif ASCII Tags*/
-    ASCII_SpectralSensitivity,
-    ASCII_DateTimeOriginal,
-    ASCII_DateTimeDigitized,
-    ASCII_SubSecTime,
-    ASCII_SubSecTimeOriginal,
-    ASCII_SubSecTimeDigitized,
-    ASCII_RelatedSoundFile,
-    ASCII_ImageUniqueID,
-    ASCII_CameraOwnerName,
-    ASCII_BodySerialNumber,
-    ASCII_LensMake,
-    ASCII_LensModel,
-    ASCII_LensSerialNumber,
-    /* Exif GPSInfo ASCII Tags */
-    ASCII_GPSLatitudeRef
+    BYTE = 1,
+    ASCII,
+    SHORT,
+    LONG,
+    RATIONAL,
+    SBYTE,
+    UNDEFINED,
+    SSHORT,
+    SLONG,
+    SRATIONAL,
+    FLOAT,
+    DOUBLE
 };
 
 
 /* tiff-ascii-tag.c */
-void         analyze_ascii_tag                       (AnalyzerFile *,
+void         process_ascii_tag                       (AnalyzerFile *,
+                                                      AnalyzerTab *,
+                                                      gchar *,
+                                                      gchar *,
                                                       guint16,
+                                                      guint32,
+                                                      guint32,
+                                                      guint32,
+                                                      gboolean,
+                                                      GSList **);
+
+/* tiff-short-tag.c */
+guint32      process_short_tag                       (AnalyzerFile *,
+                                                      AnalyzerTab *,
+                                                      gchar *,
+                                                      gchar *,
+                                                      gchar *,
+                                                      guint16,
+                                                      guint16,
+                                                      guint32,
+                                                      guint32,
+                                                      guint32,
+                                                      gboolean,
+                                                      guint,
+                                                      guint16 *,
+                                                      gchar **,
+                                                      GSList **,
+                                                      guint32 **);
+
+/* tiff-long-tag.c */
+guint32      process_long_tag                        (AnalyzerFile *,
+                                                      AnalyzerTab *,
+                                                      gchar *,
+                                                      gchar *,
+                                                      gchar *,
+                                                      guint16,
+                                                      guint16,
+                                                      guint32,
                                                       guint32,
                                                       guint32,
                                                       gboolean,
                                                       GSList **,
-                                                      gint,
-                                                      AnalyzerTab *);
-
-void         analyze_newsubfiletype_tag              (AnalyzerFile *,
-                                                      guint16,
-                                                      guint32,
-                                                      guint32,
-                                                      gboolean);
-
-void         analyze_subfiletype_tag                 (AnalyzerFile *,
-                                                      guint16,
-                                                      guint32,
-                                                      guint32,
-                                                      gboolean);
-
-void         analyze_imagewidth_tag                  (AnalyzerFile *,
-                                                      guint16,
-                                                      guint32,
-                                                      guint32,
-                                                      gboolean);
-
-void         analyze_imagelength_tag                 (AnalyzerFile *,
-                                                      guint16,
-                                                      guint32,
-                                                      guint32,
-                                                      gboolean);
-
-void         analyze_bitspersample_tag               (AnalyzerFile *,
-                                                      guint16,
-                                                      guint32,
-                                                      guint32,
-                                                      gboolean,
-                                                      GSList **);
-
-void         analyze_compression_tag                 (AnalyzerFile *,
-                                                      guint16,
-                                                      guint32,
-                                                      guint32,
-                                                      gboolean);
-
-void         analyze_photometricinterpretation_tag   (AnalyzerFile *,
-                                                      guint16,
-                                                      guint32,
-                                                      guint32,
-                                                      gboolean);
-
-void         analyze_threshholding_tag               (AnalyzerFile *,
-                                                      guint16,
-                                                      guint32,
-                                                      guint32,
-                                                      gboolean);
-
-void         analyze_cellwidth_tag                   (AnalyzerFile *,
-                                                      guint16,
-                                                      guint32,
-                                                      guint32,
-                                                      gboolean);
-
-void         analyze_celllength_tag                  (AnalyzerFile *,
-                                                      guint16,
-                                                      guint32,
-                                                      guint32,
-                                                      gboolean);
-
-void         analyze_fillorder_tag                   (AnalyzerFile *,
-                                                      guint16,
-                                                      guint32,
-                                                      guint32,
-                                                      gboolean);
-
-guint        analyze_stripoffsets_tag                (AnalyzerFile *,
-                                                      guint16,
-                                                      guint32,
-                                                      guint32,
-                                                      gboolean,
-                                                      guint32 **,
-                                                      GSList **);
-
-void         analyze_orientation_tag                 (AnalyzerFile *,
-                                                      guint16,
-                                                      guint32,
-                                                      guint32,
-                                                      gboolean);
-
-void         analyze_samplesperpixel_tag             (AnalyzerFile *,
-                                                      guint16,
-                                                      guint32,
-                                                      guint32,
-                                                      gboolean);
-
-void         analyze_rowsperstrip_tag                (AnalyzerFile *,
-                                                      guint16,
-                                                      guint32,
-                                                      guint32,
-                                                      gboolean);
-
-guint        analyze_stripbytecounts_tag             (AnalyzerFile *,
-                                                      guint16,
-                                                      guint32,
-                                                      guint32,
-                                                      gboolean,
-                                                      guint32 **,
-                                                      GSList **);
-
-void         analyze_minsamplevalue_tag              (AnalyzerFile *,
-                                                      guint16,
-                                                      guint32,
-                                                      guint32,
-                                                      gboolean);
-
-void         analyze_maxsamplevalue_tag              (AnalyzerFile *,
-                                                      guint16,
-                                                      guint32,
-                                                      guint32,
-                                                      gboolean);
-
-void         analyze_xresolution_tag                 (AnalyzerFile *,
-                                                      guint16,
-                                                      guint32,
-                                                      guint32,
-                                                      gboolean,
-                                                      GSList **);
-
-void         analyze_yresolution_tag                 (AnalyzerFile *,
-                                                      guint16,
-                                                      guint32,
-                                                      guint32,
-                                                      gboolean,
-                                                      GSList **);
-
-void         analyze_planarconfiguration_tag         (AnalyzerFile *,
-                                                      guint16,
-                                                      guint32,
-                                                      guint32,
-                                                      gboolean);
-
-void         analyze_xposition_tag                   (AnalyzerFile *,
-                                                      guint16,
-                                                      guint32,
-                                                      guint32,
-                                                      gboolean,
-                                                      GSList **);
-
-void         analyze_yposition_tag                   (AnalyzerFile *,
-                                                      guint16,
-                                                      guint32,
-                                                      guint32,
-                                                      gboolean,
-                                                      GSList **);
-
-void         analyze_resolutionunit_tag              (AnalyzerFile *,
-                                                      guint16,
-                                                      guint32,
-                                                      guint32,
-                                                      gboolean);
-
-void         analyze_pagenumber_tag                  (AnalyzerFile *,
-                                                      guint16,
-                                                      guint32,
-                                                      guint32,
-                                                      gboolean);
-
-void         analyze_predictor_tag                   (AnalyzerFile *,
-                                                      guint16,
-                                                      guint32,
-                                                      guint32,
-                                                      gboolean);
-
-void         analyze_whitepoint_tag                  (AnalyzerFile *,
-                                                      guint16,
-                                                      guint32,
-                                                      guint32,
-                                                      gboolean,
-                                                      GSList **);
-
-void         analyze_primarychromaticities_tag       (AnalyzerFile *,
-                                                      guint16,
-                                                      guint32,
-                                                      guint32,
-                                                      gboolean,
-                                                      GSList **);
-
-guint32      analyze_jpeginterchangeformat_tag       (AnalyzerFile *,
-                                                      guint16,
-                                                      guint32,
-                                                      guint32,
-                                                      gboolean);
-
-void         analyze_jpeginterchangeformatlength_tag (AnalyzerFile *,
-                                                      guint16,
-                                                      guint32,
-                                                      guint32,
-                                                      gboolean,
-                                                      GSList **,
-                                                      guint32,
-                                                      AnalyzerTab *);
-
-void         analyze_ycbcrcoefficients_tag           (AnalyzerFile *,
-                                                      guint16,
-                                                      guint32,
-                                                      guint32,
-                                                      gboolean,
-                                                      GSList **);
-
-void         analyze_ycbcrsubsampling_tag            (AnalyzerFile *,
-                                                      guint16,
-                                                      guint32,
-                                                      guint32,
-                                                      gboolean);
-
-void         analyze_ycbcrpositioning_tag            (AnalyzerFile *,
-                                                      guint16,
-                                                      guint32,
-                                                      guint32,
-                                                      gboolean);
-
-void         analyze_referenceblackwhite_tag         (AnalyzerFile *,
-                                                      guint16,
-                                                      guint32,
-                                                      guint32,
-                                                      gboolean,
-                                                      GSList **);
-
-void         analyze_exififd_tag                     (AnalyzerFile *,
+                                                      guint32 **);
+void         process_exififd_tag                     (AnalyzerFile *file,
+                                                      gchar *,
                                                       guint16,
                                                       guint32,
                                                       guint32,
                                                       gboolean,
                                                       GSList **,
                                                       AnalyzerTab *,
-                                                      AnalyzerTab *);
+                                                      AnalyzerTab *,
+                                                      gboolean);
 
-void         analyze_gpsinfoifd_tag                  (AnalyzerFile *,
+/* tiff-rational-tag.c */
+void         process_rational_tag                    (AnalyzerFile *,
+                                                      AnalyzerTab *,
+                                                      gchar *,
+                                                      gchar *,
+                                                      gchar *,
+                                                      gchar **,
+                                                      guint16,
                                                       guint16,
                                                       guint32,
                                                       guint32,
+                                                      guint32,
                                                       gboolean,
-                                                      GSList **,
+                                                      gchar *,
+                                                      GSList **);
+
+/* tiff-byte-undefined-tag.c */
+void         process_byte_undefined_tag              (AnalyzerFile *,
                                                       AnalyzerTab *,
-                                                      AnalyzerTab *);
+                                                      gchar *,
+                                                      gchar *,
+                                                      gchar *,
+                                                      guint16,
+                                                      guint16,
+                                                      guint32,
+                                                      guint32,
+                                                      guint32,
+                                                      gboolean,
+                                                      guint,
+                                                      guint8 *,
+                                                      gchar **,
+                                                      GSList **);
 
 G_END_DECLS

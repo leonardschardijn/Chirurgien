@@ -78,7 +78,8 @@ chirurgien_analyze_tiff (AnalyzerFile *file)
         0x8825  // GPSInfo IFD
     };
 
-    AnalyzerTab ascii_tab, exif_tab, exif_ascii_tab, exif_gpsinfo_tab, exif_gpsinfo_ascii_tab, jpeg_tab;
+    AnalyzerTab ascii_tab, exif_tab, exif_ascii_tab,
+                exif_gpsinfo_tab, exif_gpsinfo_ascii_tab, jpeg_tab;
 
     guint16 ifd_entries;
 
@@ -86,18 +87,16 @@ chirurgien_analyze_tiff (AnalyzerFile *file)
     guint32 count, value_offset;
 
     /* As many tags use offsets to point to their values, the tagged_bytes list
-     * keeps track of all color tagged bytes, this let's us find the stray bytes not referenced
+     * keeps track of all color tagged bytes, this let's us locate the stray bytes not referenced
      * by any tag */
     GSList *tagged_bytes = NULL, *index;
-
-    gsize save_pointer;
 
     guint strip_offsets_count = 0, strip_byte_counts_count = 0, i;
     g_autofree guint32 *strip_offsets = NULL;
     g_autofree guint32 *strip_byte_counts = NULL;
 
     guint unknown_tag_count = 0;
-    guint32 jpeg_offset;
+    guint32 jpeg_offset = 0, jpeg_length = 0;
 
     gboolean is_little_endian;
 
@@ -179,10 +178,7 @@ chirurgien_analyze_tiff (AnalyzerFile *file)
             if (!analyzer_utils_read (&count, file, 4))
                 goto END_ERROR_LOOP;
 
-            if (!is_little_endian)
-                count = g_ntohl (count);
-
-            if (count == 0)
+            if (!count)
             {
                 analyzer_utils_tag (file, IFD_COLOR, 4, _("IFD end"));
                 tagged_bytes = g_slist_append (tagged_bytes, GUINT_TO_POINTER (GET_POINTER (file)));
@@ -190,6 +186,9 @@ chirurgien_analyze_tiff (AnalyzerFile *file)
             }
             else
             {
+                if (!is_little_endian)
+                    count = g_ntohl (count);
+
                 analyzer_utils_tag (file, IFD_COLOR, 4, _("IFD offset"));
                 tagged_bytes = g_slist_append (tagged_bytes, GUINT_TO_POINTER (GET_POINTER (file)));
 
@@ -211,20 +210,21 @@ chirurgien_analyze_tiff (AnalyzerFile *file)
         /* TIFF tag */
         if (!analyzer_utils_read (&tiff_tag, file, 2))
             goto END_ERROR_LOOP;
-        if (!is_little_endian)
-            tiff_tag = g_ntohs (tiff_tag);
 
         /* Field type */
         if (!analyzer_utils_read (&field_type, file, 2))
             goto END_ERROR_LOOP;
-        if (!is_little_endian)
-            field_type = g_ntohs (field_type);
 
         /* Count */
         if (!analyzer_utils_read (&count, file, 4))
             goto END_ERROR_LOOP;
+
         if (!is_little_endian)
+        {
+            tiff_tag = g_ntohs (tiff_tag);
+            field_type = g_ntohs (field_type);
             count = g_ntohl (count);
+        }
 
         /* Tag value or offset */
         if (!analyzer_utils_read (&value_offset, file, 4))
@@ -233,202 +233,492 @@ chirurgien_analyze_tiff (AnalyzerFile *file)
         /* Analyze tag data */
         if (tiff_tag == tiff_tags[NewSubfileType])
         {
-            analyze_newsubfiletype_tag (file, field_type, count, value_offset, is_little_endian);
+            process_long_tag (file, NULL, _("Tag: NewSubfileType"), "NewSubfileType",
+                              NULL, field_type,
+                              LONG, count, 1, value_offset, is_little_endian,
+                              NULL, NULL);
         }
         else if (tiff_tag == tiff_tags[SubfileType])
         {
-            analyze_subfiletype_tag (file, field_type, count, value_offset, is_little_endian);
+            guint16 values[] = { 0x1, 0x2, 0x3 };
+            gchar *value_description[] = {
+                _("Full-resolution image data"),
+                _("Reduced-resolution image data"),
+                _("A single page of a multi-page image"),
+                _("<span foreground=\"red\">INVALID</span>")
+            };
+            process_short_tag (file, NULL, _("Tag: SubfileType"), "SubfileType",
+                   _("SubfileType\n"
+                     "<tt>00 01<sub>16</sub></tt>\tFull-resolution image data\n"
+                     "<tt>00 02<sub>16</sub></tt>\tReduced-resolution image data\n"
+                     "<tt>00 03<sub>16</sub></tt>\tA single page of a multi-page image"),
+                   field_type, SHORT, count, 1, value_offset, is_little_endian,
+                   sizeof (values) >> 1, values, value_description, NULL, NULL);
         }
         else if (tiff_tag == tiff_tags[ImageWidth])
         {
-            analyze_imagewidth_tag (file, field_type, count, value_offset, is_little_endian);
+            if (field_type == SHORT)
+                process_short_tag (file, NULL, _("Tag: ImageWidth"), "ImageWidth",
+                                   _("Number of columns in the image"), field_type,
+                                   SHORT, count, 1, value_offset, is_little_endian,
+                                   0, NULL, NULL, NULL, NULL);
+            else
+                process_long_tag (file, NULL, _("Tag: ImageWidth"), "ImageWidth",
+                                  _("Number of columns in the image"), field_type,
+                                  LONG, count, 1, value_offset, is_little_endian,
+                                  NULL, NULL);
         }
         else if (tiff_tag == tiff_tags[ImageLength])
         {
-            analyze_imagelength_tag (file, field_type, count, value_offset, is_little_endian);
+            if (field_type == SHORT)
+                process_short_tag (file, NULL, _("Tag: ImageLength"), "ImageLength",
+                                   _("Number of rows in the image"), field_type,
+                                   SHORT, count, 1, value_offset, is_little_endian,
+                                   0, NULL, NULL, NULL, NULL);
+            else
+                process_long_tag (file, NULL, _("Tag: ImageLength"), "ImageLength",
+                                  _("Number of rows in the image"), field_type,
+                                  LONG, count, 1, value_offset, is_little_endian,
+                                  NULL, NULL);
         }
         else if (tiff_tag == tiff_tags[BitsPerSample])
         {
-            analyze_bitspersample_tag (file, field_type, count, value_offset, is_little_endian, &tagged_bytes);
+            process_short_tag (file, NULL, _("Tag: BitsPerSample"), "BitsPerSample",
+                               _("Bit depth for each component"), field_type,
+                               SHORT, count, 0, value_offset, is_little_endian,
+                               0, NULL, NULL, &tagged_bytes, NULL);
         }
         else if (tiff_tag == tiff_tags[Compression])
         {
-            analyze_compression_tag (file, field_type, count, value_offset, is_little_endian);
+            guint16 values[] = { 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x8005 };
+            gchar *value_description[] = {
+                _("No compression"),
+                _("CCITT Group 3 1-Dimensional Modified Huffman RLE"),
+                _("CCITT T.4 bi-level encoding"),
+                _("CCITT T.6 bi-level encoding"),
+                _("Lempel-Ziv-Welch (LZW)"),
+                _("JPEG (TIFF 6.0 - obsolete)"),
+                _("JPEG"),
+                _("zlib-format DEFLATE"),
+                _("PackBits compression"),
+                _("<span foreground=\"red\">INVALID</span>")
+            };
+            process_short_tag (file, NULL, _("Tag: Compression"), "Compression",
+                   _("Compression\n"
+                     "<tt>00 01<sub>16</sub></tt>\tNo compression\n"
+                     "<tt>00 02<sub>16</sub></tt>\tCCITT Group 3 1-Dimensional Modified Huffman RLE\n"
+                     "<tt>00 03<sub>16</sub></tt>\tCCITT T.4 bi-level encoding\n"
+                     "<tt>00 04<sub>16</sub></tt>\tCCITT T.6 bi-level encoding\n"
+                     "<tt>00 05<sub>16</sub></tt>\tLempel-Ziv-Welch (LZW)\n"
+                     "<tt>00 06<sub>16</sub></tt>\tJPEG (TIFF 6.0 - obsolete)\n"
+                     "<tt>00 07<sub>16</sub></tt>\tJPEG\n"
+                     "<tt>00 08<sub>16</sub></tt>\tzlib-format DEFLATE\n"
+                     "<tt>80 05<sub>16</sub></tt>\tPackBits compression"),
+                   field_type, SHORT, count, 1, value_offset, is_little_endian,
+                   sizeof (values) >> 1, values, value_description, NULL, NULL);
         }
         else if (tiff_tag == tiff_tags[PhotometricInterpretation])
         {
-            analyze_photometricinterpretation_tag (file, field_type, count, value_offset, is_little_endian);
+            guint16 values[] = { 0x0, 0x1, 0x2, 0x3, 0x4 };
+            gchar *value_description[] = {
+                _("WhiteIsZero"),
+                _("BlackIsZero"),
+                _("RGB"),
+                _("Palette color"),
+                _("Transparency mask"),
+                _("<span foreground=\"red\">INVALID</span>")
+            };
+            process_short_tag (file, NULL, _("Tag: PhotometricInterpretation"), "PhotometricInterpretation",
+                   _("PhotometricInterpretation\n"
+                     "<tt>00 00<sub>16</sub></tt>\tWhiteIsZero\n"
+                     "<tt>00 01<sub>16</sub></tt>\tBlackIsZero\n"
+                     "<tt>00 02<sub>16</sub></tt>\tRGB\n"
+                     "<tt>00 03<sub>16</sub></tt>\tPalette color\n"
+                     "<tt>00 04<sub>16</sub></tt>\tTransparency mask"),
+                   field_type, SHORT, count, 1, value_offset, is_little_endian,
+                   sizeof (values) >> 1, values, value_description, NULL, NULL);
         }
         else if (tiff_tag == tiff_tags[Threshholding])
         {
-            analyze_threshholding_tag (file, field_type, count, value_offset, is_little_endian);
+            guint16 values[] = { 0x0, 0x1, 0x2, 0x3, 0x4 };
+            gchar *value_description[] = {
+                _("No dithering or halftoning has been applied to the image data"),
+                _("An ordered dither or halftone technique has been applied to the image data"),
+                _("A randomized process such as error diffusion has been applied to the image data"),
+                _("<span foreground=\"red\">INVALID</span>")
+            };
+            process_short_tag (file, NULL, _("Tag: Threshholding"), "Threshholding",
+                   _("Threshholding\n"
+                     "<tt>00 01<sub>16</sub></tt>\tNo dithering or halftoning has been applied to the image data\n"
+                     "<tt>00 02<sub>16</sub></tt>\tAn ordered dither or halftone technique has been applied to the image data\n"
+                     "<tt>00 03<sub>16</sub></tt>\tA randomized process such as error diffusion has been applied to the image data"),
+                   field_type, SHORT, count, 1, value_offset, is_little_endian,
+                   sizeof (values) >> 1, values, value_description, NULL, NULL);
         }
         else if (tiff_tag == tiff_tags[CellWidth])
         {
-            analyze_cellwidth_tag (file, field_type, count, value_offset, is_little_endian);
+            process_short_tag (file, NULL, _("Tag: CellWidth"), "CellWidth",
+                               _("The width of the dithering or halftoning matrix"), field_type,
+                               SHORT, count, 1, value_offset, is_little_endian,
+                               0, NULL, NULL, NULL, NULL);
         }
         else if (tiff_tag == tiff_tags[CellLength])
         {
-            analyze_celllength_tag (file, field_type, count, value_offset, is_little_endian);
+            process_short_tag (file, NULL, _("Tag: CellLength"), "CellLength",
+                               _("The length of the dithering or halftoning matrix"), field_type,
+                               SHORT, count, 1, value_offset, is_little_endian,
+                               0, NULL, NULL, NULL, NULL);
         }
         else if (tiff_tag == tiff_tags[FillOrder])
         {
-            analyze_fillorder_tag (file, field_type, count, value_offset, is_little_endian);
+            guint16 values[] = { 0x1, 0x2 };
+            gchar *value_description[] = {
+                _("Higher-order bits"),
+                _("Lower-order bits"),
+                _("<span foreground=\"red\">INVALID</span>")
+            };
+            process_short_tag (file, NULL, _("Tag: FillOrder"), "FillOrder",
+                   _("FillOrder\n"
+                     "<tt>00 01<sub>16</sub></tt>\tPixels with lower column values are stored in the higher-order bits of the byte\n"
+                     "<tt>00 02<sub>16</sub></tt>\tPixels with lower column values are stored in the lower-order bits of the byte"),
+                   field_type, SHORT, count, 1, value_offset, is_little_endian,
+                   sizeof (values) >> 1, values, value_description, NULL, NULL);
         }
         else if (tiff_tag == tiff_tags[DocumentName])
         {
-            analyze_ascii_tag (file, field_type, count, value_offset, is_little_endian,
-                               &tagged_bytes, ASCII_DocumentName, &ascii_tab);
+            process_ascii_tag (file, &ascii_tab, _("Tag: DocumentName"), "DocumentName", field_type,
+                               count, 0, value_offset, is_little_endian, &tagged_bytes);
         }
         else if (tiff_tag == tiff_tags[ImageDescription])
         {
-            analyze_ascii_tag (file, field_type, count, value_offset, is_little_endian,
-                   &tagged_bytes, ASCII_ImageDescription, &ascii_tab);
+            process_ascii_tag (file, &ascii_tab, _("Tag: ImageDescription"), "ImageDescription", field_type,
+                               count, 0, value_offset, is_little_endian, &tagged_bytes);
         }
         else if (tiff_tag == tiff_tags[Make])
         {
-            analyze_ascii_tag (file, field_type, count, value_offset, is_little_endian,
-                               &tagged_bytes, ASCII_Make, &ascii_tab);
+            process_ascii_tag (file, &ascii_tab, _("Tag: Make"), "Make", field_type,
+                               count, 0, value_offset, is_little_endian, &tagged_bytes);
         }
         else if (tiff_tag == tiff_tags[Model])
         {
-            analyze_ascii_tag (file, field_type, count, value_offset, is_little_endian,
-                               &tagged_bytes, ASCII_Model, &ascii_tab);
+            process_ascii_tag (file, &ascii_tab, _("Tag: Model"), "Model", field_type,
+                               count, 0, value_offset, is_little_endian, &tagged_bytes);
         }
         else if (tiff_tag == tiff_tags[StripOffsets])
         {
-            /* Number of strip offsets */
-            strip_offsets_count = analyze_stripoffsets_tag (file, field_type, count, value_offset, is_little_endian,
-                                  &strip_offsets, &tagged_bytes);
+            if (field_type == SHORT)
+                strip_offsets_count = process_short_tag (file, NULL, _("Tag: StripOffsets"), "StripOffsets",
+                                          NULL, field_type,
+                                          SHORT, count, 0, value_offset, is_little_endian,
+                                          0, NULL, NULL, &tagged_bytes, &strip_offsets);
+            else
+                strip_offsets_count = process_long_tag (file, NULL, _("Tag: StripOffsets"), "StripOffsets",
+                                          NULL, field_type,
+                                          LONG, count, 0, value_offset, is_little_endian,
+                                          &tagged_bytes, &strip_offsets);
         }
         else if (tiff_tag == tiff_tags[Orientation])
         {
-            analyze_orientation_tag (file, field_type, count, value_offset, is_little_endian);
+            guint16 values[] = { 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8 };
+            gchar *value_description[] = {
+                _("Top-left"),
+                _("Top-right"),
+                _("Bottom-right"),
+                _("Bottom-left"),
+                _("Left-top"),
+                _("Right-top"),
+                _("Right-bottom"),
+                _("Left-bottom"),
+                _("<span foreground=\"red\">INVALID</span>")
+            };
+            process_short_tag (file, NULL, _("Tag: Orientation"), "Orientation",
+                   _("Orientation\n"
+                     "<tt>00 01<sub>16</sub></tt>\tTop-left\n"
+                     "<tt>00 02<sub>16</sub></tt>\tTop-right\n"
+                     "<tt>00 03<sub>16</sub></tt>\tBottom-right\n"
+                     "<tt>00 04<sub>16</sub></tt>\tBottom-left\n"
+                     "<tt>00 05<sub>16</sub></tt>\tLeft-top\n"
+                     "<tt>00 06<sub>16</sub></tt>\tRight-top\n"
+                     "<tt>00 07<sub>16</sub></tt>\tRight-bottom\n"
+                     "<tt>00 08<sub>16</sub></tt>\tLeft-bottom"),
+                   field_type, SHORT, count, 1, value_offset, is_little_endian,
+                   sizeof (values) >> 1, values, value_description, NULL, NULL);
         }
         else if (tiff_tag == tiff_tags[SamplesPerPixel])
         {
-            analyze_samplesperpixel_tag (file, field_type, count, value_offset, is_little_endian);
+            process_short_tag (file, NULL, _("Tag: SamplesPerPixel"), "SamplesPerPixel",
+                               _("Number of components per pixel"), field_type,
+                               SHORT, count, 1, value_offset, is_little_endian,
+                               0, NULL, NULL, NULL, NULL);
         }
         else if (tiff_tag == tiff_tags[RowsPerStrip])
         {
-            analyze_rowsperstrip_tag (file, field_type, count, value_offset, is_little_endian);
+            if (field_type == SHORT)
+                process_short_tag (file, NULL, _("Tag: RowsPerStrip"), "RowsPerStrip",
+                                   _("Number of rows per strip"), field_type,
+                                   SHORT, count, 1, value_offset, is_little_endian,
+                                   0, NULL, NULL, NULL, NULL);
+            else
+                process_long_tag (file, NULL, _("Tag: RowsPerStrip"), "RowsPerStrip",
+                                  _("Number of rows per strip"), field_type,
+                                  LONG, count, 1, value_offset, is_little_endian,
+                                  NULL, NULL);
         }
         else if (tiff_tag == tiff_tags[StripByteCounts])
         {
-            /* Number of strip byte counts */
-            strip_byte_counts_count = analyze_stripbytecounts_tag (file, field_type, count, value_offset, is_little_endian,
-                                      &strip_byte_counts, &tagged_bytes);
+            if (field_type == SHORT)
+                strip_byte_counts_count = process_short_tag (file, NULL, _("Tag: StripByteCounts"), "StripByteCounts",
+                                              NULL, field_type,
+                                              SHORT, count, 0, value_offset, is_little_endian,
+                                              0, NULL, NULL, &tagged_bytes, &strip_byte_counts);
+            else
+                strip_byte_counts_count = process_long_tag (file, NULL, _("Tag: StripByteCounts"), "StripByteCounts",
+                                              NULL, field_type,
+                                              LONG, count, 0, value_offset, is_little_endian,
+                                              &tagged_bytes, &strip_byte_counts);
         }
         else if (tiff_tag == tiff_tags[MinSampleValue])
         {
-            analyze_minsamplevalue_tag (file, field_type, count, value_offset, is_little_endian);
+            process_short_tag (file, NULL, _("Tag: MinSampleValue"), "MinSampleValue",
+                               _("The minimum component value used"), field_type,
+                               SHORT, count, 1, value_offset, is_little_endian,
+                               0, NULL, NULL, NULL, NULL);
         }
         else if (tiff_tag == tiff_tags[MaxSampleValue])
         {
-            analyze_maxsamplevalue_tag (file, field_type, count, value_offset, is_little_endian);
+            process_short_tag (file, NULL, _("Tag: MaxSampleValue"), "MaxSampleValue",
+                               _("The maximum component value used"), field_type,
+                               SHORT, count, 1, value_offset, is_little_endian,
+                               0, NULL, NULL, NULL, NULL);
         }
         else if (tiff_tag == tiff_tags[XResolution])
         {
-            analyze_xresolution_tag (file, field_type, count, value_offset, is_little_endian, &tagged_bytes);
+            process_rational_tag (file, NULL, _("Tag: XResolution"), "XResolution",
+                                  _("Number of pixels per ResolutionUnit in the ImageWidth direction"),
+                                  NULL, field_type, RATIONAL, count, 1, value_offset,
+                                  is_little_endian, "%.1f", &tagged_bytes);
         }
         else if (tiff_tag == tiff_tags[YResolution])
         {
-            analyze_yresolution_tag (file, field_type, count, value_offset, is_little_endian, &tagged_bytes);
+            process_rational_tag (file, NULL, _("Tag: YResolution"), "YResolution",
+                                  _("Number of pixels per ResolutionUnit in the ImageLength direction"),
+                                  NULL, field_type, RATIONAL, count, 1, value_offset,
+                                  is_little_endian, "%.1f", &tagged_bytes);
         }
         else if (tiff_tag == tiff_tags[PlanarConfiguration])
         {
-            analyze_planarconfiguration_tag (file, field_type, count, value_offset, is_little_endian);
+            guint16 values[] = { 0x1, 0x2 };
+            gchar *value_description[] = {
+                _("Chunky format"),
+                _("Planar format"),
+                _("<span foreground=\"red\">INVALID</span>")
+            };
+            process_short_tag (file, NULL, _("Tag: PlanarConfiguration"), "PlanarConfiguration",
+                   _("PlanarConfiguration\n"
+                     "<tt>00 01<sub>16</sub></tt>\tChunky format (components are stored contiguously)\n"
+                     "<tt>00 02<sub>16</sub></tt>\tPlanar format (components are stored in separate component planes)"),
+                   field_type, SHORT, count, 1, value_offset, is_little_endian,
+                   sizeof (values) >> 1, values, value_description, NULL, NULL);
+        }
+        else if (tiff_tag == tiff_tags[PageName])
+        {
+            process_ascii_tag (file, &ascii_tab, _("Tag: PageName"), "PageName", field_type,
+                               count, 0, value_offset, is_little_endian, &tagged_bytes);
         }
         else if (tiff_tag == tiff_tags[XPosition])
         {
-            analyze_xposition_tag (file, field_type, count, value_offset, is_little_endian, &tagged_bytes);
+            process_rational_tag (file, NULL, _("Tag: XPosition"), "XPosition",
+                                  _("The X offset in ResolutionUnits of the left side of the image"),
+                                  NULL, field_type, RATIONAL, count, 1, value_offset,
+                                  is_little_endian, "%.1f", &tagged_bytes);
         }
         else if (tiff_tag == tiff_tags[YPosition])
         {
-            analyze_yposition_tag (file, field_type, count, value_offset, is_little_endian, &tagged_bytes);
+            process_rational_tag (file, NULL, _("Tag: YPosition"), "YPosition",
+                                  _("The Y offset in ResolutionUnits of the top of the image"),
+                                  NULL, field_type, RATIONAL, count, 1, value_offset,
+                                  is_little_endian, "%.1f", &tagged_bytes);
         }
         else if (tiff_tag == tiff_tags[ResolutionUnit])
         {
-            analyze_resolutionunit_tag (file, field_type, count, value_offset, is_little_endian);
+            guint16 values[] = { 0x1, 0x2, 0x3 };
+            gchar *value_description[] = {
+                _("No unit"),
+                _("Inch"),
+                _("Centimeter"),
+                _("<span foreground=\"red\">INVALID</span>")
+            };
+            process_short_tag (file, NULL, _("Tag: ResolutionUnit"), "ResolutionUnit",
+                   _("ResolutionUnit\n"
+                     "<tt>00 01<sub>16</sub></tt>\tNo unit\n"
+                     "<tt>00 02<sub>16</sub></tt>\tInch\n"
+                     "<tt>00 03<sub>16</sub></tt>\tCentimeter"),
+                   field_type, SHORT, count, 1, value_offset, is_little_endian,
+                   sizeof (values) >> 1, values, value_description, NULL, NULL);
         }
         else if (tiff_tag == tiff_tags[PageNumber])
         {
-            analyze_pagenumber_tag (file, field_type, count, value_offset, is_little_endian);
+            process_short_tag (file, NULL, _("Tag: PageNumber"), "PageNumber",
+                               _("Page number / Total pages\n"
+                                 "Page numbers start at 0\n"
+                                 "Total = 0 if it is unknown"), field_type,
+                               SHORT, count, 2, value_offset, is_little_endian,
+                               0, NULL, NULL, NULL, NULL);
         }
         else if (tiff_tag == tiff_tags[Software])
         {
-            analyze_ascii_tag (file, field_type, count, value_offset, is_little_endian,
-                               &tagged_bytes, ASCII_Software, &ascii_tab);
+            process_ascii_tag (file, &ascii_tab, _("Tag: Software"), "Software", field_type,
+                               count, 0, value_offset, is_little_endian, &tagged_bytes);
         }
         else if (tiff_tag == tiff_tags[DateTime])
         {
-            analyze_ascii_tag (file, field_type, count, value_offset, is_little_endian,
-                               &tagged_bytes, ASCII_DateTime, &ascii_tab);
+            process_ascii_tag (file, &ascii_tab, _("Tag: DateTime"), "DateTime", field_type,
+                               count, 20, value_offset, is_little_endian, &tagged_bytes);
         }
         else if (tiff_tag == tiff_tags[Artist])
         {
-            analyze_ascii_tag (file, field_type, count, value_offset, is_little_endian,
-                               &tagged_bytes, ASCII_Artist, &ascii_tab);
+            process_ascii_tag (file, &ascii_tab, _("Tag: Artist"), "Artist", field_type,
+                               count, 0, value_offset, is_little_endian, &tagged_bytes);
         }
         else if (tiff_tag == tiff_tags[HostComputer])
         {
-            analyze_ascii_tag (file, field_type, count, value_offset, is_little_endian,
-                               &tagged_bytes, ASCII_HostComputer, &ascii_tab);
+            process_ascii_tag (file, &ascii_tab, _("Tag: HostComputer"), "HostComputer", field_type,
+                               count, 0, value_offset, is_little_endian, &tagged_bytes);
         }
         else if (tiff_tag == tiff_tags[Predictor])
         {
-            analyze_predictor_tag (file, field_type, count, value_offset, is_little_endian);
+            guint16 values[] = { 0x1, 0x2 };
+            gchar *value_description[] = {
+                _("No prediction scheme used before coding"),
+                _("Horizontal differencing"),
+                _("<span foreground=\"red\">INVALID</span>")
+            };
+            process_short_tag (file, NULL, _("Tag: Predictor"), "Predictor",
+                   _("Predictor\n"
+                     "<tt>00 01<sub>16</sub></tt>\tNo prediction scheme used before coding\n"
+                     "<tt>00 02<sub>16</sub></tt>\tHorizontal differencing"),
+                   field_type, SHORT, count, 1, value_offset, is_little_endian,
+                   sizeof (values) >> 1, values, value_description, NULL, NULL);
         }
         else if (tiff_tag == tiff_tags[WhitePoint])
         {
-            analyze_whitepoint_tag (file, field_type, count, value_offset, is_little_endian, &tagged_bytes);
+            gchar *value_names[] = {
+                _("White point x"),
+                _("White point y")
+            };
+            process_rational_tag (file, NULL, _("Tag: WhitePoint"), "WhitePoint",
+                                  _("The values are described using the 1931 CIE xy chromaticity diagram"),
+                                  value_names, field_type, RATIONAL, count, 2, value_offset,
+                                  is_little_endian, NULL, &tagged_bytes);
         }
         else if (tiff_tag == tiff_tags[PrimaryChromaticities])
         {
-            analyze_primarychromaticities_tag (file, field_type, count, value_offset, is_little_endian, &tagged_bytes);
+            gchar *value_names[] = {
+                _("Red x"),
+                _("Red y"),
+                _("Green x"),
+                _("Green y"),
+                _("Blue x"),
+                _("Blue y")
+            };
+            process_rational_tag (file, NULL, _("Tag: PrimaryChromaticities"), "PrimaryChromaticities",
+                                  _("The values are described using the 1931 CIE xy chromaticity diagram"),
+                                  value_names, field_type, RATIONAL, count, 6, value_offset,
+                                  is_little_endian, NULL, &tagged_bytes);
         }
         else if (tiff_tag == tiff_tags[JPEGInterchangeFormat])
         {
-            jpeg_offset = analyze_jpeginterchangeformat_tag (file, field_type, count, value_offset, is_little_endian);
+            jpeg_offset = process_long_tag (file, NULL, _("Tag: JPEGInterchangeFormat"), "JPEGInterchangeFormat",
+                                            NULL, field_type,
+                                            LONG, count, 1, value_offset, is_little_endian,
+                                            NULL, NULL);
+
         }
         else if (tiff_tag == tiff_tags[JPEGInterchangeFormatLength])
         {
-            analyze_jpeginterchangeformatlength_tag (file, field_type, count, value_offset, is_little_endian, &tagged_bytes,
-                                                     jpeg_offset, &jpeg_tab);
+            jpeg_length = process_long_tag (file, NULL, _("Tag: JPEGInterchangeFormatLength"), "JPEGInterchangeFormatLength",
+                                            NULL, field_type,
+                                            LONG, count, 1, value_offset, is_little_endian,
+                                            NULL, NULL);
         }
         else if (tiff_tag == tiff_tags[YCbCrCoefficients])
         {
-            analyze_ycbcrcoefficients_tag (file, field_type, count, value_offset, is_little_endian, &tagged_bytes);
+            gchar *value_names[] = {
+                _("LumaRed"),
+                _("LumaGreen"),
+                _("LumaBlue")
+            };
+            process_rational_tag (file, NULL, _("Tag: YCbCrCoefficients"), "YCbCrCoefficients",
+                                  _("Coefficients used to compute luminance Y"),
+                                  value_names, field_type, RATIONAL, count, 3, value_offset,
+                                  is_little_endian, NULL, &tagged_bytes);
         }
         else if (tiff_tag == tiff_tags[YCbCrSubSampling])
         {
-            analyze_ycbcrsubsampling_tag (file, field_type, count, value_offset, is_little_endian);
+            process_short_tag (file, NULL, _("Tag: YCbCrSubSampling"), "YCbCrSubSampling",
+                   _("YCbCrSubSamplingHoriz\n"
+                     "<tt>00 01<sub>16</sub></tt>\tChroma image ImageWidth = Luma image ImageWidth\n"
+                     "<tt>00 02<sub>16</sub></tt>\tChroma image ImageWidth = 1/2 Luma image ImageWidth\n"
+                     "<tt>00 04<sub>16</sub></tt>\tChroma image ImageWidth = 1/4 Luma image ImageWidth\n"
+                     "YCbCrSubSamplingVert\n"
+                     "<tt>00 01<sub>16</sub></tt>\tChroma image ImageLength = Luma image ImageLength\n"
+                     "<tt>00 02<sub>16</sub></tt>\tChroma image ImageLength = 1/2 Luma image ImageLength\n"
+                     "<tt>00 04<sub>16</sub></tt>\tChroma image ImageLength = 1/4 Luma image ImageLength"),
+                   field_type, SHORT, count, 2, value_offset, is_little_endian,
+                   0, NULL, NULL, NULL, NULL);
         }
         else if (tiff_tag == tiff_tags[YCbCrPositioning])
         {
-            analyze_ycbcrpositioning_tag (file, field_type, count, value_offset, is_little_endian);
+            guint16 values[] = { 0x1, 0x2 };
+            gchar *value_description[] = {
+                _("Centered"),
+                _("Cosited"),
+                _("<span foreground=\"red\">INVALID</span>")
+            };
+            process_short_tag (file, NULL, _("Tag: YCbCrPositioning"), "YCbCrPositioning",
+                   _("YCbCrPositioning\n"
+                     "<tt>00 01<sub>16</sub></tt>\tCentered\n"
+                     "<tt>00 02<sub>16</sub></tt>\tCosited"),
+                   field_type, SHORT, count, 1, value_offset, is_little_endian,
+                   sizeof (values) >> 1, values, value_description, NULL, NULL);
         }
         else if (tiff_tag == tiff_tags[ReferenceBlackWhite])
         {
-            analyze_referenceblackwhite_tag (file, field_type, count, value_offset, is_little_endian, &tagged_bytes);
+            gchar *value_names[] = {
+                _("ReferenceBlackWhite footroom (component 1)"),
+                _("ReferenceBlackWhite headroom (component 1)"),
+                _("ReferenceBlackWhite footroom (component 2)"),
+                _("ReferenceBlackWhite headroom (component 2)"),
+                _("ReferenceBlackWhite footroom (component 3)"),
+                _("ReferenceBlackWhite headroom (component 3)")
+            };
+            process_rational_tag (file, NULL, _("Tag: ReferenceBlackWhite"), "ReferenceBlackWhite",
+                                  _("Headroom and footroom pairs for each component"),
+                                  value_names, field_type, RATIONAL, count, 6, value_offset,
+                                  is_little_endian, NULL, &tagged_bytes);
         }
         else if (tiff_tag == tiff_tags[Copyright])
         {
-            analyze_ascii_tag (file, field_type, count, value_offset, is_little_endian,
-                               &tagged_bytes, ASCII_Copyright, &ascii_tab);
+            process_ascii_tag (file, &ascii_tab, _("Tag: Copyright"), "Copyright", field_type,
+                               count, 0, value_offset, is_little_endian, &tagged_bytes);
         }
         else if (tiff_tag == tiff_tags[ExifIFD])
         {
-            analyze_exififd_tag (file, field_type, count, value_offset, is_little_endian, &tagged_bytes,
-                                 &exif_tab, &exif_ascii_tab);
+            process_exififd_tag (file, _("Tag: ExifIFD"), field_type, count, value_offset, is_little_endian, &tagged_bytes,
+                                 &exif_tab, &exif_ascii_tab, TRUE);
         }
         else if (tiff_tag == tiff_tags[GPSInfoIFD])
         {
-            analyze_gpsinfoifd_tag (file, field_type, count, value_offset, is_little_endian, &tagged_bytes,
-                                    &exif_gpsinfo_tab, &exif_gpsinfo_ascii_tab);
+            process_exififd_tag (file, _("Tag: GPSInfoIFD"), field_type, count, value_offset, is_little_endian, &tagged_bytes,
+                                 &exif_gpsinfo_tab, &exif_gpsinfo_ascii_tab, FALSE);
         }
         else
         {
+            analyzer_utils_tag_error (file, ERROR_COLOR_1, 2, _("Tag: Unknown"));
+            analyzer_utils_tag_error (file, ERROR_COLOR_2, 2, _("Field type"));
+            analyzer_utils_tag_error (file, ERROR_COLOR_1, 4, _("Count"));
+            analyzer_utils_tag_error (file, ERROR_COLOR_2, 4, _("Tag value or offset"));
+
             if (unknown_tag_count > 10 && ifd_entries > 100)
             {
                 analyzer_utils_insert_notice (file,
@@ -438,11 +728,6 @@ chirurgien_analyze_tiff (AnalyzerFile *file)
                 goto END_ERROR_LOOP;
             }
 
-            analyzer_utils_tag_error (file, ERROR_COLOR_1, 2, _("Tag: Unknown"));
-            analyzer_utils_tag_error (file, ERROR_COLOR_2, 2, _("Field type"));
-            analyzer_utils_tag_error (file, ERROR_COLOR_1, 4, _("Count"));
-            analyzer_utils_tag_error (file, ERROR_COLOR_2, 4, _("Tag value or offset"));
-
             unknown_tag_count++;
         }
 
@@ -450,9 +735,33 @@ chirurgien_analyze_tiff (AnalyzerFile *file)
         continue;
 
         END_ERROR_LOOP:
-        analyzer_utils_tag_error (file, ERROR_COLOR_1, -1, _("Unrecognized data"));
         tagged_bytes = g_slist_append (tagged_bytes, GUINT_TO_POINTER (GET_POINTER (file)));
         break;
+    }
+
+    if (jpeg_offset && jpeg_length)
+    {
+        SET_POINTER (file, jpeg_offset);
+
+        if (FILE_HAS_DATA_N (file, jpeg_length))
+        {
+            tagged_bytes = g_slist_append (tagged_bytes, GUINT_TO_POINTER (GET_POINTER (file)));
+
+            analyzer_utils_tag (file, VALUE_OFFSET_COLOR_1, jpeg_length, _("Embedded JPEG file"));
+
+            analyzer_utils_describe_tab (&jpeg_tab, _("There is an embedded JPEG file, analyze it in another tab"), NULL);
+            analyzer_utils_embedded_file (file, &jpeg_tab, jpeg_length);
+
+            tagged_bytes = g_slist_append (tagged_bytes, GUINT_TO_POINTER (GET_POINTER (file)));
+
+            SET_POINTER (file, jpeg_offset);
+            analyzer_utils_tag (file, VALUE_OFFSET_COLOR_2, 1, _("Embedded JPEG file"));
+        }
+        else
+        {
+            analyzer_utils_describe_tooltip_tab (&jpeg_tab, _("Failed to extract the embedded JPEG file"), NULL,
+                             _("Malformed offset (JPEGInterchangeFormat tag) or length (JPEGInterchangeFormatLength tag)"));
+        }
     }
 
     /* Used ASCII tabs reset description_lines_count as they hold text fields
@@ -461,7 +770,7 @@ chirurgien_analyze_tiff (AnalyzerFile *file)
         analyzer_utils_insert_tab (file, &ascii_tab, _("ASCII tags"));
 
     /* Embedded JPEG tab*/
-    if (jpeg_tab.description_lines_count == 0)
+    if (jpeg_tab.description_lines_count != 1)
         analyzer_utils_insert_tab (file, &jpeg_tab, "JPEG");
 
     if (exif_tab.description_lines_count > 1)
@@ -484,19 +793,19 @@ chirurgien_analyze_tiff (AnalyzerFile *file)
             /* The length of the strip */
             count = strip_byte_counts[i];
 
-            save_pointer = GET_POINTER (file);
-
             SET_POINTER (file, value_offset);
-            tagged_bytes = g_slist_append (tagged_bytes, GUINT_TO_POINTER (value_offset));
 
-            analyzer_utils_tag (file, VALUE_OFFSET_COLOR_1, count, _("Image data strip"));
+            if (FILE_HAS_DATA_N (file, count))
+            {
+                tagged_bytes = g_slist_append (tagged_bytes, GUINT_TO_POINTER (value_offset));
 
-            tagged_bytes = g_slist_append (tagged_bytes, GUINT_TO_POINTER (value_offset + count));
+                analyzer_utils_tag (file, VALUE_OFFSET_COLOR_1, count, _("Image data strip"));
 
-            SET_POINTER (file, value_offset);
-            analyzer_utils_tag (file, VALUE_OFFSET_COLOR_2, 1, _("Image data strip"));
+                tagged_bytes = g_slist_append (tagged_bytes, GUINT_TO_POINTER (value_offset + count));
 
-            SET_POINTER (file, save_pointer);
+                SET_POINTER (file, value_offset);
+                analyzer_utils_tag (file, VALUE_OFFSET_COLOR_2, 1, _("Image data strip"));
+            }
         }
     }
     else

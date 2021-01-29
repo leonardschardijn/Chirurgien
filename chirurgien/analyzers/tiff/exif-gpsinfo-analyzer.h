@@ -25,14 +25,37 @@ G_BEGIN_DECLS
 enum {
     GPSVersionID,
     GPSLatitudeRef,
+    GPSLatitude,
+    GPSLongitudeRef,
+    GPSLongitude,
+    GPSAltitudeRef,
+    GPSAltitude,
+    GPSTimeStamp,
+    GPSSatellites,
+    GPSStatus,
+    GPSMeasureMode,
+    GPSDOP,
+    GPSSpeedRef,
+    GPSSpeed,
+    GPSTrackRef,
+    GPSTrack,
+    GPSImgDirectionRef,
+    GPSImgDirection,
+    GPSMapDatum,
+    GPSDestLatitudeRef,
+    GPSDestLatitude,
+    GPSDestLongitudeRef,
+    GPSDestLongitude,
+    GPSDestBearingRef,
+    GPSDestBearing,
+    GPSDestDistanceRef,
+    GPSDestDistance,
+    GPSProcessingMethod,
+    GPSAreaInformation,
+    GPSDateStamp,
+    GPSDifferential,
+    GPSHPositioningError,
     EXIF_GPSINFO_TAGS
 };
-
-
-void         analyze_gpsversionid_tag                (AnalyzerFile *,
-                                                      AnalyzerTab *,
-                                                      guint16,
-                                                      guint32,
-                                                      guint32);
 
 G_END_DECLS
