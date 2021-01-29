@@ -277,8 +277,9 @@ get_section_name (AnalyzerFile *file,
                   gboolean is_little_endian,
                   gchar **section_name)
 {
-    gsize save_pointer;
     guint32 four_bytes;
+
+    gsize section_name_offset;
 
     if (!analyzer_utils_read (&four_bytes, file, 4))
         return FALSE;
@@ -290,19 +291,21 @@ get_section_name (AnalyzerFile *file,
 
     *section_name = NULL;
 
-    if (string_table_pointer && string_table_pointer < GET_FILE_SIZE (file))
+    section_name_offset = string_table_pointer + four_bytes;
+
+    if (string_table_pointer && section_name_offset < GET_FILE_SIZE (file))
     {
-        *section_name = (gchar *) file->file_contents + string_table_pointer + four_bytes;
-        four_bytes = strlen (*section_name);
+        *section_name = (gchar *) file->file_contents + section_name_offset;
+        four_bytes = strnlen (*section_name, GET_FILE_SIZE (file) - section_name_offset);
 
-        save_pointer = GET_POINTER (file);
-        SET_POINTER (file, string_table_pointer);
-
-        if (FILE_HAS_DATA_N (file, four_bytes))
+        if (g_utf8_validate (*section_name, four_bytes, NULL))
             analyzer_utils_describe_tab (tab, _("Section name"), *section_name);
-
-        SET_POINTER (file, save_pointer);
+        else
+            *section_name = NULL;
     }
+
+    if (!*section_name)
+        analyzer_utils_describe_tab (tab, _("Section name"), "");
 
     return TRUE;
 }

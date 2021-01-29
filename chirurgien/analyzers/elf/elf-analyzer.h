@@ -50,6 +50,7 @@ gboolean    process_elf_field              (AnalyzerFile *,
                                             gboolean,
                                             void *);
 
+/* elf-program-header.c */
 void        analyze_program_header         (AnalyzerFile *,
                                             gboolean,
                                             gboolean,
@@ -57,6 +58,7 @@ void        analyze_program_header         (AnalyzerFile *,
                                             guint16,
                                             GSList **);
 
+/* elf-program-header.c */
 void        analyze_section_header         (AnalyzerFile *,
                                             gboolean,
                                             gboolean,

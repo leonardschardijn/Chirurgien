@@ -400,10 +400,8 @@ process_elf_field (AnalyzerFile *file,
     gchar *field_description = NULL;
     guint64 eight_bytes = 0;
 
-    if (!FILE_HAS_DATA_N (file, field_length))
+    if (!analyzer_utils_read (&eight_bytes, file, field_length))
         return FALSE;
-
-    analyzer_utils_read (&eight_bytes, file, field_length);
 
     if (!is_little_endian)
     {

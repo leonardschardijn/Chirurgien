@@ -230,9 +230,9 @@ process_segment_flags (AnalyzerFile *file,
         g_string_truncate (description_string, description_string->len - 1);
         analyzer_utils_describe_tooltip_tab (tab, _("Segment flags"), description_string->str,
                                              _("Segment flags (relevant bit masks)\n"
-                                             "<tt>1<sub>16</sub></tt>\tExecute\n"
-                                             "<tt>2<sub>16</sub></tt>\tWrite\n"
-                                             "<tt>4<sub>16</sub></tt>\tRead"));
+                                               "<tt>1<sub>16</sub></tt>\tExecute\n"
+                                               "<tt>2<sub>16</sub></tt>\tWrite\n"
+                                               "<tt>4<sub>16</sub></tt>\tRead"));
     }
     g_string_free (description_string, TRUE);
 
