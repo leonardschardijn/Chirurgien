@@ -51,7 +51,7 @@ chirurgien_analyze_elf (AnalyzerFile *file)
     tagged_bytes = g_slist_append (tagged_bytes, GUINT_TO_POINTER (GET_POINTER (file)));
 
     /* Class*/
-    guint class_values[] = {1, 2};
+    guint32 class_values[] = { 1, 2 };
     gchar *class_value_description[] = {
         _("32 bits"),
         _("64 bits"),
@@ -63,7 +63,7 @@ chirurgien_analyze_elf (AnalyzerFile *file)
               "<tt>01<sub>16</sub></tt>\t32 bits\n"
               "<tt>02<sub>16</sub></tt>\t64 bits"),
             HEADER_DATA_COLOR_1,
-            1, FALSE, 2, class_values, class_value_description, NULL, FALSE, &byte))
+            1, FALSE, sizeof (class_values) >> 2, class_values, class_value_description, NULL, FALSE, &byte))
         goto END_ERROR;
 
     if (byte == 1)
@@ -74,7 +74,7 @@ chirurgien_analyze_elf (AnalyzerFile *file)
         goto END_ERROR;
 
     /* Endianness */
-    guint endianness_values[] = {1, 2};
+    guint32 endianness_values[] = { 1, 2 };
     gchar *endianness_value_description[] = {
         _("Little-endian"),
         _("Big-endian"),
@@ -86,7 +86,7 @@ chirurgien_analyze_elf (AnalyzerFile *file)
               "<tt>01<sub>16</sub></tt>\tLittle-endian\n"
               "<tt>02<sub>16</sub></tt>\tBig-endian"),
             HEADER_DATA_COLOR_2,
-            1, FALSE, 2, endianness_values, endianness_value_description,
+            1, FALSE, sizeof (endianness_values) >> 2, endianness_values, endianness_value_description,
             NULL, FALSE, &byte))
         goto END_ERROR;
 
@@ -98,7 +98,7 @@ chirurgien_analyze_elf (AnalyzerFile *file)
         goto END_ERROR;
 
     /* ELF header version */
-    guint elf_header_version_values[] = {1};
+    guint32 elf_header_version_values[] = { 1 };
     gchar *elf_header_version_value_description[] = {
         _("Version 1"),
         _("<span foreground=\"red\">INVALID</span>")
@@ -108,14 +108,14 @@ chirurgien_analyze_elf (AnalyzerFile *file)
             _("ELF header version\n"
               "<tt>01<sub>16</sub></tt>\tVersion 1"),
             HEADER_DATA_COLOR_1,
-            1, FALSE, 1, elf_header_version_values, elf_header_version_value_description,
+            1, FALSE, sizeof (elf_header_version_values) >> 2, elf_header_version_values, elf_header_version_value_description,
             NULL, FALSE, NULL))
         goto END_ERROR;
 
     /* Application Binary Interface */
-    guint abi_values[] = {0x0, 0x1, 0x2, 0x3, 0x6, 0x7, 0x8, 0x9, 0xC};
+    guint32 abi_values[] = { 0x0, 0x1, 0x2, 0x3, 0x6, 0x7, 0x8, 0x9, 0xC };
     gchar *abi_value_description[] = {
-        _("Unspecified"),
+        _("Unspecified/System V"),
         "HP-UX",
         "NetBSD",
         "Linux",
@@ -139,7 +139,7 @@ chirurgien_analyze_elf (AnalyzerFile *file)
               "<tt>09<sub>16</sub></tt>\tFreeBSD\n"
               "<tt>0C<sub>16</sub></tt>\tOpenBSD"),
             HEADER_DATA_COLOR_2,
-            1, FALSE, 9, abi_values, abi_value_description, NULL, FALSE, NULL))
+            1, FALSE, sizeof (abi_values) >> 2, abi_values, abi_value_description, NULL, FALSE, NULL))
         goto END_ERROR;
 
     /* ABI version */
@@ -158,7 +158,7 @@ chirurgien_analyze_elf (AnalyzerFile *file)
     analyzer_utils_tag (file, HEADER_DATA_COLOR_2, 7, _("Unused"));
 
     /* Object file type */
-    guint object_file_type_values[] = {0, 1, 2, 3, 4};
+    guint32 object_file_type_values[] = { 0, 1, 2, 3, 4 };
     gchar *object_file_type_value_description[] = {
         _("Unspecified"),
         _("Relocatable file"),
@@ -176,12 +176,13 @@ chirurgien_analyze_elf (AnalyzerFile *file)
               "<tt>00 03<sub>16</sub></tt>\tShared object file\n"
               "<tt>00 04<sub>16</sub></tt>\tCore file"),
             HEADER_DATA_COLOR_1,
-            2, is_little_endian, 5, object_file_type_values, object_file_type_value_description,
+            2, is_little_endian, sizeof (object_file_type_values) >> 2, object_file_type_values, object_file_type_value_description,
             NULL, FALSE, NULL))
         goto END_ERROR;
 
     /* Instruction Set Architecture */
-    guint isa_values[] = {0x0, 0x2, 0x3, 0x4, 0x5, 0x14, 0x15, 0x16, 0x28, 0x2B, 0x32, 0x3E, 0xB7, 0xF3};
+    guint32 isa_values[] = { 0x0, 0x2, 0x3, 0x4, 0x5, 0x14, 0x15, 0x16, 0x28,
+        0x2B, 0x32, 0x3E, 0xB7, 0xF3 };
     gchar *isa_value_description[] = {
         _("No machine"),
         "SPARC",
@@ -217,12 +218,12 @@ chirurgien_analyze_elf (AnalyzerFile *file)
               "<tt>00 B7<sub>16</sub></tt>\tARM 64-bit\n"
               "<tt>00 F3<sub>16</sub></tt>\tRISC-V"),
             HEADER_DATA_COLOR_2,
-            2, is_little_endian, 14, isa_values, isa_value_description,
+            2, is_little_endian, sizeof (isa_values) >> 2, isa_values, isa_value_description,
             NULL, FALSE,  NULL))
         goto END_ERROR;
 
     /* Object file version */
-    guint obj_file_version_values[] = {1};
+    guint32 obj_file_version_values[] = { 1 };
     gchar *obj_file_value_description[] = {
         _("Version 1"),
         _("<span foreground=\"red\">INVALID</span>")
@@ -232,7 +233,7 @@ chirurgien_analyze_elf (AnalyzerFile *file)
             _("Object file version\n"
              "<tt>00 00 00 01<sub>16</sub></tt>\tVersion 1"),
             HEADER_DATA_COLOR_1,
-            4, is_little_endian, 1, obj_file_version_values, obj_file_value_description,
+            4, is_little_endian, sizeof (obj_file_version_values) >> 2, obj_file_version_values, obj_file_value_description,
             NULL, FALSE,  NULL))
         goto END_ERROR;
 
@@ -391,7 +392,7 @@ process_elf_field (AnalyzerFile *file,
                    guint field_length,
                    gboolean is_little_endian,
                    guint possible_values,
-                   guint *field_values,
+                   guint32 *field_values,
                    gchar **value_descriptions,
                    gchar *description_message,
                    gboolean ignore_empty,

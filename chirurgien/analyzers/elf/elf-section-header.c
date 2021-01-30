@@ -89,7 +89,7 @@ analyze_section_header (AnalyzerFile *file,
             goto END_SECTION_HEADER;
 
         /* Section type (sh_type) */
-        guint section_type_values[] = { 0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8,
+        guint32 section_type_values[] = { 0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8,
                                         0x9, 0xA, 0xB, 0xE, 0xF, 0x10, 0x11 };
         gchar *section_type_value_description[] = {
             _("Inactive section (SHT_NULL)"),
@@ -130,7 +130,7 @@ analyze_section_header (AnalyzerFile *file,
                   "<tt>00 00 00 10<sub>16</sub></tt>\tPre-initialization functions (SHT_PREINIT_ARRAY)\n"
                   "<tt>00 00 00 11<sub>16</sub></tt>\tSection group (SHT_GROUP)"),
                 HEADER_DATA_COLOR_1,
-                4, is_little_endian, 16, section_type_values, section_type_value_description, NULL, FALSE, &section_type))
+                4, is_little_endian, sizeof (section_type_values) >> 2, section_type_values, section_type_value_description, NULL, FALSE, &section_type))
             goto END_SECTION_HEADER;
 
         /* Section flags (sh_flags) */

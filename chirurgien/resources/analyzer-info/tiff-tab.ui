@@ -470,7 +470,7 @@
 Standard TIFF: FE-103, 106-10A, 10D-112, 115-11F, 128, 129, 131, 132, 13B-13F, 201, 202, 211-214, 8298, 8769, 8825
 Exif-specific: 829A, 829D, 8822, 8824, 8827, 8830-8835, 9000, 9003, 9004, 9101, 9102, 9201-920A, 927C, 9286, 9290-9292, A000-A004, A210, A214, A215, A217, A300-A302, A401-A40A, A40C, A420, A430-A435, A500
 Exif GPSInfo-specific: 0-1F
-Treat the MakerNote and UserComment tags as ASCII tags, even though they are UNDEFINED]]>
+Treat the MakerNote, UserComment, GPSProcessingMethod and GPSAreaInformation tags as ASCII tags, even though they are UNDEFINED]]>
     </property>
   </object>
   <object class="GtkTextBuffer" id="tiff-does-not">

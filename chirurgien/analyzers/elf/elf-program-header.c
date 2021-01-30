@@ -58,7 +58,7 @@ analyze_program_header (AnalyzerFile *file,
         g_free (description_message);
 
         /* Segment type (p_type) */
-        guint segment_type_values[] = { 0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7 };
+        guint32 segment_type_values[] = { 0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7 };
         gchar *segment_type_value_description[] = {
             _("Unused segment (PT_NULL)"),
             _("Loadable segment (PT_LOAD)"),
@@ -82,7 +82,7 @@ analyze_program_header (AnalyzerFile *file,
                  "<tt>00 00 00 06<sub>16</sub></tt>\tProgram header table (PT_PHDR)\n"
                  "<tt>00 00 00 07<sub>16</sub></tt>\tThread-Local Storage template (PT_TLS)"),
                 SEGMENT_TYPE_COLOR,
-                4, is_little_endian, 8, segment_type_values, segment_type_value_description, NULL, FALSE, NULL))
+                4, is_little_endian, sizeof (segment_type_values) >> 2, segment_type_values, segment_type_value_description, NULL, FALSE, NULL))
             goto END_PROGRAM_HEADER;
 
         if (is_64bits)
