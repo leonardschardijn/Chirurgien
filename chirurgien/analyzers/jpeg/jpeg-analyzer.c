@@ -296,7 +296,7 @@ chirurgien_analyze_jpeg (AnalyzerFile *file)
         {
             analyzer_utils_tag_navigation (file, MARKER_TYPE_COLOR, 2, _("Marker type: DRI"), marker_names[DRI]);
 
-            if (!analyze_dri_marker (file, marker_counts))
+            if (!analyze_dri_dnl_marker (file, marker_counts, DRI))
                 break;
         }
         else if (!memcmp (marker_type, marker_types[SOS], 2))
@@ -310,7 +310,7 @@ chirurgien_analyze_jpeg (AnalyzerFile *file)
         {
             analyzer_utils_tag_navigation (file, MARKER_TYPE_COLOR, 2, _("Marker type: DNL"), marker_names[DNL]);
 
-            if (!analyze_dnl_marker (file, marker_counts))
+            if (!analyze_dri_dnl_marker (file, marker_counts, DNL))
                 break;
         }
         else if (!memcmp (marker_type, marker_types[COM], 2))
@@ -357,4 +357,77 @@ chirurgien_analyze_jpeg (AnalyzerFile *file)
             g_free (description_message);
         }
     }
+}
+
+gboolean
+process_jpeg_field (AnalyzerFile *file,
+                   AnalyzerTab *tab,
+                   gchar *field_name,
+                   gchar *field_name_tag,
+                   gchar *field_tooltip,
+                   GdkRGBA *color,
+                   guint field_length,
+                   guint possible_values,
+                   guint8 *field_values,
+                   gchar **value_descriptions,
+                   gchar *description_message,
+                   void *read_value)
+{
+    gchar *field_description = NULL;
+    guint32 four_bytes = 0;
+
+    if (!analyzer_utils_read (&four_bytes, file, field_length))
+        return FALSE;
+
+    if (field_length == 2)
+        four_bytes = g_ntohs (four_bytes);
+    else if (field_length == 4)
+        four_bytes = g_ntohl (four_bytes);
+
+    if (field_name_tag)
+        analyzer_utils_tag (file, color, field_length, field_name_tag);
+    else
+        analyzer_utils_tag (file, color, field_length, field_name);
+
+    if (possible_values)
+    {
+        for (guint i = 0; i < possible_values; i++)
+        {
+            if (four_bytes == field_values[i])
+            {
+                field_description = value_descriptions[i];
+                break;
+            }
+        }
+
+        if (!field_description)
+            field_description = value_descriptions[possible_values];
+
+        if (tab)
+            analyzer_utils_describe_tooltip_tab (tab, field_name, field_description, field_tooltip);
+        else
+            analyzer_utils_describe_tooltip (file, field_name, field_description, field_tooltip);
+    }
+    else if (description_message)
+    {
+
+        field_description = g_strdup_printf (description_message, four_bytes);
+        if (tab)
+            analyzer_utils_describe_tooltip_tab (tab, field_name, field_description, field_tooltip);
+        else
+            analyzer_utils_describe_tooltip (file, field_name, field_description, field_tooltip);
+        g_free (field_description);
+    }
+
+    if (read_value)
+    {
+        if (field_length == 1)
+            *(guint8 *) read_value = four_bytes;
+        else if (field_length == 2)
+            *(guint16 *) read_value = four_bytes;
+        else if (field_length == 4)
+            *(guint32 *) read_value = four_bytes;
+    }
+
+    return TRUE;
 }

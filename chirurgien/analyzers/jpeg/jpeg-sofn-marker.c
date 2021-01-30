@@ -34,7 +34,6 @@ analyze_sofn_marker (AnalyzerFile *file,
     guint8 components;
 
     guint8 one_byte, sampling_factor;
-    guint16 two_bytes;
 
     /* Data length */
     if (!analyzer_utils_read (&data_length, file , 2))
@@ -48,65 +47,43 @@ analyze_sofn_marker (AnalyzerFile *file,
         if (data_length > 2)
             analyzer_utils_create_tag (file, ERROR_COLOR_1, FALSE, data_length,
                                        _("Segment already defined"), NULL);
+        ADVANCE_POINTER (file, data_length);
         return TRUE;
     }
 
     /* Sample precision */
-    if (!analyzer_utils_read (&one_byte, file , 1))
+    if (!process_jpeg_field (file, NULL, _("Sample precision"), NULL,
+                             _("Number of bits in the samples of the components"),
+                             MARKER_DATA_COLOR_1, 1,
+                             0, NULL, NULL, _("%u bits"), NULL))
         return FALSE;
-
-    analyzer_utils_tag (file, MARKER_DATA_COLOR_1, 1, _("Sample precision"));
-
-    description_message = g_strdup_printf (_("%hhu bits"), one_byte);
-    analyzer_utils_describe_tooltip (file, _("Sample precision"), description_message,
-                             _("Number of bits in the samples of the components"));
-    g_free (description_message);
 
     /* Image height */
-    if (!analyzer_utils_read (&two_bytes, file , 2))
+    if (!process_jpeg_field (file, NULL, _("Image height"), NULL,
+                             _("Minimum value: 0 (DNL marker defines height)\n"
+                               "Maximum value: 2<sup>16</sup> - 1 (unsigned 16-bit integer)"),
+                             MARKER_DATA_COLOR_2, 2,
+                             0, NULL, NULL, "%u", NULL))
         goto END_ERROR;
-
-    analyzer_utils_tag (file, MARKER_DATA_COLOR_2, 2, _("Image height"));
-
-    two_bytes = g_ntohs (two_bytes);
-    description_message = g_strdup_printf ("%hu", two_bytes);
-    analyzer_utils_describe_tooltip (file, _("Image height"), description_message,
-                                     _("Minimum value: 0 (DNL marker defines height)\n"
-                                     "Maximum value: 2<sup>16</sup> - 1 (unsigned 16-bit integer)"));
-    g_free (description_message);
 
     /* Image width */
-    if (!analyzer_utils_read (&two_bytes, file , 2))
+    if (!process_jpeg_field (file, NULL, _("Image width"), NULL,
+                             _("Minimum value: 1\n"
+                               "Maximum value: 2<sup>16</sup> - 1 (unsigned 16-bit integer)"),
+                             MARKER_DATA_COLOR_1, 2,
+                             0, NULL, NULL, "%u", NULL))
         goto END_ERROR;
 
-    analyzer_utils_create_tag (file, MARKER_DATA_COLOR_1, TRUE, 2,
-                               _("Image width"), NULL);
-
-    two_bytes = g_ntohs (two_bytes);
-    description_message = g_strdup_printf ("%hu", two_bytes);
-    analyzer_utils_describe_tooltip (file, _("Image width"), description_message,
-                                     _("Minimum value: 1\n"
-                                     "Maximum value: 2<sup>16</sup> - 1 (unsigned 16-bit integer)"));
-    g_free (description_message);
-
     /* Number of components */
-    if (!analyzer_utils_read (&components, file , 1))
+    if (!process_jpeg_field (file, NULL, _("Number of components"), NULL,
+                             _("Scan components in the image\n"
+                               "Progressive DCT\t1-4 components\n"
+                               "All other cases\t1-255 components"),
+                             MARKER_DATA_COLOR_2, 1,
+                             0, NULL, NULL, "%u", &components))
         return FALSE;
 
-    analyzer_utils_tag (file, MARKER_DATA_COLOR_2, 1, _("Number of components"));
-
     data_used += 8;
-
-    if (components)
-        description_message = g_strdup_printf ("%hhu", components);
-    else
-        description_message = g_strdup_printf ("%s", _("<span foreground=\"red\">INVALID</span>"));
-
-    analyzer_utils_describe_tooltip (file, _("Number of components"), description_message,
-                                     _("Scan components in the image\n"
-                                     "Progressive DCT\t1-4 components\n"
-                                     "All other cases\t1-255 components"));
-    g_free (description_message);
 
     analyzer_utils_add_description (file, _("<b>Components</b>"), NULL, NULL, 20, 10);
 
@@ -128,8 +105,8 @@ analyze_sofn_marker (AnalyzerFile *file,
 
         analyzer_utils_tag (file, MARKER_DATA_COLOR_1, 1,
                             _("Sampling factor\n"
-                            "Lower four bits: Vertical sampling factor\n"
-                            "Upper four bits: Horizontal sampling factor"));
+                              "Lower four bits: Vertical sampling factor\n"
+                              "Upper four bits: Horizontal sampling factor"));
 
         sampling_factor = one_byte & 0x0F;
         if (sampling_factor && sampling_factor < 4)
@@ -139,10 +116,10 @@ analyze_sofn_marker (AnalyzerFile *file,
 
         analyzer_utils_describe_tooltip (file, _("Vertical sampling factor"), description_message,
                                         _("Sampling factor\n"
-                                         "<tt>1<sub>16</sub></tt>\t1\n"
-                                         "<tt>2<sub>16</sub></tt>\t2\n"
-                                         "<tt>3<sub>16</sub></tt>\t3\n"
-                                         "<tt>4<sub>16</sub></tt>\t4"));
+                                          "<tt>1<sub>16</sub></tt>\t1\n"
+                                          "<tt>2<sub>16</sub></tt>\t2\n"
+                                          "<tt>3<sub>16</sub></tt>\t3\n"
+                                          "<tt>4<sub>16</sub></tt>\t4"));
         g_free (description_message);
 
         sampling_factor = one_byte >> 4;
@@ -153,10 +130,10 @@ analyze_sofn_marker (AnalyzerFile *file,
 
         analyzer_utils_describe_tooltip (file, _("Horizontal sampling factor"), description_message,
                                          _("Sampling factor\n"
-                                         "<tt>1<sub>16</sub></tt>\t1\n"
-                                         "<tt>2<sub>16</sub></tt>\t2\n"
-                                         "<tt>3<sub>16</sub></tt>\t3\n"
-                                         "<tt>4<sub>16</sub></tt>\t4"));
+                                           "<tt>1<sub>16</sub></tt>\t1\n"
+                                           "<tt>2<sub>16</sub></tt>\t2\n"
+                                           "<tt>3<sub>16</sub></tt>\t3\n"
+                                           "<tt>4<sub>16</sub></tt>\t4"));
         g_free (description_message);
 
         /* Quantization table selector */

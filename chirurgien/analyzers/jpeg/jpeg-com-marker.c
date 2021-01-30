@@ -30,7 +30,7 @@ analyze_com_marker (AnalyzerFile *file,
     AnalyzerTab tab;
 
     guint16 data_length;
-    g_autofree gchar *comment = NULL;
+    gchar *comment;
 
     marker_counts[COM]++;
 
@@ -48,15 +48,16 @@ analyze_com_marker (AnalyzerFile *file,
     else
         return TRUE;
 
-    comment = g_malloc (data_length);
-
-    /* Data length */
-    if (!analyzer_utils_read (comment, file , data_length))
+    if (!FILE_HAS_DATA_N (file, data_length))
     {
         analyzer_utils_tag_error (file, ERROR_COLOR_1, -1, _("Segment length exceeds available data"));
 
         return FALSE;
     }
+
+    comment = (gchar *) file->file_contents + GET_POINTER (file);
+
+    ADVANCE_POINTER (file, data_length);
     analyzer_utils_tag (file, MARKER_DATA_COLOR_1, data_length, _("Comment"));
 
     if (g_utf8_validate (comment, data_length, NULL))
@@ -65,7 +66,7 @@ analyze_com_marker (AnalyzerFile *file,
     }
     else
     {
-        analyzer_utils_add_text_tab (&tab, _("Comment"), "", strlen(""));
+        analyzer_utils_add_text_tab (&tab, _("Comment"), "", 0);
         analyzer_utils_add_footer_tab (&tab, _("Failed to interpret comment, it is not valid UTF-8"));
     }
 

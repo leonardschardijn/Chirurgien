@@ -64,8 +64,8 @@ analyze_dht_marker (AnalyzerFile *file,
         table_size = 1;
         analyzer_utils_tag (file, HUFFMAN_TABLE_COLOR, 1,
                             _("Huffman table information\n"
-                            "Lower four bits: Huffman table identifier\n"
-                            "Upper four bits: Table class"));
+                              "Lower four bits: Huffman table identifier\n"
+                              "Upper four bits: Table class"));
 
         description_message1 = g_strdup_printf ("%u", ht_info & 0x0F);
         analyzer_utils_add_description_tab (&tab, _("Huffman table identifier"),
@@ -83,8 +83,8 @@ analyze_dht_marker (AnalyzerFile *file,
 
         analyzer_utils_describe_tooltip_tab (&tab, _("Table class"), description_message1,
                                              _("Table class\n"
-                                             "<tt>0<sub>16</sub></tt>\tDC table (or lossless table)\n"
-                                             "<tt>1<sub>16</sub></tt>\tAC table"));
+                                               "<tt>0<sub>16</sub></tt>\tDC table (or lossless table)\n"
+                                               "<tt>1<sub>16</sub></tt>\tAC table"));
 
         for (i = 0; i < 16;)
         {

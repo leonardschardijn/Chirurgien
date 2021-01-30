@@ -65,6 +65,18 @@ enum {
 
 extern gchar *marker_names[MARKER_TYPES];
 
+gboolean    process_jpeg_field       (AnalyzerFile *,
+                                      AnalyzerTab *,
+                                      gchar *,
+                                      gchar *,
+                                      gchar *,
+                                      GdkRGBA *,
+                                      guint,
+                                      guint,
+                                      guint8 *,
+                                      gchar **,
+                                      gchar *,
+                                      void *);
 
 /* jpeg-app0-marker.c */
 gboolean     analyze_app0_marker      (AnalyzerFile *,
@@ -95,16 +107,13 @@ gboolean     analyze_sofn_marker      (AnalyzerFile *,
                                        guint *,
                                        gint);
 
-/* jpeg-dri-marker.c */
-gboolean     analyze_dri_marker       (AnalyzerFile *,
-                                       guint *);
+/* jpeg-dri-dnl-marker.c */
+gboolean     analyze_dri_dnl_marker   (AnalyzerFile *,
+                                       guint *,
+                                       gint);
 
 /* jpeg-sos-marker.c */
 gboolean     analyze_sos_marker       (AnalyzerFile *,
-                                       guint *);
-
-/* jpeg-dnl-marker.c */
-gboolean     analyze_dnl_marker       (AnalyzerFile *,
                                        guint *);
 
 /* jpeg-com-marker.c */

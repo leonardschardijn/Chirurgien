@@ -387,14 +387,14 @@
   <object class="GtkTextBuffer" id="jpeg-does">
     <property name="text" translatable="yes">
 <![CDATA[Recognize the following marker types:
-SOI, APP0 (JFIF/JFXX), APP1 (Exif), APP2 (ICC_PROFILE), DQT, DHT, DAC, SOFn, DRI, SOS, DNL, COM, EOI
+SOI, APP0 (JFIF/JFXX), APP1 (Exif/XMP), APP2 (ICC_PROFILE), DQT, DHT, DAC, SOFn, DRI, SOS, DNL, COM, EOI
 Identify the EOI marker as end of file
-Assume that the COM segment is encoded using UTF-8 (this will not be the case in many cases)]]>
+Assume that the COM segment is encoded using UTF-8 (this will often not be the case)]]>
     </property>
   </object>
   <object class="GtkTextBuffer" id="jpeg-does-not">
     <property name="text" translatable="yes">
-<![CDATA[Recognize the APP1 (XMP) marker or any other
+<![CDATA[Recognize all other marker types
 Verify that APP0 (or APP1) is the first segment, or if one is even defined]]>
     </property>
   </object>

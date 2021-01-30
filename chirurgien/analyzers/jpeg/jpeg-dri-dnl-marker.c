@@ -1,6 +1,6 @@
-/* jpeg-dnl-marker.c
+/* jpeg-dri-dnl-marker.c
  *
- * Copyright (C) 2020 - Daniel Léonard Schardijn
+ * Copyright (C) 2021 - Daniel Léonard Schardijn
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,21 +24,29 @@
 
 
 gboolean
-analyze_dnl_marker (AnalyzerFile *file,
-                    guint *marker_counts)
+analyze_dri_dnl_marker (AnalyzerFile *file,
+                        guint *marker_counts,
+                        gint marker_type)
 {
     AnalyzerTab tab;
 
-    gchar *description_message;
-
+    gchar *field_name;
     guint16 data_length;
-    guint16 lines;
 
-    marker_counts[DNL]++;
+    marker_counts[marker_type]++;
 
     analyzer_utils_init_tab (&tab);
 
-    analyzer_utils_set_title_tab (&tab, _("<b>Define number of lines</b>"));
+    if (marker_type == DRI)
+    {
+        analyzer_utils_set_title_tab (&tab, _("<b>Restart interval</b>"));
+        field_name = _("Restart interval");
+    }
+    else
+    {
+        analyzer_utils_set_title_tab (&tab, _("<b>Define number of lines</b>"));
+        field_name = _("Number of lines");
+    }
 
     /* Data length */
     if (!analyzer_utils_read (&data_length, file , 2))
@@ -48,15 +56,10 @@ analyze_dnl_marker (AnalyzerFile *file,
     analyzer_utils_tag (file, MARKER_LENGTH_COLOR, 2, _("Data length"));
 
     /* Number of lines */
-    if (!analyzer_utils_read (&lines, file , 2))
+    if (!process_jpeg_field (file, &tab, field_name, NULL, NULL,
+                             MARKER_DATA_COLOR_1, 2,
+                             0, NULL, NULL, "%u", NULL))
         goto END_ERROR;
-
-    analyzer_utils_tag (file, MARKER_DATA_COLOR_1, 2, _("Number of lines"));
-
-    lines = g_ntohs (lines);
-    description_message = g_strdup_printf ("%hu", lines);
-    analyzer_utils_describe_tab (&tab, _("Number of lines"), description_message);
-    g_free (description_message);
 
     /* Fixed length marker segment */
     if (data_length > 4)
@@ -67,7 +70,7 @@ analyze_dnl_marker (AnalyzerFile *file,
         ADVANCE_POINTER (file, data_length);
     }
 
-    analyzer_utils_insert_tab (file, &tab, marker_names[DNL]);
+    analyzer_utils_insert_tab (file, &tab, marker_names[marker_type]);
 
     return TRUE;
 

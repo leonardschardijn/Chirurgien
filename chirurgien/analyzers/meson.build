@@ -20,9 +20,8 @@ chirurgien_sources += [
   'analyzers/jpeg/jpeg-dht-marker.c',
   'analyzers/jpeg/jpeg-dac-marker.c',
   'analyzers/jpeg/jpeg-sofn-marker.c',
-  'analyzers/jpeg/jpeg-dri-marker.c',
+  'analyzers/jpeg/jpeg-dri-dnl-marker.c',
   'analyzers/jpeg/jpeg-sos-marker.c',
-  'analyzers/jpeg/jpeg-dnl-marker.c',
   'analyzers/jpeg/jpeg-com-marker.c'
 ]
 

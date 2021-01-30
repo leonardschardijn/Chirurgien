@@ -93,8 +93,8 @@ analyze_dqt_marker (AnalyzerFile *file,
 
         analyzer_utils_add_description_tab (&tab, _("Quantization table precision"), description_message,
                                             _("Quantization table precision\n"
-                                            "<tt>0<sub>16</sub></tt>\t8 bit values\n"
-                                            "<tt>1<sub>16</sub></tt>\t16 bit values"),
+                                              "<tt>0<sub>16</sub></tt>\t8 bit values\n"
+                                              "<tt>1<sub>16</sub></tt>\t16 bit values"),
                                             0, 10);
     }
 

@@ -60,8 +60,8 @@ analyze_dac_marker (AnalyzerFile *file,
 
         analyzer_utils_tag (file, MARKER_DATA_COLOR_1, 1,
                             _("Arithmetic conditioning table information\n"
-                            "Lower four bits: Arithmetic conditioningtable identifier\n"
-                            "Upper four bits: Table class"));
+                              "Lower four bits: Arithmetic conditioningtable identifier\n"
+                              "Upper four bits: Table class"));
 
         description_message = g_strdup_printf ("%u", arithmetic_info & 0x0F);
         analyzer_utils_add_description_tab (&tab, _("Arithmetic conditioning table identifier"),
@@ -78,8 +78,8 @@ analyze_dac_marker (AnalyzerFile *file,
             description_message = _("<span foreground=\"red\">INVALID</span>");
         analyzer_utils_describe_tooltip_tab (&tab, _("Table class"), description_message,
                                              _("Table class\n"
-                                             "<tt>0<sub>16</sub></tt>\tDC table (or lossless table)\n"
-                                             "<tt>1<sub>16</sub></tt>\tAC table"));
+                                               "<tt>0<sub>16</sub></tt>\tDC table (or lossless table)\n"
+                                               "<tt>1<sub>16</sub></tt>\tAC table"));
 
         analyzer_utils_tag (file, MARKER_DATA_COLOR_2, 1, _("Conditioning table value"));
         ADVANCE_POINTER (file, 1);

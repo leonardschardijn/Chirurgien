@@ -52,15 +52,10 @@ analyze_sos_marker (AnalyzerFile *file,
     analyzer_utils_tag (file, MARKER_LENGTH_COLOR, 2, _("Data length"));
 
     /* Number of components in scan */
-    if (!analyzer_utils_read (&components, file , 1))
+    if (!process_jpeg_field (file, &tab, _("Components in scan"), _("Number of components in scan"),
+                             NULL, MARKER_DATA_COLOR_1, 1,
+                             0, NULL, NULL, "%u", &components))
         return FALSE;
-
-    analyzer_utils_tag (file, MARKER_DATA_COLOR_1, 1,
-                        _("Number of components in scan"));
-
-    description_message = g_strdup_printf ("%hhu", components);
-    analyzer_utils_describe_tab (&tab, _("Components in scan"), description_message);
-    g_free (description_message);
 
     while (components)
     {
@@ -83,8 +78,8 @@ analyze_sos_marker (AnalyzerFile *file,
 
         analyzer_utils_tag (file, MARKER_DATA_COLOR_1, 1,
                             _("Component table selectors\n"
-                            "Lower four bits: AC entropy coding table selector\n"
-                            "Upper four bits: DC entropy coding table selector"));
+                              "Lower four bits: AC entropy coding table selector\n"
+                              "Upper four bits: DC entropy coding table selector"));
 
         description_message = g_strdup_printf ("%u", one_byte & 0x0F);
         analyzer_utils_describe_tab (&tab, _("AC entropy coding table selector"), description_message);
@@ -128,12 +123,12 @@ analyze_sos_marker (AnalyzerFile *file,
 
     analyzer_utils_tag (file, MARKER_DATA_COLOR_2, 1,
                         _("Successive approximation bit positions\n"
-                        "DCT mode:\n"
-                        "\tLower four bits: Point transform used (for the specified band)\n"
-                        "\tUpper four bits: Point transform used in the preceding scan (for the specified band)\n"
-                        "Lossless mode:\n"
-                        "\tLower four bits: Point transform used\n"
-                        "\tUpper four bits: No meaning"));
+                          "DCT mode:\n"
+                          "\tLower four bits: Point transform used (for the specified band)\n"
+                          "\tUpper four bits: Point transform used in the preceding scan (for the specified band)\n"
+                          "Lossless mode:\n"
+                          "\tLower four bits: Point transform used\n"
+                          "\tUpper four bits: No meaning"));
 
     data_used += 6;
 
@@ -152,7 +147,6 @@ analyze_sos_marker (AnalyzerFile *file,
         if (!analyzer_utils_read (&two_bytes, file , 2))
         {
             analyzer_utils_tag_error (file, ERROR_COLOR_1, -1, _("Unexpected end of file"));
-
             return FALSE;
         }
 
