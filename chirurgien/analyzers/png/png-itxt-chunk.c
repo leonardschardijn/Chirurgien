@@ -34,7 +34,7 @@ analyze_itxt_chunk (AnalyzerFile *file,
     gchar *description_message1;
     gchar *description_message2 = NULL;
 
-    g_autofree gchar *itxt_chunk = NULL;
+    gchar *itxt_chunk;
 
     gchar *keyword = NULL;
     gchar *language_tag = NULL;
@@ -59,19 +59,21 @@ analyze_itxt_chunk (AnalyzerFile *file,
     {
         analyzer_utils_tag_error (file, ERROR_COLOR_1, chunk_length,
                                   _("The first chunk must be the IHDR chunk"));
+        ADVANCE_POINTER (file, chunk_length);
         return TRUE;
     }
 
-    analyzer_utils_init_tab (&tab);
-
-    itxt_chunk = g_malloc (chunk_length);
-
-    if (!analyzer_utils_read (itxt_chunk, file, chunk_length))
+    if (!FILE_HAS_DATA_N (file, chunk_length))
     {
         analyzer_utils_tag_error (file, ERROR_COLOR_1, -1,
                                   _("Chunk length exceeds available data"));
         return FALSE;
     }
+
+    analyzer_utils_init_tab (&tab);
+
+    itxt_chunk = (gchar *) file->file_contents + GET_POINTER (file);
+    ADVANCE_POINTER (file, chunk_length);
 
     /* iTXt chunks have the following structure:
      *   keyword
@@ -161,8 +163,8 @@ analyze_itxt_chunk (AnalyzerFile *file,
 
             analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 1,
                                 _("ZLIB compression method and flags (CMF)\n"
-                                "Lower four bits: compression method (CM)\n"
-                                "Upper four bits: compression info (CINFO)"));
+                                  "Lower four bits: compression method (CM)\n"
+                                  "Upper four bits: compression info (CINFO)"));
 
             analyzer_utils_tag (file, CHUNK_DATA_COLOR_2, 1, _("ZLIB flags (FLG)"));
 
@@ -211,12 +213,12 @@ analyze_itxt_chunk (AnalyzerFile *file,
 
     analyzer_utils_describe_tooltip_tab (&tab, _("Compression flag"), description_message1,
                                          _("Compression flag\n"
-                                         "<tt>00<sub>16</sub></tt>\tUncompressed text\n"
-                                         "<tt>01<sub>16</sub></tt>\tCompressed text"));
+                                           "<tt>00<sub>16</sub></tt>\tUncompressed text\n"
+                                           "<tt>01<sub>16</sub></tt>\tCompressed text"));
     if (description_message2)
         analyzer_utils_describe_tooltip_tab (&tab, _("Compression method"), description_message2,
                                              _("Text string compression method\n"
-                                             "<tt>00<sub>16</sub></tt>\tzlib-format DEFLATE"));
+                                               "<tt>00<sub>16</sub></tt>\tzlib-format DEFLATE"));
 
     analyzer_utils_insert_tab (file, &tab, chunk_types[iTXt]);
 

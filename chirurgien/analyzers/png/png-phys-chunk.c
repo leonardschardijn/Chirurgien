@@ -30,11 +30,6 @@ analyze_phys_chunk (AnalyzerFile *file,
 {
     AnalyzerTab tab;
 
-    gchar *description_message;
-
-    guint32 axis;
-    guint8 unit;
-
     if (!chunk_length)
         return TRUE;
 
@@ -44,6 +39,7 @@ analyze_phys_chunk (AnalyzerFile *file,
     {
         analyzer_utils_tag_error (file, ERROR_COLOR_1, chunk_length,
                                   _("The first chunk must be the IHDR chunk"));
+        ADVANCE_POINTER (file, chunk_length);
         return TRUE;
     }
 
@@ -51,42 +47,28 @@ analyze_phys_chunk (AnalyzerFile *file,
 
     analyzer_utils_set_title_tab (&tab, _("<b>Intended pixel size or aspect ratio</b>"));
 
-    if (!analyzer_utils_read (&axis, file , 4))
+    if (!process_png_field (file, &tab, _("X axis"), _("X axis (pixels per unit)"),
+                       NULL, CHUNK_DATA_COLOR_1, 4, 0, NULL, NULL, "%u", NULL))
         goto END_ERROR;
 
-    analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 4, _("X axis (pixels per unit)"));
+    if (!process_png_field (file, &tab, _("Y axis"), _("Y axis (pixels per unit)"),
+                       NULL, CHUNK_DATA_COLOR_2, 4, 0, NULL, NULL, "%u", NULL))
+        goto END_ERROR;
 
-    axis = g_ntohl (axis);
-    description_message = g_strdup_printf ("%u", axis);
-    analyzer_utils_describe_tab (&tab, _("X axis"), description_message);
-    g_free (description_message);
-
-    if (!analyzer_utils_read (&axis, file , 4))
-            goto END_ERROR;
-
-    analyzer_utils_tag (file, CHUNK_DATA_COLOR_2, 4, _("Y axis (pixels per unit)"));
-
-    axis = g_ntohl (axis);
-    description_message = g_strdup_printf ("%u", axis);
-    analyzer_utils_describe_tab (&tab, _("Y axis"), description_message);
-    g_free (description_message);
-
-    if (!analyzer_utils_read (&unit, file, 1))
-        return FALSE;
-
-    analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 1, _("Unit specifier"));
-
-    if (unit == 0)
-        description_message = _("Unknown");
-    else if (unit == 1)
-        description_message = _("Meter");
-    else
-        description_message = _("<span foreground=\"red\">INVALID</span>");
-
-    analyzer_utils_describe_tooltip_tab (&tab, _("Unit specifier"), description_message,
-                                         _("Unit specifier\n"
-                                         "<tt>00<sub>16</sub></tt>\tUnknown (pHYs chunk defines aspect ratio)\n"
-                                         "<tt>01<sub>16</sub></tt>\tMeter"));
+    guint8 unit_values[] = { 0x0, 0x1 };
+    gchar *unit_value_description[] = {
+        _("Unknown"),
+        _("Meter"),
+        _("<span foreground=\"red\">INVALID</span>")
+    };
+    if (!process_png_field (file, &tab, _("Unit specifier"), NULL,
+                       _("Unit specifier\n"
+                         "<tt>00<sub>16</sub></tt>\tUnknown (pHYs chunk defines aspect ratio)\n"
+                         "<tt>01<sub>16</sub></tt>\tMeter"),
+                       CHUNK_DATA_COLOR_1, 1,
+                       sizeof (unit_values), unit_values, unit_value_description,
+                       NULL, NULL))
+        goto END_ERROR;
 
     /* Fixed length chunk */
     if (chunk_length > 9)

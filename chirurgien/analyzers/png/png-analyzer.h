@@ -66,6 +66,19 @@ enum {
 
 extern gchar *chunk_types[CHUNK_TYPES];
 
+gboolean    process_png_field        (AnalyzerFile *,
+                                      AnalyzerTab *,
+                                      gchar *,
+                                      gchar *,
+                                      gchar *,
+                                      GdkRGBA *,
+                                      guint,
+                                      guint,
+                                      guint8 *,
+                                      gchar **,
+                                      gchar *,
+                                      void *);
+
 /* png-ihdr-chunk.c */
 gboolean     analyze_ihdr_chunk      (AnalyzerFile *,
                                       gsize,

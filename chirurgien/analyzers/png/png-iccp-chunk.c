@@ -31,7 +31,7 @@ analyze_iccp_chunk (AnalyzerFile *file,
 {
     AnalyzerTab tab;
 
-    g_autofree guchar *iccp_chunk = NULL;
+    guchar *iccp_chunk;
 
     g_autofree gchar *profile_name = NULL;
     guchar *compressed_profile;
@@ -52,19 +52,21 @@ analyze_iccp_chunk (AnalyzerFile *file,
     {
         analyzer_utils_tag_error (file, ERROR_COLOR_1, chunk_length,
                                   _("The first chunk must be the IHDR chunk"));
+        ADVANCE_POINTER (file, chunk_length);
         return TRUE;
     }
 
-    analyzer_utils_init_tab (&tab);
-
-    iccp_chunk = g_malloc (chunk_length);
-
-    if (!analyzer_utils_read (iccp_chunk, file, chunk_length))
+    if (!FILE_HAS_DATA_N (file, chunk_length))
     {
         analyzer_utils_tag_error (file, ERROR_COLOR_1, -1,
                                   _("Chunk length exceeds available data"));
         return FALSE;
     }
+
+    analyzer_utils_init_tab (&tab);
+
+    iccp_chunk = file->file_contents + GET_POINTER (file);
+    ADVANCE_POINTER (file, chunk_length);
 
     /* The null character separes the profile name and the compression method + compressed profile */
     /* The profile name must the 1-79 bytes long */
@@ -110,14 +112,14 @@ analyze_iccp_chunk (AnalyzerFile *file,
 
         analyzer_utils_tag (file, CHUNK_DATA_COLOR_2, 1,
                             _("ZLIB compression method and flags (CMF)\n"
-                            "Lower four bits: compression method (CM)\n"
-                            "Upper four bits: compression info (CINFO)"));
+                              "Lower four bits: compression method (CM)\n"
+                              "Upper four bits: compression info (CINFO)"));
 
         analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 1, _("ZLIB flags (FLG)"));
 
         analyzer_utils_describe_tooltip_tab (&tab, _("Compression method"), _("zlib-format DEFLATE"),
                                              _("ICC profile compression method\n"
-                                             "<tt>00<sub>16</sub></tt>\tzlib-format DEFLATE"));
+                                               "<tt>00<sub>16</sub></tt>\tzlib-format DEFLATE"));
 
         /* deflate profile size = chunk_length - profile_name - null separator (1) -
          * compression method (1) - ZLIB CMF (1) - ZLIB FLG (1) - ZLIB Adler32 chechsum (4) */
@@ -149,7 +151,7 @@ analyze_iccp_chunk (AnalyzerFile *file,
         analyzer_utils_describe_tooltip_tab (&tab, _("Compression method"),
                                              _("<span foreground=\"red\">INVALID</span>"),
                                              _("ICC profile compression method\n"
-                                             "<tt>00<sub>16</sub></tt>\tzlib-format DEFLATE"));
+                                               "<tt>00<sub>16</sub></tt>\tzlib-format DEFLATE"));
     }
 
     analyzer_utils_add_footer_tab (&tab, _("NOTE: ICC profile names are encoded using ISO-8859-1"));

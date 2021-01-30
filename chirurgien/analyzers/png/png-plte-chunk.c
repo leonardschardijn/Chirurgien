@@ -40,6 +40,7 @@ analyze_plte_chunk (AnalyzerFile *file,
     {
         analyzer_utils_tag_error (file, ERROR_COLOR_1, chunk_length,
                                    _("Only one PLTE chunk is allowed"));
+        ADVANCE_POINTER (file, chunk_length);
         return TRUE;
     }
 
@@ -47,6 +48,7 @@ analyze_plte_chunk (AnalyzerFile *file,
     {
         analyzer_utils_tag_error (file, ERROR_COLOR_1, chunk_length,
                                   _("The first chunk must be the IHDR chunk"));
+        ADVANCE_POINTER (file, chunk_length);
         return TRUE;
     }
 
@@ -54,6 +56,7 @@ analyze_plte_chunk (AnalyzerFile *file,
     {
         analyzer_utils_tag_error (file, ERROR_COLOR_1, chunk_length,
                                   _("Incorrect palette length"));
+        ADVANCE_POINTER (file, chunk_length);
         return TRUE;
     }
 
@@ -63,6 +66,7 @@ analyze_plte_chunk (AnalyzerFile *file,
     {
         analyzer_utils_tag_error (file, ERROR_COLOR_1, chunk_length,
                                   _("Palettes cannot have more than 256 entries"));
+        ADVANCE_POINTER (file, chunk_length);
         return TRUE;
     }
 

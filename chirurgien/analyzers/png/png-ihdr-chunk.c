@@ -35,8 +35,6 @@ analyze_ihdr_chunk (AnalyzerFile *file,
 
     gchar *description_message;
 
-    guint32 four_bytes;
-    guint8 one_byte;
     guint8 bitdepth;
 
     if (!chunk_length)
@@ -45,164 +43,111 @@ analyze_ihdr_chunk (AnalyzerFile *file,
     if (chunk_counts[IHDR])
     {
         analyzer_utils_tag_error (file, ERROR_COLOR_1, chunk_length, _("Only one IHDR chunk is allowed"));
+        ADVANCE_POINTER (file, chunk_length);
         return TRUE;
     }
 
     /* Image width */
-    if (!analyzer_utils_read (&four_bytes, file , 4))
+    if (!process_png_field (file, NULL, _("Image width"), NULL,
+                       _("Minimum value: 1\n"
+                         "Maximum value: 2<sup>31</sup> - 1 (signed 32-bit integer)"),
+                       CHUNK_DATA_COLOR_1, 4, 0, NULL, NULL, "%u", NULL))
         goto END_ERROR;
-
-    analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 4, _("Image width"));
-
-    four_bytes = g_ntohl (four_bytes);
-    description_message = g_strdup_printf ("%u", four_bytes);
-    analyzer_utils_describe_tooltip (file, _("Image width"), description_message,
-                                     _("Minimum value: 1\n"
-                                     "Maximum value: 2<sup>31</sup> - 1 (signed 32-bit integer)"));
-    g_free (description_message);
 
     /* Image height */
-    if (!analyzer_utils_read (&four_bytes, file , 4))
+    if (!process_png_field (file, NULL, _("Image height"), NULL,
+                       _("Minimum value: 1\n"
+                         "Maximum value: 2<sup>31</sup> - 1 (signed 32-bit integer)"),
+                       CHUNK_DATA_COLOR_2, 4, 0, NULL, NULL, "%u", NULL))
         goto END_ERROR;
 
-    analyzer_utils_tag (file, CHUNK_DATA_COLOR_2, 4, _("Image height"));
-
-    four_bytes = g_ntohl (four_bytes);
-    description_message = g_strdup_printf ("%u", four_bytes);
-    analyzer_utils_describe_tooltip (file, _("Image height"), description_message,
-                                     _("Minimum value: 1\n"
-                                     "Maximum value: 2<sup>31</sup> - 1 (signed 32-bit integer)"));
-    g_free (description_message);
-
     /* Bit depth */
-    if (!analyzer_utils_read (&bitdepth, file , 1))
-        return FALSE;
-
-    switch (bitdepth)
-    {
-        case 1:
-        case 2:
-        case 4:
-        case 8:
-        case 16:
-            analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 1, _("Bit depth"));
-            description_message = g_strdup_printf (_("%hhu bits"), bitdepth);
-            break;
-        default:
-            analyzer_utils_tag_error (file, ERROR_COLOR_1, 1, _("Invalid bit depth"));
-            description_message = g_strdup_printf ("%s", _("<span foreground=\"red\">INVALID</span>"));
-    }
-    analyzer_utils_describe_tooltip (file, _("Bit depth"), description_message,
-                                     _("Bit depth\n"
-                                     "<tt>01<sub>16</sub></tt>\t1 bit\n"
-                                     "<tt>02<sub>16</sub></tt>\t2 bits\n"
-                                     "<tt>04<sub>16</sub></tt>\t4 bits\n"
-                                     "<tt>08<sub>16</sub></tt>\t8 bits\n"
-                                     "<tt>10<sub>16</sub></tt>\t16 bits"));
-    g_free (description_message);
+    guint8 bit_depth_values[] = { 0x1, 0x2, 0x4, 0x8, 0x10 };
+    gchar *bit_depth_value_description[] = {
+        _("1 bit"),
+        _("2 bits"),
+        _("4 bits"),
+        _("8 bits"),
+        _("16 bits"),
+        _("<span foreground=\"red\">INVALID</span>")
+    };
+    if (!process_png_field (file, NULL, _("Bit depth"), NULL,
+                       _("Bit depth\n"
+                         "<tt>01<sub>16</sub></tt>\t1 bit\n"
+                         "<tt>02<sub>16</sub></tt>\t2 bits\n"
+                         "<tt>04<sub>16</sub></tt>\t4 bits\n"
+                         "<tt>08<sub>16</sub></tt>\t8 bits\n"
+                         "<tt>10<sub>16</sub></tt>\t16 bits"),
+                       CHUNK_DATA_COLOR_1, 1,
+                       sizeof (bit_depth_values), bit_depth_values, bit_depth_value_description,
+                       NULL, &bitdepth))
+        goto END_ERROR;
 
     /* Color type */
-    if (!analyzer_utils_read (colortype, file, 1))
-        return FALSE;
-
-    switch (*colortype)
-    {
-        case 0:
-            description_message = _("Grayscale sample");
-            goto VALID_COLORTYPE;
-        case 2:
-            description_message = _("RGB triple");
-            goto VALID_COLORTYPE;
-        case 3:
-            description_message = _("Palette index");
-            goto VALID_COLORTYPE;
-        case 4:
-            description_message = _("Grayscale sample + alpha sample");
-            goto VALID_COLORTYPE;
-        case 6:
-            description_message = _("RGB triple + alpha sample");
-            goto VALID_COLORTYPE;
-        default:
-            analyzer_utils_tag_error (file, ERROR_COLOR_1, 1, _("Invalid color type"));
-            description_message = _("<span foreground=\"red\">INVALID</span>");
-            goto END_COLORTYPE;
-    }
-    VALID_COLORTYPE:
-    analyzer_utils_tag (file, CHUNK_DATA_COLOR_2, 1, _("Color type"));
-
-    END_COLORTYPE:
-    analyzer_utils_describe_tooltip (file, _("Color type"), description_message,
-                                     _("Color type\n"
-                                     "<tt>00<sub>16</sub></tt>\tGrayscale sample\n"
-                                     "<tt>02<sub>16</sub></tt>\tRGB triple\n"
-                                     "<tt>03<sub>16</sub></tt>\tPalette index (a PLTE chunk must appear)\n"
-                                     "<tt>04<sub>16</sub></tt>\tGrayscale sample + alpha sample\n"
-                                     "<tt>06<sub>16</sub></tt>\tRGB triple + alpha sample"));
+    guint8 color_type_values[] = { 0x0, 0x2, 0x3, 0x4, 0x6 };
+    gchar *color_type_value_description[] = {
+        _("Grayscale sample"),
+        _("RGB triple"),
+        _("Palette index (a PLTE chunk must appear)"),
+        _("Grayscale sample + alpha sample"),
+        _("RGB triple + alpha sample"),
+        _("<span foreground=\"red\">INVALID</span>")
+    };
+    if (!process_png_field (file, NULL, _("Color type"), NULL,
+                       _("Color type\n"
+                         "<tt>00<sub>16</sub></tt>\tGrayscale sample\n"
+                         "<tt>02<sub>16</sub></tt>\tRGB triple\n"
+                         "<tt>03<sub>16</sub></tt>\tPalette index (a PLTE chunk must appear)\n"
+                         "<tt>04<sub>16</sub></tt>\tGrayscale sample + alpha sample\n"
+                         "<tt>06<sub>16</sub></tt>\tRGB triple + alpha sample"),
+                       CHUNK_DATA_COLOR_2, 1,
+                       sizeof (color_type_values), color_type_values, color_type_value_description,
+                       NULL, colortype))
+        goto END_ERROR;
 
     /* Compression method */
-    if (!analyzer_utils_read (&one_byte, file , 1))
-        return FALSE;
-
-    if (!one_byte)
-    {
-        analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 1, _("Compression method"));
-        description_message = _("zlib-format DEFLATE");
-    }
-    else
-    {
-        analyzer_utils_tag_error (file, ERROR_COLOR_1, 1, _("Invalid compression method"));
-        description_message = _("<span foreground=\"red\">INVALID</span>");
-    }
-    analyzer_utils_describe_tooltip (file, _("Compression method"), description_message,
-                                     _("Compression method\n"
-                                     "<tt>00<sub>16</sub></tt>\tzlib-format DEFLATE"));
+    guint8 compression_values[] = { 0x0 };
+    gchar *compression_value_description[] = {
+        _("zlib-format DEFLATE"),
+        _("<span foreground=\"red\">INVALID</span>")
+    };
+    if (!process_png_field (file, NULL, _("Compression method"), NULL,
+                       _("Compression method\n"
+                         "<tt>00<sub>16</sub></tt>\tzlib-format DEFLATE"),
+                       CHUNK_DATA_COLOR_1, 1,
+                       sizeof (compression_values), compression_values, compression_value_description,
+                       NULL, NULL))
+        goto END_ERROR;
 
     /* Filter method */
-    if (!analyzer_utils_read (&one_byte, file , 1))
-        return FALSE;
-
-    if (!one_byte)
-    {
-        analyzer_utils_tag (file, CHUNK_DATA_COLOR_2, 1, _("Filter method"));
-        description_message = _("Adaptative filtering (five basic types)");
-    }
-    else
-    {
-        analyzer_utils_tag_error (file, ERROR_COLOR_1, 1, _("Invalid filter method"));
-        description_message = _("<span foreground=\"red\">INVALID</span>");
-    }
-    analyzer_utils_describe_tooltip (file, _("Filter method"), description_message,
-                                     _("Filter method\n"
-                                     "<tt>00<sub>16</sub></tt>\tAdaptative filtering (five basic types)"));
+    guint8 filter_values[] = { 0x0 };
+    gchar *filter_value_description[] = {
+        _("Adaptative filtering (five basic types)"),
+        _("<span foreground=\"red\">INVALID</span>")
+    };
+    if (!process_png_field (file, NULL, _("Filter method"), NULL,
+                       _("Filter method\n"
+                         "<tt>00<sub>16</sub></tt>\tAdaptative filtering (five basic types)"),
+                       CHUNK_DATA_COLOR_2, 1,
+                       sizeof (filter_values), filter_values, filter_value_description,
+                       NULL, NULL))
+        goto END_ERROR;
 
     /* Interlace method  */
-    if (!analyzer_utils_read (&one_byte, file , 1))
-        return FALSE;
-
-    if (!one_byte)
-    {
-        description_message = _("No interlace");
-        goto VALID_INTERLACE;
-    }
-    else if (one_byte == 1)
-    {
-        description_message = _("Adam7 interlace");
-        goto VALID_INTERLACE;
-    }
-    else
-    {
-        analyzer_utils_tag_error (file, ERROR_COLOR_1, 1, _("Invalid interlace method"));
-        description_message = _("<span foreground=\"red\">INVALID</span>");
-        goto END_INTERLACE;
-    }
-    VALID_INTERLACE:
-    analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 1, _("Interlace method"));
-
-    END_INTERLACE:
-    analyzer_utils_describe_tooltip (file, _("Interlace method"), description_message,
-                                     _("Interlace method\n"
-                                     "<tt>00<sub>16</sub></tt>\tNo interlace\n"
-                                     "<tt>01<sub>16</sub></tt>\tAdam7 interlace"));
+    guint8 interlace_values[] = { 0x0, 0x1 };
+    gchar *interlace_description[] = {
+        _("No interlace"),
+        _("Adam7 interlace"),
+        _("<span foreground=\"red\">INVALID</span>")
+    };
+    if (!process_png_field (file, NULL, _("Interlace method"), NULL,
+                       _("Interlace method\n"
+                         "<tt>00<sub>16</sub></tt>\tNo interlace\n"
+                         "<tt>01<sub>16</sub></tt>\tAdam7 interlace"),
+                       CHUNK_DATA_COLOR_1, 1,
+                       sizeof (interlace_values), interlace_values, interlace_description,
+                       NULL, NULL))
+        goto END_ERROR;
 
     /* Fixed length chunk */
     if (chunk_length > 13)
@@ -272,13 +217,13 @@ analyze_ihdr_chunk (AnalyzerFile *file,
     }
     END:
     analyzer_utils_add_description (file, _("Color type/bit depth combination"), description_message,
-                _("Color type and bit depth combinations\n"
-                "Color type: valid bit depths\n"
-                "<tt>00<sub>16</sub>: 01<sub>16</sub>, 02<sub>16</sub>, 04<sub>16</sub>, 08<sub>16</sub>, 10<sub>16</sub></tt>\n"
-                "<tt>02<sub>16</sub>: 08<sub>16</sub>, 10<sub>16</sub></tt>\n"
-                "<tt>03<sub>16</sub>: 01<sub>16</sub>, 02<sub>16</sub>, 04<sub>16</sub>, 08<sub>16</sub></tt>\n"
-                "<tt>04<sub>16</sub>: 08<sub>16</sub>, 10<sub>16</sub></tt>\n"
-                "<tt>06<sub>16</sub>: 08<sub>16</sub>, 10<sub>16</sub></tt>"),
+            _("Color type and bit depth combinations\n"
+            "Color type: valid bit depths\n"
+            "<tt>00<sub>16</sub>: 01<sub>16</sub>, 02<sub>16</sub>, 04<sub>16</sub>, 08<sub>16</sub>, 10<sub>16</sub></tt>\n"
+            "<tt>02<sub>16</sub>: 08<sub>16</sub>, 10<sub>16</sub></tt>\n"
+            "<tt>03<sub>16</sub>: 01<sub>16</sub>, 02<sub>16</sub>, 04<sub>16</sub>, 08<sub>16</sub></tt>\n"
+            "<tt>04<sub>16</sub>: 08<sub>16</sub>, 10<sub>16</sub></tt>\n"
+            "<tt>06<sub>16</sub>: 08<sub>16</sub>, 10<sub>16</sub></tt>"),
                 10, 0);
 
     chunk_counts[IHDR]++;

@@ -30,9 +30,7 @@ analyze_chrm_chunk (AnalyzerFile *file,
 {
     AnalyzerTab tab;
 
-    gchar *description_message;
-
-    guint32 chromaticity;
+    GdkRGBA *color_toggle;
 
     gchar *chromaticities[] = {
         _("White point x"),
@@ -45,8 +43,6 @@ analyze_chrm_chunk (AnalyzerFile *file,
         _("Blue y")
     };
 
-    guint i;
-
     if (!chunk_length)
         return TRUE;
 
@@ -56,6 +52,7 @@ analyze_chrm_chunk (AnalyzerFile *file,
     {
         analyzer_utils_tag_error (file, ERROR_COLOR_1, chunk_length,
                                   _("The first chunk must be the IHDR chunk"));
+        ADVANCE_POINTER (file, chunk_length);
         return TRUE;
     }
 
@@ -63,20 +60,16 @@ analyze_chrm_chunk (AnalyzerFile *file,
 
     analyzer_utils_set_title_tab (&tab, _("<b>Primary chromaticities and white point</b>"));
 
-    for (i = 0; i < 8; i++)
+    for (guint i = 0; i < 8; i++)
     {
-        if (!analyzer_utils_read (&chromaticity, file , 4))
-            goto END_ERROR;
-
         if (i % 2)
-            analyzer_utils_tag (file, CHUNK_DATA_COLOR_2, 4, chromaticities[i]);
+            color_toggle = CHUNK_DATA_COLOR_2;
         else
-            analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 4, chromaticities[i]);
+            color_toggle = CHUNK_DATA_COLOR_1;
 
-        chromaticity = g_ntohl (chromaticity);
-        description_message = g_strdup_printf ("%u", chromaticity);
-        analyzer_utils_describe_tab (&tab, chromaticities[i], description_message);
-        g_free (description_message);
+        if (!process_png_field (file, &tab, chromaticities[i], NULL,
+                           NULL, color_toggle, 4, 0, NULL, NULL, "%u", NULL))
+            goto END_ERROR;
     }
 
     /* Fixed length chunk */

@@ -32,6 +32,8 @@ analyze_time_chunk (AnalyzerFile *file,
 
     gchar *description_message;
 
+    GdkRGBA *color_toggle;
+
     guint16 year;
     guint8 date[5];
 
@@ -54,6 +56,7 @@ analyze_time_chunk (AnalyzerFile *file,
     {
         analyzer_utils_tag_error (file, ERROR_COLOR_1, chunk_length,
                                   _("The first chunk must be the IHDR chunk"));
+        ADVANCE_POINTER (file, chunk_length);
         return TRUE;
     }
 
@@ -61,29 +64,20 @@ analyze_time_chunk (AnalyzerFile *file,
 
     analyzer_utils_set_title_tab (&tab, _("<b>Last-modification time</b>"));
 
-    if (!analyzer_utils_read (&year, file , 2))
-            goto END_ERROR;
-
-    analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 2, _("Year"));
-
-    year = g_ntohs (year);
-    description_message = g_strdup_printf ("%u", year);
-    analyzer_utils_describe_tab (&tab, _("Year"), description_message);
-    g_free (description_message);
+    if (!process_png_field (file, &tab, _("Year"), NULL,
+                            NULL, CHUNK_DATA_COLOR_1, 2, 0, NULL, NULL, "%u", &year))
+        goto END_ERROR;
 
     for (i = 0; i < 5; i++)
     {
-        if (!analyzer_utils_read (&date[i], file, 1))
-            return FALSE;
-
         if (i % 2)
-            analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 1, fields[i]);
+            color_toggle = CHUNK_DATA_COLOR_1;
         else
-            analyzer_utils_tag (file, CHUNK_DATA_COLOR_2, 1, fields[i]);
+            color_toggle = CHUNK_DATA_COLOR_2;
 
-        description_message = g_strdup_printf ("%u", date[i]);
-        analyzer_utils_describe_tab (&tab, fields[i], description_message);
-        g_free (description_message);
+        if (!process_png_field (file, &tab, fields[i], NULL,
+                        NULL, color_toggle, 1, 0, NULL, NULL, "%u", &date[i]))
+            return FALSE;
     }
 
     description_message = g_strdup_printf ("%.4u-%.2u-%.2u %.2u:%.2u:%.2u",

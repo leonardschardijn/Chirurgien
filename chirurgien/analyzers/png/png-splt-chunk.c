@@ -32,7 +32,7 @@ analyze_splt_chunk (AnalyzerFile *file,
 
     gchar *description_message;
 
-    g_autofree gchar *splt_chunk = NULL;
+    gchar *splt_chunk;
 
     g_autofree gchar *palette_name = NULL;
 
@@ -51,19 +51,21 @@ analyze_splt_chunk (AnalyzerFile *file,
     {
         analyzer_utils_tag_error (file, ERROR_COLOR_1, chunk_length,
                                   _("The first chunk must be the IHDR chunk"));
+        ADVANCE_POINTER (file, chunk_length);
         return TRUE;
     }
 
-    analyzer_utils_init_tab (&tab);
-
-    splt_chunk = g_malloc (chunk_length);
-
-    if (!analyzer_utils_read (splt_chunk, file, chunk_length))
+    if (!FILE_HAS_DATA_N (file, chunk_length))
     {
         analyzer_utils_tag_error (file, ERROR_COLOR_1, -1,
                                   _("Chunk length exceeds available data"));
         return FALSE;
     }
+
+    analyzer_utils_init_tab (&tab);
+
+    splt_chunk = (gchar *) file->file_contents + GET_POINTER (file);
+    ADVANCE_POINTER (file, chunk_length);
 
     /* The null character separes the palette name and the sample depth + palette entries */
     /* The palette name must the 1-79 bytes long */
@@ -106,8 +108,8 @@ analyze_splt_chunk (AnalyzerFile *file,
 
     analyzer_utils_describe_tooltip_tab (&tab, _("Sample depth"), description_message,
                                          _("Sample depth\n"
-                                         "<tt>08<sub>16</sub></tt>\t8 bits\n"
-                                         "<tt>10<sub>16</sub></tt>\t16 bits"));
+                                           "<tt>08<sub>16</sub></tt>\t8 bits\n"
+                                           "<tt>10<sub>16</sub></tt>\t16 bits"));
     g_free (description_message);
 
     chunk_length -= palette_name_length + 2;
@@ -117,7 +119,7 @@ analyze_splt_chunk (AnalyzerFile *file,
         if (chunk_length % 6)
         {
             analyzer_utils_tag_error (file, ERROR_COLOR_1, chunk_length,
-                                _("Invalid palette entry length"));
+                                      _("Invalid palette entry length"));
             return TRUE;
         }
         else

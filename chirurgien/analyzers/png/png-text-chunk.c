@@ -30,7 +30,7 @@ analyze_text_chunk (AnalyzerFile *file,
 {
     AnalyzerTab tab;
 
-    g_autofree gchar *text_chunk = NULL;
+    gchar *text_chunk = NULL;
 
     g_autofree gchar *keyword = NULL;
     g_autofree gchar *text = NULL;
@@ -48,19 +48,21 @@ analyze_text_chunk (AnalyzerFile *file,
     {
         analyzer_utils_tag_error (file, ERROR_COLOR_1, chunk_length,
                                   _("The first chunk must be the IHDR chunk"));
+        ADVANCE_POINTER (file, chunk_length);
         return TRUE;
     }
 
-    analyzer_utils_init_tab (&tab);
-
-    text_chunk = g_malloc (chunk_length);
-
-    if (!analyzer_utils_read (text_chunk, file, chunk_length))
+    if (!FILE_HAS_DATA_N (file, chunk_length))
     {
         analyzer_utils_tag_error (file, ERROR_COLOR_1, -1,
                                   _("Chunk length exceeds available data"));
         return FALSE;
     }
+
+    analyzer_utils_init_tab (&tab);
+
+    text_chunk = (gchar *) file->file_contents + GET_POINTER (file);
+    ADVANCE_POINTER (file, chunk_length);
 
     /* The null character separes the keyword and the text string */
     /* The keyword must the 1-79 bytes long */

@@ -34,9 +34,6 @@ analyze_trns_chunk (AnalyzerFile *file,
 
     gchar *description_message;
 
-    guint16 alpha;
-
-    guint i;
     gsize chunk_used = 0;
 
     if (!chunk_length)
@@ -48,6 +45,7 @@ analyze_trns_chunk (AnalyzerFile *file,
     {
         analyzer_utils_tag_error (file, ERROR_COLOR_1, chunk_length,
                                   _("The first chunk must be the IHDR chunk"));
+        ADVANCE_POINTER (file, chunk_length);
         return TRUE;
     }
 
@@ -57,48 +55,25 @@ analyze_trns_chunk (AnalyzerFile *file,
 
     if (colortype == 0)
     {
-        if (!analyzer_utils_read (&alpha, file , 2))
+        if (!process_png_field (file, &tab, _("Grayscale alpha channel"), NULL,
+                           NULL, CHUNK_DATA_COLOR_1, 2, 0, NULL, NULL, _("%u bits"), NULL))
             goto END_ERROR;
 
         chunk_used += 2;
-        analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 2, _("Grayscale alpha channel"));
-
-        alpha = g_ntohs (alpha);
-        description_message = g_strdup_printf (_("%u bits"), alpha);
-        analyzer_utils_describe_tab (&tab, _("Grayscale alpha channel"), description_message);
-        g_free (description_message);
     }
     else if (colortype == 2)
     {
-        if (!analyzer_utils_read (&alpha, file , 2))
+        if (!process_png_field (file, &tab, _("Red alpha channel"), NULL,
+                           NULL, CHUNK_DATA_COLOR_1, 2, 0, NULL, NULL, _("%u bits"), NULL))
             goto END_ERROR;
 
-        analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 2, _("Red alpha channel"));
-
-        alpha = g_ntohs (alpha);
-        description_message = g_strdup_printf (_("%u bits"), alpha);
-        analyzer_utils_describe_tab (&tab, _("Red alpha channel"), description_message);
-        g_free (description_message);
-
-        if (!analyzer_utils_read (&alpha, file , 2))
+        if (!process_png_field (file, &tab, _("Green alpha channel"), NULL,
+                           NULL, CHUNK_DATA_COLOR_2, 2, 0, NULL, NULL, _("%u bits"), NULL))
             goto END_ERROR;
 
-        analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 2, _("Green alpha channel"));
-
-        alpha = g_ntohs (alpha);
-        description_message = g_strdup_printf (_("%u bits"), alpha);
-        analyzer_utils_describe_tab (&tab, _("Green alpha channel"), description_message);
-        g_free (description_message);
-
-        if (!analyzer_utils_read (&alpha, file , 2))
+        if (!process_png_field (file, &tab, _("Blue alpha channel"), NULL,
+                           NULL, CHUNK_DATA_COLOR_1, 2, 0, NULL, NULL, _("%u bits"), NULL))
             goto END_ERROR;
-
-        analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 2, _("Blue alpha channel"));
-
-        alpha = g_ntohs (alpha);
-        description_message = g_strdup_printf (_("%u bits"), alpha);
-        analyzer_utils_describe_tab (&tab, _("Blue alpha channel"), description_message);
-        g_free (description_message);
 
         chunk_used += 6;
     }
@@ -108,10 +83,11 @@ analyze_trns_chunk (AnalyzerFile *file,
         {
             analyzer_utils_tag_error (file, ERROR_COLOR_1, chunk_length,
                                       _("The tRNS chunk has more alpha values than palette entries"));
+            ADVANCE_POINTER (file, chunk_length);
             return TRUE;
         }
 
-        for (i = 0; i < chunk_length; i++)
+        for (guint i = 0; i < chunk_length; i++)
         {
             if (i % 2)
                 analyzer_utils_tag (file, CHUNK_DATA_COLOR_2, 1, _("Palette entry alpha"));
@@ -120,7 +96,6 @@ analyze_trns_chunk (AnalyzerFile *file,
         }
 
         ADVANCE_POINTER (file, chunk_length);
-        chunk_length -= chunk_length;
 
         description_message = g_strdup_printf ("%u", palette_entries);
         analyzer_utils_describe_tab (&tab, _("Palette entries"), description_message);

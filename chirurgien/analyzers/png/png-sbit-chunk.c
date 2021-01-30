@@ -31,9 +31,6 @@ analyze_sbit_chunk (AnalyzerFile *file,
 {
     AnalyzerTab tab;
 
-    gchar *description_message;
-
-    guint8 significant_bits;
     gsize chunk_used = 0;
 
     if (!chunk_length)
@@ -45,6 +42,7 @@ analyze_sbit_chunk (AnalyzerFile *file,
     {
         analyzer_utils_tag_error (file, ERROR_COLOR_1, chunk_length,
                                   _("The first chunk must be the IHDR chunk"));
+        ADVANCE_POINTER (file, chunk_length);
         return TRUE;
     }
 
@@ -52,63 +50,43 @@ analyze_sbit_chunk (AnalyzerFile *file,
 
     analyzer_utils_set_title_tab (&tab, _("<b>Original number of significant bits</b>"));
 
-    if (!analyzer_utils_read (&significant_bits, file, 1))
-        return FALSE;
-
     if (colortype == 0 || colortype == 4)
     {
-        chunk_used++;
-        analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 1,
-                            _("Grayscale sample significant bits"));
+        if (!process_png_field (file, &tab, _("Grayscale sample"),
+                                _("Grayscale sample significant bits"),
+                                NULL, CHUNK_DATA_COLOR_1, 1, 0, NULL, NULL, _("%u bits"), NULL))
+            return FALSE;
 
-        description_message = g_strdup_printf (_("%u bits"), significant_bits);
-        analyzer_utils_describe_tab (&tab, _("Grayscale sample"), description_message);
-        g_free (description_message);
+        chunk_used++;
     }
     else if (colortype == 2 || colortype == 3 || colortype == 6)
     {
-        analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 1,
-                            _("Red sample significant bits"));
-
-        description_message = g_strdup_printf (_("%u bits"), significant_bits);
-        analyzer_utils_describe_tab (&tab, _("Red sample"), description_message);
-        g_free (description_message);
-
-        if (!analyzer_utils_read (&significant_bits, file, 1))
+        if (!process_png_field (file, &tab, _("Red sample"),
+                                _("Red sample significant bits"),
+                                NULL, CHUNK_DATA_COLOR_1, 1, 0, NULL, NULL, _("%u bits"), NULL))
             return FALSE;
 
-        analyzer_utils_tag (file, CHUNK_DATA_COLOR_2, 1,
-                            _("Green sample significant bits"));
-
-        description_message = g_strdup_printf (_("%u bits"), significant_bits);
-        analyzer_utils_describe_tab (&tab, _("Green sample"), description_message);
-        g_free (description_message);
-
-        if (!analyzer_utils_read (&significant_bits, file, 1))
+        if (!process_png_field (file, &tab, _("Green sample"),
+                                _("Green sample significant bits"),
+                                NULL, CHUNK_DATA_COLOR_2, 1, 0, NULL, NULL, _("%u bits"), NULL))
             return FALSE;
 
-        analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 1,
-                            _("Blue sample significant bits"));
-
-        description_message = g_strdup_printf (_("%u bits"), significant_bits);
-        analyzer_utils_describe_tab (&tab, _("Blue sample"), description_message);
-        g_free (description_message);
+        if (!process_png_field (file, &tab, _("Blue sample"),
+                                _("Blue sample significant bits"),
+                                NULL, CHUNK_DATA_COLOR_1, 1, 0, NULL, NULL, _("%u bits"), NULL))
+            return FALSE;
 
         chunk_used += 3;
     }
 
     if (colortype == 4 || colortype == 6)
     {
-        if (!analyzer_utils_read (&significant_bits, file, 1))
+        if (!process_png_field (file, &tab, _("Alpha sample"),
+                                _("Alpha sample significant bits"),
+                                NULL, CHUNK_DATA_COLOR_2, 1, 0, NULL, NULL, _("%u bits"), NULL))
             return FALSE;
 
         chunk_used++;
-        analyzer_utils_tag (file, CHUNK_DATA_COLOR_2, 1,
-                            _("Alpha sample significant bits"));
-
-        description_message = g_strdup_printf (_("%u bits"), significant_bits);
-        analyzer_utils_describe_tab (&tab, _("Alpha sample"), description_message);
-        g_free (description_message);
     }
 
     if (chunk_used < chunk_length)

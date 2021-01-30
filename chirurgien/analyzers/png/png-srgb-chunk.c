@@ -30,10 +30,6 @@ analyze_srgb_chunk (AnalyzerFile *file,
 {
     AnalyzerTab tab;
 
-    gchar *description_message;
-
-    guint8 intent;
-
     if (!chunk_length)
         return TRUE;
 
@@ -43,6 +39,7 @@ analyze_srgb_chunk (AnalyzerFile *file,
     {
         analyzer_utils_tag_error (file, ERROR_COLOR_1, chunk_length,
                                   _("The first chunk must be the IHDR chunk"));
+        ADVANCE_POINTER (file, chunk_length);
         return TRUE;
     }
 
@@ -50,28 +47,24 @@ analyze_srgb_chunk (AnalyzerFile *file,
 
     analyzer_utils_set_title_tab (&tab, _("<b>Standard RGB color space</b>"));
 
-    if (!analyzer_utils_read (&intent, file , 1))
+    guint8 rendering_intent_values[] = { 0x0, 0x1, 0x2, 0x3 };
+    gchar *rendering_intent_value_description[] = {
+        _("Perceptual"),
+        _("Relative colorimetric"),
+        _("Saturation"),
+        _("Absolute colorimetric"),
+        _("<span foreground=\"red\">INVALID</span>")
+    };
+    if (!process_png_field (file, &tab, _("Rendering intent"), NULL,
+                       _("Rendering intent\n"
+                         "<tt>00<sub>16</sub></tt>\tPerceptual\n"
+                         "<tt>01<sub>16</sub></tt>\tRelative colorimetric\n"
+                         "<tt>02<sub>16</sub></tt>\tSaturation\n"
+                         "<tt>03<sub>16</sub></tt>\tAbsolute colorimetric"),
+                       CHUNK_DATA_COLOR_1, 1,
+                       sizeof (rendering_intent_values), rendering_intent_values, rendering_intent_value_description,
+                       NULL, NULL))
         return FALSE;
-
-    analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 1, _("Rendering intent"));
-
-    if (intent == 0)
-        description_message = _("Perceptual");
-    else if (intent == 1)
-        description_message = _("Relative colorimetric");
-    else if (intent == 2)
-        description_message = _("Saturation");
-    else if (intent == 3)
-        description_message = _("Absolute colorimetric");
-    else
-        description_message = _("<span foreground=\"red\">INVALID</span>");
-
-    analyzer_utils_describe_tooltip_tab (&tab, _("Rendering intent"), description_message,
-                                         _("Rendering intent\n"
-                                         "<tt>00<sub>16</sub></tt>\tPerceptual\n"
-                                         "<tt>01<sub>16</sub></tt>\tRelative colorimetric\n"
-                                         "<tt>02<sub>16</sub></tt>\tSaturation\n"
-                                         "<tt>03<sub>16</sub></tt>\tAbsolute colorimetric"));
 
     /* Fixed length chunk */
     if (chunk_length > 1)

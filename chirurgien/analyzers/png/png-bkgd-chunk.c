@@ -31,11 +31,6 @@ analyze_bkgd_chunk (AnalyzerFile *file,
 {
     AnalyzerTab tab;
 
-    gchar *description_message;
-
-    guint16 color;
-    guint8 palette_index;
-
     gsize chunk_used = 0;
 
     if (!chunk_length)
@@ -47,6 +42,7 @@ analyze_bkgd_chunk (AnalyzerFile *file,
     {
         analyzer_utils_tag_error (file, ERROR_COLOR_1, chunk_length,
                                   _("The first chunk must be the IHDR chunk"));
+        ADVANCE_POINTER (file, chunk_length);
         return TRUE;
     }
 
@@ -56,62 +52,35 @@ analyze_bkgd_chunk (AnalyzerFile *file,
 
     if (colortype == 0 || colortype == 4)
     {
-        if (!analyzer_utils_read (&color, file , 2))
+        if (!process_png_field (file, &tab, _("Grayscale background"), NULL,
+                           NULL, CHUNK_DATA_COLOR_1, 2, 0, NULL, NULL, "%u", NULL))
             goto END_ERROR;
 
         chunk_used += 2;
-        analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 2, _("Grayscale background"));
-
-        color = g_ntohs (color);
-        description_message = g_strdup_printf ("%u", color);
-        analyzer_utils_describe_tab (&tab, _("Grayscale background"), description_message);
-        g_free (description_message);
     }
     else if (colortype == 2 || colortype == 6)
     {
-        if (!analyzer_utils_read (&color, file , 2))
+        if (!process_png_field (file, &tab, _("Background red sample"), NULL,
+                           NULL, CHUNK_DATA_COLOR_1, 2, 0, NULL, NULL, "%u", NULL))
             goto END_ERROR;
 
-        analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 2, _("Background red sample"));
-
-        color = g_ntohs (color);
-        description_message = g_strdup_printf ("%u", color);
-        analyzer_utils_describe_tab (&tab, _("Background red sample"), description_message);
-        g_free (description_message);
-
-        if (!analyzer_utils_read (&color, file , 2))
+        if (!process_png_field (file, &tab, _("Background green sample"), NULL,
+                           NULL, CHUNK_DATA_COLOR_2, 2, 0, NULL, NULL, "%u", NULL))
             goto END_ERROR;
 
-        analyzer_utils_tag (file, CHUNK_DATA_COLOR_2, 2, _("Background green sample"));
-
-        color = g_ntohs (color);
-        description_message = g_strdup_printf ("%u", color);
-        analyzer_utils_describe_tab (&tab, _("Background green sample"), description_message);
-        g_free (description_message);
-
-        if (!analyzer_utils_read (&color, file , 2))
+        if (!process_png_field (file, &tab, _("Background blue sample"), NULL,
+                           NULL, CHUNK_DATA_COLOR_1, 2, 0, NULL, NULL, "%u", NULL))
             goto END_ERROR;
-
-        analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 2, _("Background blue sample"));
-
-        color = g_ntohs (color);
-        description_message = g_strdup_printf ("%u", color);
-        analyzer_utils_describe_tab (&tab, _("Background blue sample"), description_message);
-        g_free (description_message);
 
         chunk_used += 6;
     }
     else if (colortype == 3)
     {
-        if (!analyzer_utils_read (&palette_index, file , 1))
-            return FALSE;
+        if (!process_png_field (file, &tab, _("Background palette index"), NULL,
+                           NULL, CHUNK_DATA_COLOR_1, 1, 0, NULL, NULL, "%u", NULL))
+            goto END_ERROR;
 
         chunk_used++;
-        analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 1, _("Background palette index"));
-
-        description_message = g_strdup_printf ("%u", palette_index);
-        analyzer_utils_describe_tab (&tab, _("Background palette index"), description_message);
-        g_free (description_message);
     }
     else
     {

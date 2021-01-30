@@ -30,10 +30,6 @@ analyze_gama_chunk (AnalyzerFile *file,
 {
     AnalyzerTab tab;
 
-    gchar *description_message;
-
-    guint32 gamma;
-
     if (!chunk_length)
         return TRUE;
 
@@ -43,6 +39,7 @@ analyze_gama_chunk (AnalyzerFile *file,
     {
         analyzer_utils_tag_error (file, ERROR_COLOR_1, chunk_length,
                                   _("The first chunk must be the IHDR chunk"));
+        ADVANCE_POINTER (file, chunk_length);
         return TRUE;
     }
 
@@ -50,15 +47,9 @@ analyze_gama_chunk (AnalyzerFile *file,
 
     analyzer_utils_set_title_tab (&tab, _("<b>Image gamma</b>"));
 
-    if (!analyzer_utils_read (&gamma, file , 4))
+    if (!process_png_field (file, &tab, _("Image gamma"), NULL,
+                       NULL, CHUNK_DATA_COLOR_1, 4, 0, NULL, NULL, "%u", NULL))
         goto END_ERROR;
-
-    analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 4, _("Image gamma"));
-
-    gamma = g_ntohl (gamma);
-    description_message = g_strdup_printf ("%u", gamma);
-    analyzer_utils_describe_tab (&tab, _("Gamma"), description_message);
-    g_free (description_message);
 
     /* Fixed length chunk */
     if (chunk_length > 4)

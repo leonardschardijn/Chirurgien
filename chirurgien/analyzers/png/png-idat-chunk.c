@@ -84,6 +84,7 @@ collect_idat_chunk (AnalyzerFile *file,
     {
         analyzer_utils_tag_error (file, ERROR_COLOR_1, chunk_length,
                                   _("The first chunk must be the IHDR chunk"));
+        ADVANCE_POINTER (file, chunk_length);
         return TRUE;
     }
 
@@ -94,7 +95,6 @@ collect_idat_chunk (AnalyzerFile *file,
         zlib_data->compressed_image_size += chunk_length;
 
         SKIP_DATA (file, chunk_length);
-
         return TRUE;
     }
     analyzer_utils_tag_error (file, ERROR_COLOR_1, -1,

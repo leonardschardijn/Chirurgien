@@ -31,11 +31,8 @@ analyze_hist_chunk (AnalyzerFile *file,
 {
     AnalyzerTab tab;
 
-    gchar *description_message1, *description_message2;
-
-    guint16 frequency;
-
-    guint i;
+    GdkRGBA *color_toggle;
+    gchar *description_message;
 
     if (!chunk_length)
         return TRUE;
@@ -46,6 +43,7 @@ analyze_hist_chunk (AnalyzerFile *file,
     {
         analyzer_utils_tag_error (file, ERROR_COLOR_1, chunk_length,
                                   _("The first chunk must be the IHDR chunk"));
+        ADVANCE_POINTER (file, chunk_length);
         return TRUE;
     }
 
@@ -53,6 +51,7 @@ analyze_hist_chunk (AnalyzerFile *file,
     {
         analyzer_utils_tag_error (file, ERROR_COLOR_1, chunk_length,
                                   _("The hIST chunk must have an entry for every palette entry"));
+        ADVANCE_POINTER (file, chunk_length);
         return TRUE;
     }
 
@@ -60,22 +59,20 @@ analyze_hist_chunk (AnalyzerFile *file,
 
     analyzer_utils_set_title_tab (&tab, _("<b>Palette entry frequency</b>"));
 
-    for (i = 0; i < palette_entries; i++)
+    for (guint i = 0; i < palette_entries; i++)
     {
-        if (!analyzer_utils_read (&frequency, file , 2))
+        if (i % 2)
+            color_toggle = CHUNK_DATA_COLOR_2;
+        else
+            color_toggle = CHUNK_DATA_COLOR_1;
+
+        description_message = g_strdup_printf (_("Entry %u"), i);
+
+        if (!process_png_field (file, &tab, description_message, _("Entry frequency"),
+                           NULL, color_toggle, 2, 0, NULL, NULL, "%u", NULL))
             goto END_ERROR;
 
-        if (i % 2)
-            analyzer_utils_tag (file, CHUNK_DATA_COLOR_2, 2, _("Palette entry frequency"));
-        else
-            analyzer_utils_tag (file, CHUNK_DATA_COLOR_1, 2, _("Palette entry frequency"));
-
-        frequency = g_ntohs (frequency);
-        description_message1 = g_strdup_printf (_("Entry %u"), i);
-        description_message2 = g_strdup_printf ("%u", frequency);
-        analyzer_utils_describe_tab (&tab, description_message1, description_message2);
-        g_free (description_message1);
-        g_free (description_message2);
+        g_free (description_message);
     }
 
     analyzer_utils_insert_tab (file, &tab, chunk_types[hIST]);
@@ -83,6 +80,7 @@ analyze_hist_chunk (AnalyzerFile *file,
     return TRUE;
 
     END_ERROR:
+    g_free (description_message);
     analyzer_utils_tag_error (file, ERROR_COLOR_1, -1, _("Unrecognized data"));
     return FALSE;
 }
