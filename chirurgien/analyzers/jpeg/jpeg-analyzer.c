@@ -95,7 +95,9 @@ chirurgien_analyze_jpeg (AnalyzerFile *file)
 
     memset (marker_counts, 0, sizeof (guint) * MARKER_TYPES);
 
-    analyzer_utils_set_title (file, "Joint Photographic Experts Group");
+    analyzer_utils_set_title (file, "<span weight=\"bold\" size=\"larger\">"
+                                    "Joint Photographic Experts Group"
+                                    "</span>");
 
     /* Marker loop */
     while (FILE_HAS_DATA (file))

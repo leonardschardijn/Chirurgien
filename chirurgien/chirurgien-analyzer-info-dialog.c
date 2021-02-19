@@ -71,6 +71,11 @@ chirurgien_analyzer_info_dialog_init (ChirurgienAnalyzerInfoDialog *dialog)
     g_signal_connect (dialog->button, "clicked", G_CALLBACK (show_note), dialog);
     g_object_unref (builder);
 
+    builder = gtk_builder_new_from_resource ("/io/github/leonardschardijn/chirurgien/analyzer-info/cpio-tab.ui");
+    widget = GTK_WIDGET (gtk_builder_get_object (builder, "cpio-tab"));
+    gtk_stack_add_titled (dialog->stack, widget, "cpio", "cpio");
+    g_object_unref (builder);
+
     builder = gtk_builder_new_from_resource ("/io/github/leonardschardijn/chirurgien/analyzer-info/elf-tab.ui");
     widget = GTK_WIDGET (gtk_builder_get_object (builder, "elf-tab"));
     gtk_stack_add_titled (dialog->stack, widget, "ELF", "ELF");
@@ -84,6 +89,11 @@ chirurgien_analyzer_info_dialog_init (ChirurgienAnalyzerInfoDialog *dialog)
     builder = gtk_builder_new_from_resource ("/io/github/leonardschardijn/chirurgien/analyzer-info/png-tab.ui");
     widget = GTK_WIDGET (gtk_builder_get_object (builder, "png-tab"));
     gtk_stack_add_titled (dialog->stack, widget, "PNG", "PNG");
+    g_object_unref (builder);
+
+    builder = gtk_builder_new_from_resource ("/io/github/leonardschardijn/chirurgien/analyzer-info/tar-tab.ui");
+    widget = GTK_WIDGET (gtk_builder_get_object (builder, "tar-tab"));
+    gtk_stack_add_titled (dialog->stack, widget, "tar", "tar");
     g_object_unref (builder);
 
     builder = gtk_builder_new_from_resource ("/io/github/leonardschardijn/chirurgien/analyzer-info/tiff-tab.ui");

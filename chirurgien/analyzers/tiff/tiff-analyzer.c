@@ -100,7 +100,9 @@ chirurgien_analyze_tiff (AnalyzerFile *file)
 
     gboolean is_little_endian;
 
-    analyzer_utils_set_title (file, "Tag Image File Format");
+    analyzer_utils_set_title (file, "<span weight=\"bold\" size=\"larger\">"
+                                    "Tag Image File Format"
+                                    "</span>");
 
     analyzer_utils_init_tab (&ascii_tab);
     analyzer_utils_add_description_tab (&ascii_tab, _("<b>Standard TIFF ASCII tags</b>"), NULL, NULL, 0, 0);

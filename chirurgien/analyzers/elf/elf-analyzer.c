@@ -44,7 +44,9 @@ chirurgien_analyze_elf (AnalyzerFile *file)
      * of any section (or bytes that are part of more than one section) */
     GSList *tagged_bytes = NULL, *index;
 
-    analyzer_utils_set_title (file, "Executable and Linkable Format");
+    analyzer_utils_set_title (file, "<span weight=\"bold\" size=\"larger\">"
+                                    "Executable and Linkable Format"
+                                    "</span>");
 
     analyzer_utils_tag_navigation (file, SIGNATURE_COLOR, 4, _("ELF file signature"), "ELF");
     ADVANCE_POINTER (file, 4);

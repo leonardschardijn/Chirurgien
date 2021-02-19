@@ -6,6 +6,10 @@ chirurgien_sources += [
 ]
 
 chirurgien_sources += [
+  'analyzers/cpio/cpio-analyzer.c'
+]
+
+chirurgien_sources += [
   'analyzers/elf/elf-analyzer.c',
   'analyzers/elf/elf-program-header.c',
   'analyzers/elf/elf-section-header.c'
@@ -45,6 +49,10 @@ chirurgien_sources += [
   'analyzers/png/png-splt-chunk.c',
   'analyzers/png/png-time-chunk.c',
   'analyzers/png/puff.c'
+]
+
+chirurgien_sources += [
+  'analyzers/tar/tar-analyzer.c'
 ]
 
 chirurgien_sources += [

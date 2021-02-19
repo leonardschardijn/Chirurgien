@@ -20,6 +20,9 @@ chirurgien/resources/analyzer-info/intro-tab.ui
 chirurgien/resources/analyzer-info/jpeg-tab.ui
 chirurgien/resources/analyzer-info/png-tab.ui
 
+# cpio analyzer strings
+chirurgien/analyzers/cpio/cpio-analyzer.c
+
 # ELF analyzer strings
 chirurgien/analyzers/elf/elf-analyzer.c
 chirurgien/analyzers/elf/elf-program-header.c
@@ -57,6 +60,9 @@ chirurgien/analyzers/png/png-hist-chunk.c
 chirurgien/analyzers/png/png-phys-chunk.c
 chirurgien/analyzers/png/png-splt-chunk.c
 chirurgien/analyzers/png/png-time-chunk.c
+
+# tar analyzer strings
+chirurgien/analyzers/tar/tar-analyzer.c
 
 # TIFF analyzer strings
 chirurgien/analyzers/tiff/tiff-analyzer.c

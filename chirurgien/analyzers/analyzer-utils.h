@@ -43,7 +43,7 @@ typedef struct
  * Set title, the title cannot be translated
  */
 #define analyzer_utils_set_title(file, title) \
-        analyzer_utils_add_description(file, "<span weight=\"bold\" size=\"larger\">"title"</span>", NULL, NULL, 0, 20)
+        analyzer_utils_add_description(file, title, NULL, NULL, 0, 20)
 
 /*
  * Set subtitle

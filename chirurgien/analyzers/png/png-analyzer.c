@@ -69,7 +69,9 @@ chirurgien_analyze_png (AnalyzerFile *file)
 
     memset (chunk_counts, 0, sizeof (guint) * CHUNK_TYPES);
 
-    analyzer_utils_set_title (file, "Portable Network Graphics");
+    analyzer_utils_set_title (file, "<span weight=\"bold\" size=\"larger\">"
+                                    "Portable Network Graphics"
+                                    "</span>");
 
     analyzer_utils_tag (file, SIGNATURE_COLOR, 8, _("PNG file signature"));
     ADVANCE_POINTER (file, 8);
