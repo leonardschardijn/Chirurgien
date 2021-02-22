@@ -40,7 +40,7 @@ typedef struct
 /* The following macros serve as frequent uses of the functions declared below */
 
 /*
- * Set title, the title cannot be translated
+ * Set title
  */
 #define analyzer_utils_set_title(file, title) \
         analyzer_utils_add_description(file, title, NULL, NULL, 0, 20)

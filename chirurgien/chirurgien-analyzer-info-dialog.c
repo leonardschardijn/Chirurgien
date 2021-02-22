@@ -81,6 +81,11 @@ chirurgien_analyzer_info_dialog_init (ChirurgienAnalyzerInfoDialog *dialog)
     gtk_stack_add_titled (dialog->stack, widget, "ELF", "ELF");
     g_object_unref (builder);
 
+    builder = gtk_builder_new_from_resource ("/io/github/leonardschardijn/chirurgien/analyzer-info/gif-tab.ui");
+    widget = GTK_WIDGET (gtk_builder_get_object (builder, "gif-tab"));
+    gtk_stack_add_titled (dialog->stack, widget, "GIF", "GIF");
+    g_object_unref (builder);
+
     builder = gtk_builder_new_from_resource ("/io/github/leonardschardijn/chirurgien/analyzer-info/jpeg-tab.ui");
     widget = GTK_WIDGET (gtk_builder_get_object (builder, "jpeg-tab"));
     gtk_stack_add_titled (dialog->stack, widget, "JPEG", "JPEG");

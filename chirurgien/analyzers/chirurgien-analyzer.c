@@ -23,6 +23,7 @@
 
 #include "cpio/chirurgien-analyze-cpio.h"
 #include "elf/chirurgien-analyze-elf.h"
+#include "gif/chirurgien-analyze-gif.h"
 #include "jpeg/chirurgien-analyze-jpeg.h"
 #include "png/chirurgien-analyze-png.h"
 #include "tar/chirurgien-analyze-tar.h"
@@ -38,6 +39,8 @@ chirurgien_analyzer_analyze (AnalyzerFile *file)
     const guchar cpio_magic_number4[] = { 0x30,0x37,0x30,0x37,0x30,0x31 };
     const guchar cpio_magic_number5[] = { 0x30,0x37,0x30,0x37,0x30,0x32 };
     const guchar elf_magic_number[] = { 0x7F,0x45,0x4C,0x46 };
+    const guchar gif_magic_number1[] = { 0x47,0x49,0x46,0x38,0x39,0x61 };
+    const guchar gif_magic_number2[] = { 0x47,0x49,0x46,0x38,0x37,0x61 };
     const guchar jpeg_magic_number[] = { 0xFF,0xD8 };
     const guchar png_magic_number[] = { 0x89,0x50,0x4E,0x47,0x0D,0x0A,0x1A,0x0A };
     const guchar tar_magic_number[] = { 0x75,0x73,0x74,0x61,0x72 };
@@ -64,6 +67,11 @@ chirurgien_analyzer_analyze (AnalyzerFile *file)
     else if (FILE_HAS_DATA_N (file, 4) &&
         !memcmp (file->file_contents, elf_magic_number, 4))
         chirurgien_analyze_elf (file);
+    /* GIF */
+    else if (FILE_HAS_DATA_N (file, 6) &&
+             (!memcmp (file->file_contents, gif_magic_number1, 6) ||
+              !memcmp (file->file_contents, gif_magic_number2, 6)))
+        chirurgien_analyze_gif (file);
     /* JPEG */
     else if (FILE_HAS_DATA_N (file, 2) &&
              !memcmp (file->file_contents, jpeg_magic_number, 2))

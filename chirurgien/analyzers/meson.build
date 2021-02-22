@@ -16,6 +16,16 @@ chirurgien_sources += [
 ]
 
 chirurgien_sources += [
+  'analyzers/gif/gif-analyzer.c',
+  'analyzers/gif/gif-logical-screen-descriptor-block.c',
+  'analyzers/gif/gif-image-descriptor-block.c',
+  'analyzers/gif/gif-application-ext-block.c',
+  'analyzers/gif/gif-comment-ext-block.c',
+  'analyzers/gif/gif-graphic-control-ext-block.c',
+  'analyzers/gif/gif-plain-text-ext-block.c'
+]
+
+chirurgien_sources += [
   'analyzers/jpeg/jpeg-analyzer.c',
   'analyzers/jpeg/jpeg-app0-marker.c',
   'analyzers/jpeg/jpeg-app1-marker.c',

@@ -17,8 +17,13 @@ chirurgien/resources/ui/chirurgien-shortcuts-dialog.ui
 
 # Analyzer information strings
 chirurgien/resources/analyzer-info/intro-tab.ui
+chirurgien/resources/analyzer-info/cpio-tab.ui
+chirurgien/resources/analyzer-info/elf-tab.ui
+chirurgien/resources/analyzer-info/gif-tab.ui
 chirurgien/resources/analyzer-info/jpeg-tab.ui
 chirurgien/resources/analyzer-info/png-tab.ui
+chirurgien/resources/analyzer-info/tar-tab.ui
+chirurgien/resources/analyzer-info/tiff-tab.ui
 
 # cpio analyzer strings
 chirurgien/analyzers/cpio/cpio-analyzer.c
@@ -27,6 +32,15 @@ chirurgien/analyzers/cpio/cpio-analyzer.c
 chirurgien/analyzers/elf/elf-analyzer.c
 chirurgien/analyzers/elf/elf-program-header.c
 chirurgien/analyzers/elf/elf-section-header.c
+
+# GIF analyzer strings
+chirurgien/analyzers/gif/gif-analyzer.c
+chirurgien/analyzers/gif/gif-logical-screen-descriptor-block.c
+chirurgien/analyzers/gif/gif-image-descriptor-block.c
+chirurgien/analyzers/gif/gif-application-ext-block.c
+chirurgien/analyzers/gif/gif-comment-ext-block.c
+chirurgien/analyzers/gif/gif-graphic-control-ext-block.c
+chirurgien/analyzers/gif/gif-plain-text-ext-block.c
 
 # JPEG analyzer strings
 chirurgien/analyzers/jpeg/jpeg-analyzer.c
