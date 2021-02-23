@@ -256,7 +256,7 @@ chirurgien_analyze_png (AnalyzerFile *file)
 
     analyze_idat_chunk(file, &zlib_data);
 
-    analyzer_utils_set_subtitle (file, _("<b>Chunk count</b>"));
+    analyzer_utils_set_subtitle (file, _("<b>Chunk count</b>"), NULL);
 
     for (gint i = IHDR; i < tIME; i++)
     {

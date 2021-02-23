@@ -84,8 +84,8 @@ analyze_logical_screen_descriptor_block (AnalyzerFile *file)
     /* Global Color Table */
     if (fields[0] >> 7)
     {
-        analyzer_utils_add_description (file, _("<b>Global Color Table</b>"), NULL,
-                             _("Global Color Table flag (bit 7 of the packed fields)"), 20, 20);
+        analyzer_utils_set_subtitle (file, _("<b>Global Color Table</b>"),
+                                     _("Global Color Table flag (bit 7 of the packed fields)"));
 
         if ((fields[0] >> 3) & 0x1)
             description_message = _("Yes");

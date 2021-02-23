@@ -157,7 +157,7 @@ chirurgien_analyze_gif (AnalyzerFile *file)
 
     analyzer_utils_insert_tab (file, &graphics_tab, _("Graphics"));
 
-    analyzer_utils_set_subtitle (file, _("<b>Block count</b>"));
+    analyzer_utils_set_subtitle (file, _("<b>Block count</b>"), NULL);
 
     for (gint i = Header; i < Trailer; i++)
     {

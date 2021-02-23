@@ -48,8 +48,8 @@ typedef struct
 /*
  * Set subtitle
  */
-#define analyzer_utils_set_subtitle(file, title) \
-        analyzer_utils_add_description(file, title, NULL, NULL, 20, 20)
+#define analyzer_utils_set_subtitle(file, title, tooltip) \
+        analyzer_utils_add_description(file, title, NULL, tooltip, 20, 20)
 
 /*
  * Set tab subtitle

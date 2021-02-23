@@ -137,7 +137,7 @@ chirurgien_analyze_tiff (AnalyzerFile *file)
                                          "<tt>4D 4D<sub>16</sub></tt>\tBig-endian"));
     }
 
-    analyzer_utils_set_subtitle (file, _("<b>Standard TIFF tags</b>"));
+    analyzer_utils_set_subtitle (file, _("<b>Standard TIFF tags</b>"), NULL);
 
     analyzer_utils_tag_navigation (file, TIFF_TAG_COLOR, 2, _("Endianness"), _("End."));
 

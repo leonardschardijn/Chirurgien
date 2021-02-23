@@ -169,7 +169,8 @@ chirurgien_analyze_jpeg (AnalyzerFile *file)
             analyzer_utils_tag_navigation (file, MARKER_TYPE_COLOR, 2, _("Marker type: SOF0"), marker_names[SOF0]);
 
             if (!marker_counts[SOF0])
-                analyzer_utils_set_subtitle (file, _("<b>Baseline DCT</b>"));
+                analyzer_utils_set_subtitle (file, _("<b>Baseline DCT</b>"),
+                                             _("Baseline Discrete Cosine Transform"));
 
             if (!analyze_sofn_marker (file, marker_counts, SOF0))
                 break;
@@ -179,7 +180,8 @@ chirurgien_analyze_jpeg (AnalyzerFile *file)
             analyzer_utils_tag_navigation (file, MARKER_TYPE_COLOR, 2, _("Marker type: SOF1"), marker_names[SOF1]);
 
             if (!marker_counts[SOF1])
-                analyzer_utils_set_subtitle (file, _("<b>Extended sequential DCT - Huffman coding</b>"));
+                analyzer_utils_set_subtitle (file, _("<b>Extended sequential DCT - Huffman coding</b>"),
+                                             _("Extended sequential Discrete Cosine Transform"));
 
             if (!analyze_sofn_marker (file, marker_counts, SOF1))
                 break;
@@ -189,7 +191,8 @@ chirurgien_analyze_jpeg (AnalyzerFile *file)
             analyzer_utils_tag_navigation (file, MARKER_TYPE_COLOR, 2, _("Marker type: SOF2"), marker_names[SOF2]);
 
             if (!marker_counts[SOF2])
-                analyzer_utils_set_subtitle (file, _("<b>Progressive DCT - Huffman coding</b>"));
+                analyzer_utils_set_subtitle (file, _("<b>Progressive DCT - Huffman coding</b>"),
+                                             _("Progressive Discrete Cosine Transform"));
 
             if (!analyze_sofn_marker (file, marker_counts, SOF2))
                 break;
@@ -199,7 +202,8 @@ chirurgien_analyze_jpeg (AnalyzerFile *file)
             analyzer_utils_tag_navigation (file, MARKER_TYPE_COLOR, 2, _("Marker type: SOF3"), marker_names[SOF3]);
 
             if (!marker_counts[SOF3])
-                analyzer_utils_set_subtitle (file, _("<b>Lossless (sequential) - Huffman coding</b>"));
+                analyzer_utils_set_subtitle (file, _("<b>Lossless (sequential) - Huffman coding</b>"),
+                                             NULL);
 
             if (!analyze_sofn_marker (file, marker_counts, SOF3))
                 break;
@@ -209,7 +213,8 @@ chirurgien_analyze_jpeg (AnalyzerFile *file)
             analyzer_utils_tag_navigation (file, MARKER_TYPE_COLOR, 2, _("Marker type: SOF5"), marker_names[SOF5]);
 
             if (!marker_counts[SOF5])
-                analyzer_utils_set_subtitle (file, _("<b>Differential sequential DCT - Huffman coding</b>"));
+                analyzer_utils_set_subtitle (file, _("<b>Differential sequential DCT - Huffman coding</b>"),
+                                             _("Differential sequential Discrete Cosine Transform"));
 
             if (!analyze_sofn_marker (file, marker_counts, SOF5))
                 break;
@@ -219,7 +224,8 @@ chirurgien_analyze_jpeg (AnalyzerFile *file)
             analyzer_utils_tag_navigation (file, MARKER_TYPE_COLOR, 2, _("Marker type: SOF6"), marker_names[SOF6]);
 
             if (!marker_counts[SOF6])
-                analyzer_utils_set_subtitle (file, _("<b>Differential progressive DCT - Huffman coding</b>"));
+                analyzer_utils_set_subtitle (file, _("<b>Differential progressive DCT - Huffman coding</b>"),
+                                             _("Differential progressive Discrete Cosine Transform"));
 
             if (!analyze_sofn_marker (file, marker_counts, SOF6))
                 break;
@@ -229,7 +235,8 @@ chirurgien_analyze_jpeg (AnalyzerFile *file)
             analyzer_utils_tag_navigation (file, MARKER_TYPE_COLOR, 2, _("Marker type: SOF7"), marker_names[SOF7]);
 
             if (!marker_counts[SOF7])
-                analyzer_utils_set_subtitle (file, _("<b>Differential lossless (sequential) - Huffman coding</b>"));
+                analyzer_utils_set_subtitle (file, _("<b>Differential lossless (sequential) - Huffman coding</b>"),
+                                             NULL);
 
             if (!analyze_sofn_marker (file, marker_counts, SOF7))
                 break;
@@ -239,7 +246,8 @@ chirurgien_analyze_jpeg (AnalyzerFile *file)
             analyzer_utils_tag_navigation (file, MARKER_TYPE_COLOR, 2, _("Marker type: SOF9"), marker_names[SOF9]);
 
             if (!marker_counts[SOF9])
-                analyzer_utils_set_subtitle (file, _("<b>Extended sequential DCT - Arithmetic coding</b>"));
+                analyzer_utils_set_subtitle (file, _("<b>Extended sequential DCT - Arithmetic coding</b>"),
+                                             _("Extended sequential Discrete Cosine Transform"));
 
             if (!analyze_sofn_marker (file, marker_counts, SOF9))
                 break;
@@ -249,7 +257,8 @@ chirurgien_analyze_jpeg (AnalyzerFile *file)
             analyzer_utils_tag_navigation (file, MARKER_TYPE_COLOR, 2, _("Marker type: SOF10"), marker_names[SOF10]);
 
             if (!marker_counts[SOF10])
-                analyzer_utils_set_subtitle (file, _("<b>Progressive DCT - Arithmetic coding</b>"));
+                analyzer_utils_set_subtitle (file, _("<b>Progressive DCT - Arithmetic coding</b>"),
+                                             _("Progressive Discrete Cosine Transform"));
 
             if (!analyze_sofn_marker (file, marker_counts, SOF10))
                 break;
@@ -259,7 +268,8 @@ chirurgien_analyze_jpeg (AnalyzerFile *file)
             analyzer_utils_tag_navigation (file, MARKER_TYPE_COLOR, 2, _("Marker type: SOF11"), marker_names[SOF11]);
 
             if (!marker_counts[SOF11])
-                analyzer_utils_set_subtitle (file, _("<b>Lossless (sequential) - Arithmetic coding</b>"));
+                analyzer_utils_set_subtitle (file, _("<b>Lossless (sequential) - Arithmetic coding</b>"),
+                                             NULL);
 
             if (!analyze_sofn_marker (file, marker_counts, SOF11))
                 break;
@@ -269,7 +279,8 @@ chirurgien_analyze_jpeg (AnalyzerFile *file)
             analyzer_utils_tag_navigation (file, MARKER_TYPE_COLOR, 2, _("Marker type: SOF13"), marker_names[SOF13]);
 
             if (!marker_counts[SOF13])
-                analyzer_utils_set_subtitle (file, _("<b>Differential sequential DCT - Arithmetic coding</b>"));
+                analyzer_utils_set_subtitle (file, _("<b>Differential sequential DCT - Arithmetic coding</b>"),
+                                             _("Differential sequential Discrete Cosine Transform"));
 
             if (!analyze_sofn_marker (file, marker_counts, SOF13))
                 break;
@@ -279,7 +290,8 @@ chirurgien_analyze_jpeg (AnalyzerFile *file)
             analyzer_utils_tag_navigation (file, MARKER_TYPE_COLOR, 2, _("Marker type: SOF14"), marker_names[SOF14]);
 
             if (!marker_counts[SOF14])
-                analyzer_utils_set_subtitle (file, _("<b>Differential progressive DCT - Arithmetic coding</b>"));
+                analyzer_utils_set_subtitle (file, _("<b>Differential progressive DCT - Arithmetic coding</b>"),
+                                             _("Differential progressive Discrete Cosine Transform"));
 
             if (!analyze_sofn_marker (file, marker_counts, SOF14))
                 break;
@@ -289,7 +301,8 @@ chirurgien_analyze_jpeg (AnalyzerFile *file)
             analyzer_utils_tag_navigation (file, MARKER_TYPE_COLOR, 2, _("Marker type: SOF15"), marker_names[SOF15]);
 
             if (!marker_counts[SOF15])
-                analyzer_utils_set_subtitle (file, _("<b>Differential lossless (sequential) - Arithmetic coding</b>"));
+                analyzer_utils_set_subtitle (file, _("<b>Differential lossless (sequential) - Arithmetic coding</b>"),
+                                             NULL);
 
             if (!analyze_sofn_marker (file, marker_counts, SOF15))
                 break;
@@ -348,7 +361,7 @@ chirurgien_analyze_jpeg (AnalyzerFile *file)
         }
     }
 
-    analyzer_utils_set_subtitle (file, _("<b>Marker count</b>"));
+    analyzer_utils_set_subtitle (file, _("<b>Marker count</b>"), NULL);
 
     for (gint i = SOI; i < EOI; i++)
     {

@@ -143,7 +143,7 @@ analyze_idat_chunk (AnalyzerFile *file,
 
         if (zlib_data->compressed_image_size > 7) /* Minimum zlib format size? */
         {
-            analyzer_utils_set_subtitle (file, _("<b>ZLIB compressed image</b>"));
+            analyzer_utils_set_subtitle (file, _("<b>ZLIB compressed image</b>"), NULL);
 
             compressed_data_pointer = compressed_data;
 
@@ -240,7 +240,7 @@ analyze_idat_chunk (AnalyzerFile *file,
                 analyzer_utils_describe (file, _("Compression ratio"), description_message);
                 g_free (description_message);
 
-                analyzer_utils_set_subtitle (file, _("<b>DEFLATE block count</b>"));
+                analyzer_utils_set_subtitle (file, _("<b>DEFLATE block count</b>"), NULL);
 
                 description_message = g_strdup_printf ("%u", no_compression_blocks);
                 analyzer_utils_describe_tooltip (file, _("No compression blocks"), description_message,
