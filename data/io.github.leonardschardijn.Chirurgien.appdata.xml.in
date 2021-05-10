@@ -6,9 +6,13 @@
   <name>Chirurgien</name>
   <summary>Understand and manipulate file formats</summary>
   <description>
-    <p>
-      Chirurgien is a simple tool that helps to understand file formats.
-    </p>
+    <p>Chirurgien helps understand and manipulate file formats.</p>
+    <p>Features:</p>
+    <ul>
+      <li>File format highlighting</li>
+      <li>Description panel interpreting the highlighted fields and offering additional information about the format</li>
+      <li>Double click on a highlighted field for edition or extraction to a separate tab</li>
+    </ul>
   </description>
   <screenshots>
     <screenshot type="default">
@@ -20,15 +24,18 @@
     <screenshot>
       <image>https://raw.githubusercontent.com/leonardschardijn/Chirurgien/master/data/screenshot3.png</image>
     </screenshot>
+    <screenshot>
+      <image>https://raw.githubusercontent.com/leonardschardijn/Chirurgien/master/data/screenshot4.png</image>
+    </screenshot>
   </screenshots>
   <url type="homepage">https://github.com/leonardschardijn/Chirurgien</url>
   <developer_name>Daniel Léonard Schardijn</developer_name>
   <content_rating type="oars-1.1" />
   <releases>
+    <release version="1.0" date="2021-05-10" />
     <release version="0.5" date="2021-02-23" />
     <release version="0.4" date="2021-01-30" />
     <release version="0.3" date="2021-01-03" />
     <release version="0.2" date="2020-12-24" />
-    <release version="0.1" date="2020-12-14" />
   </releases>
 </component>
