@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <template class="ChirurgienEditor" parent="GtkWidget">
+    <property name="hexpand">t</property>
+    <property name="vexpand">t</property>
+    <child>
+      <object class="GtkDrawingArea" id="hex_view">
+        <property name="hexpand">t</property>
+        <property name="vexpand">t</property>
+        <property name="focusable">t</property>
+        <property name="margin-start">5</property>
+        <property name="margin-end">5</property>
+        <property name="margin-top">5</property>
+        <property name="margin-bottom">5</property>
+        <style>
+          <class name="chirurgien-font"/>
+        </style>
+      </object>
+    </child>
+    <child>
+      <object class="GtkDrawingArea" id="text_view">
+        <property name="hexpand">t</property>
+        <property name="vexpand">t</property>
+        <property name="focusable">t</property>
+        <property name="margin-start">5</property>
+        <property name="margin-end">5</property>
+        <property name="margin-top">5</property>
+        <property name="margin-bottom">5</property>
+        <style>
+          <class name="chirurgien-font"/>
+        </style>
+      </object>
+    </child>
+    <child>
+      <object class="GtkScrollbar" id="scrollbar">
+        <property name="orientation">GTK_ORIENTATION_VERTICAL</property>
+        <property name="adjustment">adjustment</property>
+      </object>
+    </child>
+  </template>
+  <object class="GtkAdjustment" id="adjustment"/>
+</interface>

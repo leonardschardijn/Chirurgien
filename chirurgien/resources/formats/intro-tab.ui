@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <object class="GtkBox" id="intro">
+    <property name="orientation">GTK_ORIENTATION_VERTICAL</property>
+    <child>
+      <object class="GtkButton" id="button">
+        <property name="halign">GTK_ALIGN_END</property>
+        <property name="icon-name">dialog-question-symbolic</property>
+        <style>
+          <class name="circular"/>
+          <class name="flat"/>
+        </style>
+      </object>
+    </child>
+    <child>
+      <object class="GtkLabel">
+        <property name="label" translatable="yes">Formats</property>
+        <property name="margin-top">30</property>
+        <property name="margin-bottom">10</property>
+        <attributes>
+          <attribute name="weight" value="PANGO_WEIGHT_BOLD"/>
+          <attribute name="scale" value="1.3"/>
+        </attributes>
+      </object>
+    </child>
+    <child>
+      <object class="GtkLabel">
+        <property name="margin-bottom">40</property>
+        <property name="label" translatable="yes">Information on the currently supported formats</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkRevealer" id="revealer">
+        <property name="transition-type">GTK_REVEALER_TRANSITION_TYPE_CROSSFADE</property>
+        <child>
+          <object class="GtkScrolledWindow">
+            <property name="hexpand">t</property>
+            <property name="vexpand">t</property>
+            <child>
+              <object class="GtkTextView">
+                <property name="can-target">f</property>
+                <property name="left-margin">10</property>
+                <property name="right-margin">10</property>
+                <property name="top-margin">10</property>
+                <property name="bottom-margin">10</property>
+                <property name="editable">f</property>
+                <property name="cursor-visible">f</property>
+                <property name="wrap-mode">GTK_WRAP_WORD</property>
+                <property name="buffer">notes</property>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+  </object>
+  <object class="GtkTextBuffer" id="notes">
+    <property name="text" translatable="yes"><![CDATA[<b>Note on malformed files</b>
+
+When analyzing a file section with a known structure and length field (e.g. the IHDR chunk and its corresponding chunk length in a PNG file) Chirurgien assumes that the known and expected structure is always there, dismissing the malformed length (if it is not zero).
+
+In the example, the IHDR chunk data is always 13 bytes, yet its chunk length field could be malformed and state that the chunk length is not 13. If the stated length is less than 13, it is ignored. If it is more than 13, the additional bytes are tagged as unrecognized and skipped.]]></property>
+  </object>
+</interface>
+

@@ -1,54 +1,114 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist gettext-domain="chirurgien">
-  <enum id="io.github.leonardschardijn.chirurgien.FileJustification">
-    <value nick="left" value="0"/>
-    <value nick="right" value="1"/>
-    <value nick="center" value="2"/>
-  </enum>
   <schema id="io.github.leonardschardijn.chirurgien" path="/io/github/leonardschardijn/chirurgien/">
     <child name="preferences" schema="io.github.leonardschardijn.chirurgien.preferences"/>
     <child name="state" schema="io.github.leonardschardijn.chirurgien.state"/>
   </schema>
   <schema id="io.github.leonardschardijn.chirurgien.preferences" path="/io/github/leonardschardijn/chirurgien/preferences/">
-    <key name="disable-csd" type="b">
+    <key name="hide-navigation" type="b">
       <default>false</default>
-      <summary>Disable client-side decorations</summary>
+      <summary>Hide navigation buttons</summary>
       <description>
-        Whether client-side decorations should be disabled. Client-side decorations make the application look better integrated with GNOME.
+        Whether the navigation buttons should be visible.
+      </description>
+    </key>
+    <key name="hide-description" type="b">
+      <default>false</default>
+      <summary>Hide description panel</summary>
+      <description>
+        Whether the description panel should be visible.
+      </description>
+    </key>
+    <key name="auto-analysis" type="b">
+      <default>false</default>
+      <summary>Automatic reanalysis</summary>
+      <description>
+        Should the file be automatically reanalyzed after edition.
+      </description>
+    </key>
+    <key name="color0" type="s">
+      <default>'rgba(37,103,193,0.7)'</default>
+      <summary>Color 0</summary>
+      <description>
+        One of the available colors for file format highlighting.
+      </description>
+    </key>
+    <key name="color1" type="s">
+      <default>'rgba(187,64,206,0.7)'</default>
+      <summary>Color 1</summary>
+      <description>
+        One of the available colors for file format highlighting.
+      </description>
+    </key>
+    <key name="color2" type="s">
+      <default>'rgba(28,175,8,0.7)'</default>
+      <summary>Color 2</summary>
+      <description>
+        One of the available colors for file format highlighting.
+      </description>
+    </key>
+    <key name="color3" type="s">
+      <default>'rgba(28,110,17,0.7)'</default>
+      <summary>Color 3</summary>
+      <description>
+        One of the available colors for file format highlighting.
+      </description>
+    </key>
+    <key name="color4" type="s">
+      <default>'rgba(221,231,13,0.7)'</default>
+      <summary>Color 4</summary>
+      <description>
+        One of the available colors for file format highlighting.
+      </description>
+    </key>
+    <key name="color5" type="s">
+      <default>'rgba(13,231,186,0.7)'</default>
+      <summary>Color 5</summary>
+      <description>
+        One of the available colors for file format highlighting.
+      </description>
+    </key>
+    <key name="color6" type="s">
+      <default>'rgba(255,0,0,1.0)'</default>
+      <summary>Color 6</summary>
+      <description>
+        One of the available colors for file format highlighting.
+      </description>
+    </key>
+    <key name="color7" type="s">
+      <default>'rgba(232,79,219,1.0)'</default>
+      <summary>Color 7</summary>
+      <description>
+        One of the available colors for file format highlighting.
+      </description>
+    </key>
+    <key name="color8" type="s">
+      <default>'rgba(12,103,182,1.0)'</default>
+      <summary>Color 8</summary>
+      <description>
+        One of the available colors for file format highlighting.
+      </description>
+    </key>
+    <key name="font" type="s">
+      <default>'FreeMono 12'</default>
+      <summary>File view font</summary>
+      <description>
+        Font used to display the contents of a file.
       </description>
     </key>
     <key name="bytes-per-line" type="i">
-      <range min="10" max="200"/>
-      <default>32</default>
+      <range min="0" max="200"/>
+      <default>0</default>
       <summary>Bytes per line</summary>
       <description>
-        How many bytes should be displayed per line on the hexadecimal/text view of the analyzed file.
-      </description>
-    </key>
-    <key name="file-justification" enum="io.github.leonardschardijn.chirurgien.FileJustification">
-      <aliases>
-        <alias value='GTK_JUSTIFY_LEFT' target='left'/>
-        <alias value='GTK_JUSTIFY_RIGHT' target='right'/>
-        <alias value='GTK_JUSTIFY_CENTER' target='center'/>
-      </aliases>
-      <default>'left'</default>
-      <summary>File view justification</summary>
-      <description>
-        Used for justifying the hexadecimal/text view.
-      </description>
-    </key>
-    <key name="show-navigation" type="b">
-      <default>true</default>
-      <summary>Show navigation buttons</summary>
-      <description>
-        Whether the navigation buttons panel should be visible.
+        How many bytes should be displayed per line. Useful if the desired font is not rendering correctly.
       </description>
     </key>
   </schema>
   <schema id="io.github.leonardschardijn.chirurgien.state" path="/io/github/leonardschardijn/chirurgien/state/">
-    <key name="state" type="i">
-      <default>0</default>
-      <summary>Window state</summary>
+    <key name="maximized" type="b">
+      <default>false</default>
+      <summary>Window is maximized</summary>
     </key>
     <key name="size" type="(ii)">
       <default>(900, 600)</default>
@@ -56,7 +116,7 @@
     </key>
     <key name="position" type="i">
       <default>400</default>
-      <summary>Analyzer panes divider position</summary>
+      <summary>File view divider position</summary>
     </key>
   </schema>
 </schemalist>

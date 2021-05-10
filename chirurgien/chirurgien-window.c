@@ -20,90 +20,83 @@
 
 #include "chirurgien-window.h"
 
-#include <amtk/amtk.h>
 #include <glib/gi18n.h>
 
-#include "chirurgien-analyzer-view.h"
+#include "chirurgien-colors.h"
+
+#include "chirurgien-view.h"
 #include "chirurgien-actions.h"
 
+
+/* Available colors */
+GdkRGBA colors[TOTAL_COLORS];
+PangoColor pango_colors[TOTAL_COLORS];
+guint16 pango_alphas[TOTAL_COLORS];
+
+const gchar *color_names[TOTAL_COLORS] = {
+    "color0", "color1", "color2",
+    "color3", "color4", "color5",
+    "color6", "color7", "color8",
+};
+
+struct _ChirurgienWindow
+{
+    GtkApplicationWindow   parent_instance;
+
+    GQueue                 recent_files;
+    GMenu                 *recent_menu;
+    gboolean               recent_rebuild_needed;
+
+    GSettings             *preferences_settings;
+    GSettings             *state_settings;
+};
 
 G_DEFINE_TYPE (ChirurgienWindow, chirurgien_window, GTK_TYPE_APPLICATION_WINDOW)
 
 static GActionEntry win_entries[] =
 {
     { "open", chirurgien_actions_open, NULL, NULL, NULL },
-    { "close", chirurgien_actions_close, NULL, NULL, NULL },
+    { "save", chirurgien_actions_save, NULL, NULL, NULL },
+    { "save-as", chirurgien_actions_save, NULL, NULL, NULL },
+    { "close-tab", chirurgien_actions_close, NULL, NULL, NULL },
+    { "reanalyze", chirurgien_actions_reanalyze, NULL, NULL, NULL },
     { "hex-view", chirurgien_actions_hex_view, NULL, NULL, NULL },
     { "text-view", chirurgien_actions_text_view, NULL, NULL, NULL },
+    { "undo", chirurgien_actions_undo, NULL, NULL, NULL },
+    { "redo", chirurgien_actions_redo, NULL, NULL, NULL },
     { "next-tab", chirurgien_actions_next_tab, NULL, NULL, NULL },
     { "previous-tab", chirurgien_actions_previous_tab, NULL, NULL, NULL },
 
-    /* Only used when using Window Manager decorations */
-    { "recent", chirurgien_actions_recent_open_wmd, "s", NULL, NULL }
+    { "recent", chirurgien_actions_recent_open, "s", NULL, NULL }
 };
 
 static void
-restore_window_state (ChirurgienWindow *window)
+restore_window_size (ChirurgienWindow *window)
 {
     gint width, height;
-    GdkWindowState state;
 
-    g_settings_get (window->window_settings, "size", "(ii)", &width, &height);
-
+    g_settings_get (window->state_settings, "size", "(ii)", &width, &height);
     gtk_window_set_default_size (GTK_WINDOW (window), width, height);
-
-    state = g_settings_get_int (window->window_settings, "state");
-    if ((state & GDK_WINDOW_STATE_MAXIMIZED) != 0)
-        gtk_window_maximize (GTK_WINDOW (window));
-    else
-        gtk_window_unmaximize (GTK_WINDOW (window));
-
-    if ((state & GDK_WINDOW_STATE_STICKY ) != 0)
-        gtk_window_stick (GTK_WINDOW (window));
-    else
-        gtk_window_unstick (GTK_WINDOW (window));
 }
 
-/*
- * Handle the configure-event signal
- */
-static gboolean
-chirurgien_window_configure_event (GtkWidget *widget,
-                                   GdkEventConfigure *event)
+static void
+notify_size_change (GObject *gobject,
+                    G_GNUC_UNUSED GParamSpec *pspec)
 {
     ChirurgienWindow *window;
     gint width, height;
 
-    window = CHIRURGIEN_WINDOW (widget);
+    window = CHIRURGIEN_WINDOW (gobject);
 
-    if (gtk_widget_get_realized (widget) && (window->window_state & (GDK_WINDOW_STATE_MAXIMIZED | GDK_WINDOW_STATE_FULLSCREEN)) == 0)
+    if (gtk_widget_get_realized (GTK_WIDGET (window)) && !gtk_window_is_maximized (GTK_WINDOW (window)))
     {
-        gtk_window_get_size (GTK_WINDOW (window), &width, &height);
-        g_settings_set (window->window_settings, "size", "(ii)", width, height);
+        gtk_window_get_default_size (GTK_WINDOW (window), &width, &height);
+        g_settings_set (window->state_settings, "size", "(ii)", width, height);
     }
-
-    return GTK_WIDGET_CLASS (chirurgien_window_parent_class)->configure_event (widget, event);
 }
 
 /*
- * Handle the window-state-event signal
- */
-static gboolean
-chirurgien_window_window_state_event (GtkWidget *widget,
-                                      GdkEventWindowState *event)
-{
-    ChirurgienWindow *window;
-
-    window = CHIRURGIEN_WINDOW (widget);
-    window->window_state = event->new_window_state;
-
-    g_settings_set_int (window->window_settings, "state", window->window_state);
-
-    return GTK_WIDGET_CLASS (chirurgien_window_parent_class)->window_state_event (widget, event);
-}
-
-/*
- * Escape underscores for the WMD recent files list
+ * Escape underscores for the recent file list
  * (Shamelessly copied from Xfce's Mousepad (Thanks!))
  */
 static gchar *
@@ -112,7 +105,7 @@ escape_underscores (const gchar *label)
     GString *result;
     const gchar *character;
 
-    result = g_string_sized_new (strlen (label));
+    result = g_string_new (NULL);
 
     for (character = label; *character != '\0'; character++)
     {
@@ -125,213 +118,216 @@ escape_underscores (const gchar *label)
     return g_string_free (result, FALSE);
 }
 
-/*
- * (Re)builds the recent files list when using Window Manager decorations
- */
-void
-chirurgien_window_build_recent (ChirurgienWindow* window)
+static void
+build_recent_menu (ChirurgienWindow *window)
 {
-    GList *recent_files, *index;
-    GtkRecentInfo *recent_entry;
+    GList *list_item;
     GMenuItem *recent_item;
-    gchar *escaped_label;
-    gint position = 0;
+    gchar *item_name;
+
+    gint menu_entries;
 
     g_menu_remove_all (window->recent_menu);
-    recent_files = gtk_recent_chooser_get_items (GTK_RECENT_CHOOSER (window->recent_files));
-    for (index = recent_files;
-         index != NULL;
-         index = index->next)
+
+    for (list_item = window->recent_files.head, menu_entries = 0;
+         list_item != NULL;
+         list_item = list_item->next, menu_entries++)
     {
-        recent_entry = index->data;
-        escaped_label = escape_underscores (gtk_recent_info_get_display_name (recent_entry));
-        recent_item = g_menu_item_new (escaped_label, NULL);
+        item_name = escape_underscores (gtk_recent_info_get_display_name (list_item->data));
+        recent_item = g_menu_item_new (item_name, NULL);
         g_menu_item_set_action_and_target (recent_item, "win.recent",
-                                           "s", gtk_recent_info_get_uri (recent_entry));
+                                           "s", gtk_recent_info_get_uri (list_item->data));
 
-        g_menu_insert_item (window->recent_menu, position++, recent_item);
+        g_menu_append_item (window->recent_menu, recent_item);
 
+        g_free (item_name);
         g_object_unref (recent_item);
-        g_free (escaped_label);
-        gtk_recent_info_unref (recent_entry);
     }
+
+    if (!menu_entries)
+    {
+        recent_item = g_menu_item_new (_("No recent entries"), NULL);
+        g_menu_append_item (window->recent_menu, recent_item);
+        g_object_unref (recent_item);
+    }
+}
+
+static gint
+compare_recent_entries (gconstpointer a,
+                        gconstpointer b,
+                        G_GNUC_UNUSED gpointer user_data)
+{
+    GtkRecentInfo *recent_a, *recent_b;
+    GDateTime *date_a, *date_b;
+
+    recent_a = (gpointer) a;
+    recent_b = (gpointer) b;
+
+    gtk_recent_info_get_application_info (recent_a,
+                                          g_get_prgname (),
+                                          NULL,
+                                          NULL,
+                                          &date_a);
+    gtk_recent_info_get_application_info (recent_b,
+                                          g_get_prgname (),
+                                          NULL,
+                                          NULL,
+                                          &date_b);
+
+    return g_date_time_compare (date_a, date_b);
+}
+
+static void
+build_recent_files (ChirurgienWindow *window)
+{
+    GList *recent_files, *list_item;
+
+    recent_files = gtk_recent_manager_get_items (gtk_recent_manager_get_default ());
+
+    g_queue_init (&window->recent_files);
+
+    /* Get all recent files used by the application */
+    for (list_item = recent_files;
+         list_item != NULL;
+         list_item = list_item->next)
+    {
+        if (gtk_recent_info_has_application (list_item->data, g_get_prgname ()))
+            g_queue_push_head (&window->recent_files, list_item->data);
+        else
+            gtk_recent_info_unref (list_item->data);
+    }
+
     g_list_free (recent_files);
+
+    g_queue_sort (&window->recent_files, compare_recent_entries, NULL);
+    g_queue_reverse (&window->recent_files);
+
+    /* Keep only the 10 most recent files */
+    for (list_item = g_queue_peek_nth_link (&window->recent_files, 10);
+         list_item != NULL;
+         list_item = list_item->next)
+    {
+        gtk_recent_info_unref (list_item->data);
+        list_item = list_item->prev;
+        g_queue_delete_link (&window->recent_files, list_item->next);
+    }
+
+    build_recent_menu (window);
 }
 
-/*
- * Window Manager decorations 
- * 
- * Create the File submenu:
- *  File
- *    Open
- *    Recent files
- *    Close tab
- *    Quit
- */
 static void
-create_open_recent_wmd (ChirurgienWindow *window,
-                        GMenu *menubar)
+recent_changed (G_GNUC_UNUSED GtkRecentManager *recent_manager,
+                gpointer user_data)
 {
-    GMenu *file_menu, *recent_submenu, *quit_section;
-    GMenuItem *recent_item;
+    ChirurgienWindow *window;
+    GList *list_item;
 
-    recent_submenu = g_menu_new ();
-    window->recent_menu = recent_submenu;
+    window = user_data;
 
-    chirurgien_window_build_recent (window);
+    if (!window->recent_rebuild_needed)
+        return;
 
-    file_menu = g_menu_new ();
+    window->recent_rebuild_needed = FALSE;
 
-    g_menu_insert (file_menu, 0, _("_Open"), "win.open");
+    for (list_item = window->recent_files.head;
+         list_item != NULL;
+         list_item = list_item->next)
+    {
+        gtk_recent_info_unref (list_item->data);
+    }
 
-    recent_item = g_menu_item_new (_("Recent files"), NULL);
-    g_menu_item_set_link (recent_item, G_MENU_LINK_SUBMENU, G_MENU_MODEL (recent_submenu));
-    g_menu_append_item (file_menu, recent_item);
+    g_queue_clear (&window->recent_files);
 
-    quit_section = g_menu_new ();
-    g_menu_insert (quit_section, 0, _("_Close tab"), "win.close");
-    g_menu_insert (quit_section, 1, _("_Quit"), "app.quit");
-    g_menu_append_section(file_menu, NULL, G_MENU_MODEL (quit_section));
-
-    g_menu_prepend_submenu (menubar, _("_File"), G_MENU_MODEL (file_menu));
-
-    g_object_unref (recent_item);
-    g_object_unref (quit_section);
-    g_object_unref (file_menu);
+    build_recent_files (window);
 }
 
-/*
- * Client-side decorations
- * 
- * Create the Open button and recent files list at the top left corner
- */
-static void
-create_open_recent_csd (ChirurgienWindow *window)
-{
-    GtkWidget *box;
-    GtkStyleContext *context;
-    GtkWidget *open_button;
-    GtkWidget *open_recent_button;
-
-    box = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
-    context = gtk_widget_get_style_context (box);
-    gtk_style_context_add_class (context, GTK_STYLE_CLASS_LINKED);
-
-    open_button = gtk_button_new_with_label (_("Open"));
-    gtk_widget_set_tooltip_text (open_button, _("Open a file"));
-    gtk_actionable_set_action_name (GTK_ACTIONABLE (open_button), "win.open");
-
-    open_recent_button = gtk_menu_button_new ();
-    gtk_widget_set_tooltip_text (open_recent_button, _("Open a recently used file"));
-
-    gtk_menu_button_set_popup (GTK_MENU_BUTTON (open_recent_button), window->recent_files);
-
-    gtk_container_add (GTK_CONTAINER (box), open_button);
-    gtk_container_add (GTK_CONTAINER (box), open_recent_button);
-
-    gtk_container_add_with_properties (GTK_CONTAINER (window->headerbar), box, "position", 0, NULL);
-}
-
-/*
- * Create the window using Client-side decorations or Window Manager decorations
- */
 static void
 create_window (ChirurgienWindow *window)
 {
     GtkBuilder *builder;
     GMenuModel *menu;
-    GtkWidget *main, *widget;
-    GtkStyleContext* context;
-    GAction *action;
 
-    AmtkApplicationWindow *amtk_window;
-    GtkWidget *recent_files;
+    GtkWidget *headerbar, *box, *widget;
 
-    amtk_window = amtk_application_window_get_from_gtk_application_window (GTK_APPLICATION_WINDOW (window));
-    recent_files = amtk_application_window_create_open_recent_menu (amtk_window);
-    window->recent_files = g_object_ref_sink (recent_files);
+    headerbar = gtk_header_bar_new ();
 
-    /* Window Manager decorations */
-    if (g_settings_get_boolean (window->preferences_settings, "disable-csd"))
-    {
-        gtk_window_set_title (GTK_WINDOW (window), "Chirurgien");
-        builder = gtk_builder_new_from_resource ("/io/github/leonardschardijn/chirurgien/menus/menu-wmd.ui");
-        menu = G_MENU_MODEL (gtk_builder_get_object (builder, "menu-wmd"));
-        gtk_application_set_menubar (GTK_APPLICATION (g_application_get_default ()), menu);
+    /* Hamburger menu */
+    widget = gtk_menu_button_new ();
+    gtk_menu_button_set_icon_name (GTK_MENU_BUTTON (widget), "open-menu-symbolic");
+    builder = gtk_builder_new_from_resource ("/io/github/leonardschardijn/chirurgien/menus/hamburger-menu.ui");
+    menu = G_MENU_MODEL (gtk_builder_get_object (builder, "hamburger-menu"));
+    gtk_menu_button_set_menu_model (GTK_MENU_BUTTON (widget), menu);
 
-        action = g_action_map_lookup_action (G_ACTION_MAP (g_application_get_default ()), "disable-csd");
-        g_simple_action_set_state (G_SIMPLE_ACTION (action), g_variant_new_boolean (TRUE));
+    gtk_header_bar_pack_end (GTK_HEADER_BAR (headerbar), widget);
 
-        /* Connect to the signal to update the recent files list */
-        g_signal_connect (window, "update-recent", G_CALLBACK (chirurgien_window_build_recent), NULL);
-        
-        create_open_recent_wmd (window, G_MENU (menu));
-    }
-    /* Client-side decorations */
-    else
-    {
-        widget = gtk_header_bar_new ();
-        gtk_header_bar_set_title (GTK_HEADER_BAR (widget), "Chirurgien");
-        gtk_header_bar_set_show_close_button (GTK_HEADER_BAR (widget), TRUE);
-        gtk_window_set_titlebar (GTK_WINDOW (window), widget);
-        window->headerbar = widget;
-
-        widget = gtk_menu_button_new ();
-        gtk_button_set_image (GTK_BUTTON (widget),
-                              gtk_image_new_from_icon_name ("open-menu-symbolic",
-                                                            GTK_ICON_SIZE_MENU));
-        builder = gtk_builder_new_from_resource ("/io/github/leonardschardijn/chirurgien/menus/menu-csd.ui");
-        menu = G_MENU_MODEL (gtk_builder_get_object (builder, "menu-csd"));
-        gtk_menu_button_set_menu_model (GTK_MENU_BUTTON (widget), menu);
-
-        gtk_container_add_with_properties (GTK_CONTAINER (window->headerbar), widget,
-                                           "position", 0,
-                                           "pack-type", GTK_PACK_END,
-                                           NULL);
-
-        create_open_recent_csd (window);
-        gtk_widget_show_all (GTK_WIDGET (window->headerbar));
-
-        gtk_application_set_menubar (GTK_APPLICATION (g_application_get_default ()), NULL);
-
-        action = g_action_map_lookup_action (G_ACTION_MAP (g_application_get_default ()), "disable-csd");
-        g_simple_action_set_state (G_SIMPLE_ACTION (action), g_variant_new_boolean (FALSE));
-    }
     g_object_unref (builder);
 
-    main = gtk_overlay_new ();
+    /* Open/Recent files buttons */
+    box = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
+    gtk_widget_add_css_class (box, "linked");
 
-    widget = gtk_notebook_new ();
-    gtk_notebook_set_scrollable (GTK_NOTEBOOK (widget), TRUE);
-    gtk_container_add (GTK_CONTAINER (main), widget);
-    window->notebook = widget;
+    widget = gtk_button_new_with_label (_("Open"));
+    gtk_widget_set_tooltip_text (widget, _("Open a file"));
+    gtk_actionable_set_action_name (GTK_ACTIONABLE (widget), "win.open");
+    gtk_box_append (GTK_BOX (box), widget);
 
-    widget = gtk_label_new (_("Analyzing..."));
-    context = gtk_widget_get_style_context (widget);
-    gtk_style_context_add_class (context, "app-notification");
-    gtk_overlay_add_overlay (GTK_OVERLAY (main), widget);
-    window->analyzing_message = widget;
+    widget = gtk_menu_button_new ();
+    gtk_widget_set_tooltip_text (widget, _("Open a recently used file"));
+    build_recent_files (window);
+    gtk_menu_button_set_menu_model (GTK_MENU_BUTTON (widget), G_MENU_MODEL (window->recent_menu));
+    gtk_box_append (GTK_BOX (box), widget);
 
-    widget = gtk_label_new (_("Processing..."));
-    context = gtk_widget_get_style_context (widget);
-    gtk_style_context_add_class (context, "app-notification");
-    gtk_overlay_add_overlay (GTK_OVERLAY (main), widget);
-    window->processing_message = widget;
+    gtk_header_bar_pack_start (GTK_HEADER_BAR (headerbar), box);
 
-    gtk_widget_show_all (main);
-    gtk_widget_hide (window->analyzing_message);
-    gtk_widget_hide (window->processing_message);
+    /* Save/Save as buttons */
+    box = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
+    gtk_widget_add_css_class (box, "linked");
 
-    gtk_container_add (GTK_CONTAINER (window), main);
+    widget = gtk_button_new_with_label (_("Save"));
+    gtk_widget_set_tooltip_text (widget, _("Save the current file"));
+    gtk_actionable_set_action_name (GTK_ACTIONABLE (widget), "win.save");
+    gtk_box_append (GTK_BOX (box), widget);
+
+    widget = gtk_menu_button_new ();
+    menu = G_MENU_MODEL (g_menu_new ());
+    g_menu_insert (G_MENU (menu), 0, _("Save as..."), "win.save-as");
+    gtk_menu_button_set_menu_model (GTK_MENU_BUTTON (widget), menu);
+    gtk_box_append (GTK_BOX (box), widget);
+
+    g_object_unref (menu);
+
+    gtk_header_bar_pack_end (GTK_HEADER_BAR (headerbar), box);
+
+    /* Undo/Redo buttons */
+    box = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
+    gtk_widget_add_css_class (box, "linked");
+
+    widget = gtk_button_new_from_icon_name ("edit-undo-symbolic");
+    gtk_widget_set_tooltip_text (widget, _("Undo previous modification"));
+    gtk_actionable_set_action_name (GTK_ACTIONABLE (widget), "win.undo");
+    gtk_box_append (GTK_BOX (box), widget);
+
+    widget = gtk_button_new_from_icon_name ("edit-redo-symbolic");
+    gtk_widget_set_tooltip_text (widget, _("Redo previous modification"));
+    gtk_actionable_set_action_name (GTK_ACTIONABLE (widget), "win.redo");
+    gtk_box_append (GTK_BOX (box), widget);
+
+    gtk_header_bar_pack_end (GTK_HEADER_BAR (headerbar), box);
+
+    gtk_window_set_titlebar (GTK_WINDOW (window), headerbar);
 }
 
 static void
-toggle_tab_actions (ChirurgienWindow *window, gboolean enable)
+toggle_view_actions (ChirurgienWindow *window,
+                     gboolean          enable)
 {
-    GAction *close_action, *hex_view_action, *text_view_action,
-            *next_tab_action, *prev_tab_action;
+    GAction *save_action, *save_as_action, *close_tab_action, *reanalyze_action,
+            *hex_view_action, *text_view_action, *next_tab_action, *prev_tab_action;
 
-    close_action = g_action_map_lookup_action (G_ACTION_MAP (window), "close");
+    save_action = g_action_map_lookup_action (G_ACTION_MAP (window), "save");
+    save_as_action = g_action_map_lookup_action (G_ACTION_MAP (window), "save-as");
+    close_tab_action = g_action_map_lookup_action (G_ACTION_MAP (window), "close-tab");
+    reanalyze_action = g_action_map_lookup_action (G_ACTION_MAP (window), "reanalyze");
     hex_view_action = g_action_map_lookup_action (G_ACTION_MAP (window), "hex-view");
     text_view_action = g_action_map_lookup_action (G_ACTION_MAP (window), "text-view");
     next_tab_action = g_action_map_lookup_action (G_ACTION_MAP (window), "next-tab");
@@ -339,7 +335,10 @@ toggle_tab_actions (ChirurgienWindow *window, gboolean enable)
 
     if (enable)
     {
-        g_simple_action_set_enabled (G_SIMPLE_ACTION (close_action), TRUE);
+        g_simple_action_set_enabled (G_SIMPLE_ACTION (save_action), TRUE);
+        g_simple_action_set_enabled (G_SIMPLE_ACTION (save_as_action), TRUE);
+        g_simple_action_set_enabled (G_SIMPLE_ACTION (close_tab_action), TRUE);
+        g_simple_action_set_enabled (G_SIMPLE_ACTION (reanalyze_action), TRUE);
         g_simple_action_set_enabled (G_SIMPLE_ACTION (hex_view_action), TRUE);
         g_simple_action_set_enabled (G_SIMPLE_ACTION (text_view_action), TRUE);
         g_simple_action_set_enabled (G_SIMPLE_ACTION (next_tab_action), TRUE);
@@ -347,7 +346,10 @@ toggle_tab_actions (ChirurgienWindow *window, gboolean enable)
     }
     else
     {
-        g_simple_action_set_enabled (G_SIMPLE_ACTION (close_action), FALSE);
+        g_simple_action_set_enabled (G_SIMPLE_ACTION (save_action), FALSE);
+        g_simple_action_set_enabled (G_SIMPLE_ACTION (save_as_action), FALSE);
+        g_simple_action_set_enabled (G_SIMPLE_ACTION (close_tab_action), FALSE);
+        g_simple_action_set_enabled (G_SIMPLE_ACTION (reanalyze_action), FALSE);
         g_simple_action_set_enabled (G_SIMPLE_ACTION (hex_view_action), FALSE);
         g_simple_action_set_enabled (G_SIMPLE_ACTION (text_view_action), FALSE);
         g_simple_action_set_enabled (G_SIMPLE_ACTION (next_tab_action), FALSE);
@@ -356,116 +358,352 @@ toggle_tab_actions (ChirurgienWindow *window, gboolean enable)
 }
 
 static void
-switch_page (__attribute__((unused)) GtkNotebook *notebook,
-             GtkWidget *page,
-             __attribute__((unused)) guint page_num,
-             gpointer user_data)
+close_response (GtkDialog *self,
+                gint       response_id,
+                gpointer   user_data)
 {
-    ChirurgienWindow *window;
-    ChirurgienAnalyzerView *view;
+    gtk_window_destroy (GTK_WINDOW (self));
 
-    window = CHIRURGIEN_WINDOW (user_data);
-    view = CHIRURGIEN_ANALYZER_VIEW (page);
+    if (response_id == GTK_RESPONSE_YES)
+        gtk_window_destroy (user_data);
+}
 
-    if (window->headerbar != NULL)
-        gtk_header_bar_set_subtitle (GTK_HEADER_BAR (window->headerbar),
-                                     chirurgien_analyzer_view_get_file_path (view));
+static gboolean
+close_window (GtkWindow *window)
+{
+    ChirurgienView *view;
+    GtkNotebook *files_notebook;
+    gint pages, unsaved_files;
+
+    GtkWidget *dialog, *close_button;
+
+    unsaved_files = 0;
+    files_notebook = GTK_NOTEBOOK (gtk_window_get_child (window));
+    pages = gtk_notebook_get_n_pages (files_notebook);
+
+    for (gint i = 0; i < pages; i++)
+    {
+        view = CHIRURGIEN_VIEW (gtk_notebook_get_nth_page (files_notebook, i));
+
+        if (chirurgien_view_unsaved (view))
+            unsaved_files++;
+    }
+
+    if (unsaved_files)
+    {
+        dialog = gtk_message_dialog_new (window,
+                                         GTK_DIALOG_MODAL,
+                                         GTK_MESSAGE_WARNING,
+                                         GTK_BUTTONS_NONE,
+                                         _("Unsaved files"));
+
+        if (unsaved_files == 1)
+            gtk_message_dialog_format_secondary_text (GTK_MESSAGE_DIALOG (dialog),
+                                          _("There is one unsaved modified file"));
+        else
+            gtk_message_dialog_format_secondary_text (GTK_MESSAGE_DIALOG (dialog),
+                                          _("There are %d unsaved modified files"),
+                                            unsaved_files);
+
+        close_button = gtk_dialog_add_button  (GTK_DIALOG (dialog),
+                                             _("Close without saving"),
+                                               GTK_RESPONSE_YES);
+
+        gtk_widget_add_css_class (close_button, "destructive-action");
+
+        gtk_dialog_add_button  (GTK_DIALOG (dialog),
+                              _("Cancel"),
+                                GTK_RESPONSE_CANCEL);
+
+        g_signal_connect (dialog, "response", G_CALLBACK (close_response), window);
+        gtk_window_present (GTK_WINDOW (dialog));
+
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+static void
+switch_page (G_GNUC_UNUSED GtkNotebook *notebook,
+             GtkWidget *page,
+             G_GNUC_UNUSED guint        page_num,
+             gpointer   user_data)
+{
+    ChirurgienView *view;
+    g_autofree char *filename;
+
+    gboolean undo_available, redo_available;
+
+    view = CHIRURGIEN_VIEW (page);
+
+    filename = g_path_get_basename (chirurgien_view_get_file_path (view));
+    gtk_window_set_title (user_data, filename);
+
+    chirurgien_view_query_modifications (view,
+                                         &undo_available,
+                                         &redo_available);
+
+    chirurgien_window_set_undo (user_data, undo_available);
+    chirurgien_window_set_redo (user_data, redo_available);
 }
 
 static void
 page_added (GtkNotebook *notebook,
-            __attribute__((unused)) GtkWidget *page,
-            __attribute__((unused)) guint page_num,
-            gpointer user_data)
+            G_GNUC_UNUSED GtkWidget *page,
+            G_GNUC_UNUSED guint      page_num,
+            gpointer     user_data)
 {
     ChirurgienWindow *window;
 
-    window = CHIRURGIEN_WINDOW (user_data);
+    window = user_data;
 
     if (gtk_notebook_get_n_pages (notebook) == 1)
-        toggle_tab_actions (window, TRUE);
+    {
+        gtk_widget_show (GTK_WIDGET (notebook));
+        toggle_view_actions (window, TRUE);
+    }
 
 }
 
 static void
 page_removed (GtkNotebook *notebook,
-              __attribute__((unused)) GtkWidget *page,
-              __attribute__((unused)) guint page_num,
-              gpointer user_data)
+              G_GNUC_UNUSED GtkWidget *page,
+              G_GNUC_UNUSED guint      page_num,
+              gpointer     user_data)
 {
     ChirurgienWindow *window;
 
-    window = CHIRURGIEN_WINDOW (user_data);
+    window = user_data;
 
     if (!gtk_notebook_get_n_pages (notebook))
     {
-        toggle_tab_actions (window, FALSE);
+        gtk_widget_hide (GTK_WIDGET (notebook));
+        toggle_view_actions (window, FALSE);
+        gtk_window_set_title (GTK_WINDOW (window), "Chirurgien");
 
-        if (window->headerbar != NULL)
-            gtk_header_bar_set_subtitle (GTK_HEADER_BAR (window->headerbar), NULL);
+        chirurgien_window_set_undo (user_data, FALSE);
+        chirurgien_window_set_redo (user_data, FALSE);
     }
-}
-
-static void
-chirurgien_window_init (ChirurgienWindow *window)
-{
-    g_action_map_add_action_entries (G_ACTION_MAP (window),
-                                     win_entries, G_N_ELEMENTS (win_entries),
-                                     window);
-
-    window->preferences_settings = g_settings_new ("io.github.leonardschardijn.chirurgien.preferences");
-    window->window_settings = g_settings_new ("io.github.leonardschardijn.chirurgien.state");
-    g_settings_delay (window->window_settings);
-
-    create_window (window);
-    toggle_tab_actions (window, FALSE);
-
-    g_signal_connect (window->notebook, "switch-page", G_CALLBACK (switch_page), window);
-    g_signal_connect (window->notebook, "page-added", G_CALLBACK (page_added), window);
-    g_signal_connect (window->notebook, "page-removed", G_CALLBACK (page_removed), window);
-
-    restore_window_state (window);
 }
 
 static void
 chirurgien_window_dispose (GObject *object)
 {
     ChirurgienWindow *window;
+    GList *list_item;
 
     window = CHIRURGIEN_WINDOW (object);
 
-    if (window->window_settings != NULL)
-        g_settings_apply (window->window_settings);
+    if (window->state_settings)
+        g_settings_apply (window->state_settings);
 
-    g_clear_object (&window->window_settings);
+    for (list_item = window->recent_files.head;
+         list_item != NULL;
+         list_item = list_item->next)
+    {
+        gtk_recent_info_unref (list_item->data);
+    }
+
+    g_queue_clear (&window->recent_files);
+    g_queue_init (&window->recent_files);
+
     g_clear_object (&window->preferences_settings);
-    g_clear_object (&window->recent_files);
+    g_clear_object (&window->state_settings);
     g_clear_object (&window->recent_menu);
 
     G_OBJECT_CLASS (chirurgien_window_parent_class)->dispose (object);
 }
 
 static void
-chirurgien_window_class_init (ChirurgienWindowClass *class)
+chirurgien_window_class_init (ChirurgienWindowClass *klass)
 {
-    GObjectClass *gobject_class = G_OBJECT_CLASS (class);
-    GtkWidgetClass *gtkwidget_class = GTK_WIDGET_CLASS (class);
-
-    gobject_class->dispose = chirurgien_window_dispose;
-
-    gtkwidget_class->window_state_event = chirurgien_window_window_state_event;
-    gtkwidget_class->configure_event = chirurgien_window_configure_event;
-
-    /* Only used when using Window Manager decorations */
-    /* Used to update the recent files list */
-    g_signal_new ("update-recent",
-                  G_OBJECT_CLASS_TYPE (gobject_class),
-                  G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
-                  0, NULL, NULL, NULL, G_TYPE_NONE, 0);
+    G_OBJECT_CLASS (klass)->dispose = chirurgien_window_dispose;
 }
 
-ChirurgienWindow *
-chirurgien_window_new (ChirurgienApplication *app)
+static void
+chirurgien_window_init (ChirurgienWindow *window)
 {
-    return g_object_new (CHIRURGIEN_WINDOW_TYPE, "application", app, NULL);
+    GtkWidget *widget;
+    gchar *color_string;
+
+    g_action_map_add_action_entries (G_ACTION_MAP (window),
+                                     win_entries, G_N_ELEMENTS (win_entries),
+                                     window);
+
+    window->preferences_settings = g_settings_new ("io.github.leonardschardijn.chirurgien.preferences");
+    window->state_settings = g_settings_new ("io.github.leonardschardijn.chirurgien.state");
+    g_settings_delay (window->state_settings);
+
+    window->recent_menu = g_menu_new ();
+
+    create_window (window);
+    toggle_view_actions (window, FALSE);
+
+    chirurgien_window_set_undo (window, FALSE);
+    chirurgien_window_set_redo (window, FALSE);
+
+    g_signal_connect (gtk_recent_manager_get_default (), "changed",
+                      G_CALLBACK (recent_changed), window);
+
+    g_signal_connect (window, "close-request",
+                      G_CALLBACK (close_window), NULL);
+
+    g_signal_connect (window, "notify::default-width",
+                      G_CALLBACK (notify_size_change), NULL);
+    g_signal_connect (window, "notify::default-height",
+                      G_CALLBACK (notify_size_change), NULL);
+
+    widget = gtk_notebook_new ();
+    gtk_notebook_set_scrollable (GTK_NOTEBOOK (widget), TRUE);
+    g_signal_connect (widget, "switch-page", G_CALLBACK (switch_page), window);
+    g_signal_connect (widget, "page-added", G_CALLBACK (page_added), window);
+    g_signal_connect (widget, "page-removed", G_CALLBACK (page_removed), window);
+
+    gtk_window_set_child (GTK_WINDOW (window), widget);
+    gtk_widget_hide (widget);
+
+    window->recent_rebuild_needed = FALSE;
+
+    restore_window_size (window);
+
+    gtk_window_set_title (GTK_WINDOW (window), "Chirurgien");
+
+    chirurgien_window_load_view_font (window);
+
+    /* Load colors */
+    for (gint i = 0; i < TOTAL_COLORS; i++)
+    {
+        color_string = g_settings_get_string (window->preferences_settings, color_names[i]);
+
+        gdk_rgba_parse (&colors[i], color_string);
+
+        pango_colors[i].red = colors[i].red * 65535;
+        pango_colors[i].green = colors[i].green * 65535;
+        pango_colors[i].blue = colors[i].blue * 65535;
+
+        pango_alphas[i] = colors[i].alpha * 65535;
+
+        g_free (color_string);
+    }
+}
+
+/*** Public API ***/
+
+ChirurgienWindow *
+chirurgien_window_new (GtkApplication *app)
+{
+    ChirurgienWindow *window;
+
+    window =  g_object_new (CHIRURGIEN_TYPE_WINDOW,
+                            "application", app,
+                            NULL);
+
+    g_settings_bind (window->state_settings, "maximized", window, "maximized", G_SETTINGS_BIND_DEFAULT);
+
+    return window;
+}
+
+void
+chirurgien_window_update_recent (ChirurgienWindow *window,
+                                 GFile            *file)
+{
+    GList *list_item;
+    g_autoptr (GtkRecentInfo) recent_info;
+    g_autofree gchar *uri;
+
+    gboolean found = FALSE;
+
+    uri = g_file_get_uri (file);
+    recent_info = gtk_recent_manager_lookup_item (gtk_recent_manager_get_default (), uri, NULL);
+
+    /* The file is not present in the recent files, a rebuild is needed */
+    if (!recent_info)
+    {
+        window->recent_rebuild_needed = TRUE;
+        return;
+    }
+
+    for (list_item = window->recent_files.head;
+         list_item != NULL && !found;
+         list_item = list_item->next)
+    {
+        if (gtk_recent_info_match (list_item->data, recent_info))
+        {
+            g_queue_unlink (&window->recent_files, list_item);
+            g_queue_push_head_link (&window->recent_files, list_item);
+
+            found = TRUE;
+        }
+    }
+
+    if (!found)
+    {
+        gtk_recent_info_unref (g_queue_pop_tail (&window->recent_files));
+        g_queue_push_head (&window->recent_files, g_steal_pointer (&recent_info));
+    }
+
+    build_recent_menu (window);
+}
+
+void
+chirurgien_window_load_view_font (ChirurgienWindow *window)
+{
+    GdkDisplay *display;
+    GtkCssProvider *provider;
+    PangoFontDescription *font_description;
+
+    g_autofree gchar *css_font;
+
+    font_description = pango_font_description_from_string (g_settings_get_string
+                                                          (window->preferences_settings,
+                                                           "font"));
+
+    css_font = g_strdup_printf (".chirurgien-font { font-family: %s; font-size: %dpt; }",
+                                pango_font_description_get_family (font_description),
+                                pango_font_description_get_size (font_description) / PANGO_SCALE);
+
+    display = gdk_display_get_default ();
+
+    provider = gtk_css_provider_new ();
+    gtk_css_provider_load_from_data (provider, css_font, -1);
+
+    gtk_style_context_add_provider_for_display (display, GTK_STYLE_PROVIDER (provider),
+                                                GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+
+    pango_font_description_free (font_description);
+}
+
+void
+chirurgien_window_set_undo (ChirurgienWindow *window,
+                            gboolean          enabled)
+{
+    GAction *action;
+
+    action = g_action_map_lookup_action (G_ACTION_MAP (window), "undo");
+
+    g_simple_action_set_enabled (G_SIMPLE_ACTION (action), enabled);
+}
+
+void
+chirurgien_window_set_redo (ChirurgienWindow *window,
+                            gboolean          enabled)
+{
+    GAction *action;
+
+    action = g_action_map_lookup_action (G_ACTION_MAP (window), "redo");
+
+    g_simple_action_set_enabled (G_SIMPLE_ACTION (action), enabled);
+}
+
+GSettings *
+chirurgien_window_get_preferences (ChirurgienWindow *window)
+{
+    return window->preferences_settings;
+}
+
+GSettings *
+chirurgien_window_get_state (ChirurgienWindow *window)
+{
+    return window->state_settings;
 }

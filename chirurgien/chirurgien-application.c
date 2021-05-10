@@ -31,35 +31,19 @@ G_DEFINE_TYPE (ChirurgienApplication, chirurgien_application, GTK_TYPE_APPLICATI
 
 static GActionEntry app_entries[] =
 {
-    { "disable-csd", NULL, NULL, "false", chirurgien_actions_disable_csd },
     { "preferences", chirurgien_actions_preferences, NULL, NULL, NULL },
-    { "analyzer-info", chirurgien_actions_analyzer_info, NULL, NULL, NULL },
+    { "formats", chirurgien_actions_formats, NULL, NULL, NULL },
     { "shortcuts", chirurgien_actions_shortcuts, NULL, NULL, NULL },
     { "about", chirurgien_actions_about, NULL, NULL, NULL },
     { "quit", chirurgien_actions_quit, NULL, NULL, NULL }
 };
 
 static void
-chirurgien_application_open (GApplication *application,
-                             GFile **files,
-                             gint n_files,
-                             __attribute__((unused)) const gchar *hint)
-{
-    ChirurgienWindow *window;
-    gint i;
-
-    window = CHIRURGIEN_WINDOW (gtk_application_get_active_window (GTK_APPLICATION (application)));
-    for (i = 0; i < n_files; i++)
-        chirurgien_actions_analyze_file (window, files[i]);
-}
-
-static void
 chirurgien_application_activate (GApplication *app)
 {
     ChirurgienWindow *window;
 
-    window = chirurgien_window_new (CHIRURGIEN_APPLICATION (app));
-
+    window = chirurgien_window_new (GTK_APPLICATION (app));
     gtk_window_present (GTK_WINDOW (window));
 }
 
@@ -76,32 +60,36 @@ chirurgien_application_startup (GApplication *app)
     gtk_application_set_accels_for_action (GTK_APPLICATION (app), "app.about", (const gchar *[]) {"F1", NULL});
     gtk_application_set_accels_for_action (GTK_APPLICATION (app), "app.quit", (const gchar *[]) {"<Primary>Q", NULL});
     gtk_application_set_accels_for_action (GTK_APPLICATION (app), "win.open", (const gchar *[]) {"<Primary>O", NULL});
-    gtk_application_set_accels_for_action (GTK_APPLICATION (app), "win.close", (const gchar *[]) {"<Primary>W", NULL});
+    gtk_application_set_accels_for_action (GTK_APPLICATION (app), "win.save", (const gchar *[]) {"<Primary>S", NULL});
+    gtk_application_set_accels_for_action (GTK_APPLICATION (app), "win.close-tab", (const gchar *[]) {"<Primary>W", NULL});
+    gtk_application_set_accels_for_action (GTK_APPLICATION (app), "win.reanalyze", (const gchar *[]) {"<Primary>R", NULL});
     gtk_application_set_accels_for_action (GTK_APPLICATION (app), "win.hex-view", (const gchar *[]) {"<Primary>H", NULL});
     gtk_application_set_accels_for_action (GTK_APPLICATION (app), "win.text-view", (const gchar *[]) {"<Primary>T", NULL});
+    gtk_application_set_accels_for_action (GTK_APPLICATION (app), "win.undo", (const gchar *[]) {"<Primary>Z", NULL});
+    gtk_application_set_accels_for_action (GTK_APPLICATION (app), "win.redo", (const gchar *[]) {"<Primary><Shift>Z", NULL});
     gtk_application_set_accels_for_action (GTK_APPLICATION (app), "win.next-tab", (const gchar *[]) {"<Primary><Alt>Page_Down", NULL});
     gtk_application_set_accels_for_action (GTK_APPLICATION (app), "win.previous-tab", (const gchar *[]) {"<Primary><Alt>Page_Up", NULL});
 }
 
 static void
-chirurgien_application_init (__attribute__((unused)) ChirurgienApplication *app)
+chirurgien_application_init (G_GNUC_UNUSED ChirurgienApplication *app)
 {
 
 }
 
 static void
-chirurgien_application_class_init (ChirurgienApplicationClass *class)
+chirurgien_application_class_init (ChirurgienApplicationClass *klass)
 {
-    G_APPLICATION_CLASS (class)->activate = chirurgien_application_activate;
-    G_APPLICATION_CLASS (class)->startup = chirurgien_application_startup;
-    G_APPLICATION_CLASS (class)->open = chirurgien_application_open;
+    G_APPLICATION_CLASS (klass)->activate = chirurgien_application_activate;
+    G_APPLICATION_CLASS (klass)->startup = chirurgien_application_startup;
 }
+
+/*** Public API ***/
 
 ChirurgienApplication *
 chirurgien_application_new (void)
 {
-    return g_object_new (CHIRURGIEN_APPLICATION_TYPE,
+    return g_object_new (CHIRURGIEN_TYPE_APPLICATION,
                          "application-id", "io.github.leonardschardijn.Chirurgien",
-                         "flags", G_APPLICATION_HANDLES_OPEN,
                          NULL);
 }

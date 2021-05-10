@@ -19,39 +19,26 @@
 #pragma once
 
 #include <gtk/gtk.h>
-#include "chirurgien-application.h"
 
 G_BEGIN_DECLS
 
-#define CHIRURGIEN_WINDOW_TYPE (chirurgien_window_get_type ())
+#define CHIRURGIEN_TYPE_WINDOW (chirurgien_window_get_type ())
 
 G_DECLARE_FINAL_TYPE (ChirurgienWindow, chirurgien_window, CHIRURGIEN, WINDOW, GtkApplicationWindow)
 
-struct _ChirurgienWindow
-{
-    GtkApplicationWindow   parent_instance;
+ChirurgienWindow *    chirurgien_window_new                (GtkApplication *);
 
-    /* Client-side decorations */
-    GtkWidget              *headerbar;
-    /* Window Manager decorations */
-    GtkWidget              *recent_files;
-    GMenu                  *recent_menu;
+void                  chirurgien_window_update_recent      (ChirurgienWindow *,
+                                                            GFile *);
 
-    GtkWidget              *notebook;
+void                  chirurgien_window_load_view_font     (ChirurgienWindow *);
 
-    GdkWindowState         window_state;
+void                  chirurgien_window_set_undo           (ChirurgienWindow *,
+                                                            gboolean);
+void                  chirurgien_window_set_redo           (ChirurgienWindow *,
+                                                            gboolean);
 
-    GSettings              *preferences_settings;
-    GSettings              *window_settings;
-
-    GtkWidget              *analyzing_message;
-    GtkWidget              *processing_message;
-};
-
-
-ChirurgienWindow *    chirurgien_window_new              (ChirurgienApplication *);
-
-void                  chirurgien_window_update_recent    (ChirurgienWindow *);
+GSettings *           chirurgien_window_get_preferences    (ChirurgienWindow *);
+GSettings *           chirurgien_window_get_state          (ChirurgienWindow *);
 
 G_END_DECLS
-

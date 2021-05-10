@@ -22,13 +22,11 @@
 
 G_BEGIN_DECLS
 
-#define CHIRURGIEN_APPLICATION_TYPE (chirurgien_application_get_type ())
+#define CHIRURGIEN_TYPE_APPLICATION (chirurgien_application_get_type ())
 
 G_DECLARE_FINAL_TYPE (ChirurgienApplication, chirurgien_application, CHIRURGIEN, APPLICATION, GtkApplication)
 
-
 ChirurgienApplication * chirurgien_application_new (void);
-
 
 G_END_DECLS
 

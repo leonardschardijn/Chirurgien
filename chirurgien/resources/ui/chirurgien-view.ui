@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <template class="ChirurgienView" parent="GtkWidget">
+    <child>
+      <object class="GtkPaned" id="main">
+        <property name="wide-handle">t</property>
+        <child>
+          <object class="GtkGrid">
+            <property name="css-name">notebook</property>
+            <child>
+              <object class="GtkBox">
+                <property name="css-name">header</property>
+                <child>
+                  <object class="GtkToggleButton" id="hex_view">
+                    <property name="hexpand">t</property>
+                    <property name="label" translatable="yes">Hexadecimal view</property>
+                    <property name="active">t</property>
+                    <property name="group">text_view</property>
+                    <style>
+                      <class name="flat"/>
+                      <class name="circular"/>
+                    </style>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkToggleButton" id="text_view">
+                    <property name="hexpand">t</property>
+                    <property name="label" translatable="yes">Text view</property>
+                    <style>
+                      <class name="flat"/>
+                      <class name="circular"/>
+                    </style>
+                  </object>
+                </child>
+                <style>
+                  <class name="top"/>
+                </style>
+                <layout>
+                  <property name="row">0</property>
+                  <property name="column">0</property>
+                  <property name="row-span">1</property>
+                  <property name="column-span">1</property>
+                </layout>
+              </object>
+            </child>
+            <child>
+              <object class="GtkImage" id="navigation_icon">
+                <property name="css-name">header</property>
+                <property name="icon-name">mark-location-symbolic</property>
+                <property name="tooltip-text" translatable="yes">Navigate file</property>
+                <style>
+                  <class name="top"/>
+                </style>
+                <layout>
+                  <property name="row">0</property>
+                  <property name="column">1</property>
+                  <property name="row-span">1</property>
+                  <property name="column-span">1</property>
+                </layout>
+              </object>
+            </child>
+            <child>
+              <object class="GtkBox">
+                <child>
+                  <object class="GtkOverlay">
+                    <child>
+                      <object class="GtkDrawingArea" id="file_view">
+                        <property name="hexpand">t</property>
+                        <property name="vexpand">t</property>
+                        <property name="focusable">t</property>
+                        <property name="margin-start">5</property>
+                        <property name="margin-end">5</property>
+                        <property name="margin-top">5</property>
+                        <property name="margin-bottom">5</property>
+                        <style>
+                          <class name="chirurgien-font"/>
+                        </style>
+                      </object>
+                    </child>
+                    <child type="overlay">
+                      <object class="GtkRevealer" id="reanalyze_notice">
+                        <property name="transition-type">GTK_REVEALER_TRANSITION_TYPE_SLIDE_UP</property>
+                        <property name="halign">GTK_ALIGN_CENTER</property>
+                        <property name="valign">GTK_ALIGN_END</property>
+                        <child>
+                          <object class="GtkBox">
+                            <property name="margin-start">3</property>
+                            <property name="margin-end">3</property>
+                            <property name="margin-top">3</property>
+                            <property name="margin-bottom">3</property>
+                            <property name="orientation">GTK_ORIENTATION_HORIZONTAL</property>
+                            <property name="spacing">5</property>
+                            <style>
+                              <class name="osd"/>
+                            </style>
+                            <child>
+                              <object class="GtkLabel">
+                                <property name="label" translatable="yes">The file has been modified</property>
+                                <property name="margin-start">10</property>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkButton">
+                                <property name="margin-start">10</property>
+                                <property name="margin-end">10</property>
+                                <property name="margin-top">10</property>
+                                <property name="margin-bottom">10</property>
+                                <property name="label" translatable="yes">Reanalyze</property>
+                                <property name="action-name">win.reanalyze</property>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkScrollbar">
+                    <property name="orientation">GTK_ORIENTATION_VERTICAL</property>
+                    <property name="adjustment">adjustment</property>
+                  </object>
+                </child>
+                <layout>
+                  <property name="row">1</property>
+                  <property name="column">0</property>
+                  <property name="row-span">1</property>
+                  <property name="column-span">1</property>
+                </layout>
+              </object>
+            </child>
+            <child>
+              <object class="GtkScrolledWindow">
+                <property name="hscrollbar-policy">GTK_POLICY_NEVER</property>
+                <child>
+                  <object class="GtkViewport">
+                    <child>
+                      <object class="GtkBox" id="navigation">
+                        <property name="orientation">GTK_ORIENTATION_VERTICAL</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <layout>
+                  <property name="row">1</property>
+                  <property name="column">1</property>
+                  <property name="row-span">1</property>
+                  <property name="column-span">1</property>
+                </layout>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="GtkNotebook" id="description">
+            <property name="scrollable">t</property>
+            <property name="show-border">f</property>
+            <property name="width-request">300</property>
+            <child>
+              <object class="GtkScrolledWindow">
+                <child>
+                  <object class="GtkViewport">
+                    <child>
+                      <object class="GtkBox" id="overview">
+                        <property name="orientation">GTK_ORIENTATION_VERTICAL</property>
+                        <property name="can-focus">f</property>
+                        <property name="spacing">10</property>
+                        <property name="margin-start">10</property>
+                        <property name="margin-end">10</property>
+                        <property name="margin-top">10</property>
+                        <property name="margin-bottom">10</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child type="tab">
+              <object class="GtkLabel">
+                <property name="label" translatable="yes">Overview</property>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+  </template>
+  <object class="GtkAdjustment" id="adjustment"/>
+  <object class="ChirurgienViewTab" id="view_tab"/>
+</interface>

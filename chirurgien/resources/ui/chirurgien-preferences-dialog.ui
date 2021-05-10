@@ -2,88 +2,405 @@
 <interface>
   <template class="ChirurgienPreferencesDialog" parent="GtkDialog">
     <property name="title" translatable="yes">Preferences</property>
-    <property name="type_hint">dialog</property>
-    <property name="resizable">False</property>
-    <property name="modal">True</property>
-    <child internal-child="vbox">
+    <property name="resizable">f</property>
+    <property name="modal">t</property>
+    <child internal-child="content_area">
       <object class="GtkBox">
-        <property name="orientation">vertical</property>
+        <property name="orientation">GTK_ORIENTATION_VERTICAL</property>
         <child>
           <object class="GtkNotebook">
-            <property name="visible">True</property>
             <child>
-              <object class="GtkGrid">
-                <property name="margin">10</property>
-                <property name="column-spacing">10</property>
-                <property name="row-spacing">10</property>
-                <property name="visible">True</property>
+              <object class="GtkBox">
+                <property name="orientation">GTK_ORIENTATION_VERTICAL</property>
+                <property name="margin-start">10</property>
+                <property name="margin-end">10</property>
+                <property name="margin-top">10</property>
+                <property name="margin-bottom">10</property>
+                <property name="spacing">10</property>
                 <child>
-                  <object class="GtkLabel">
-                    <property name="visible">True</property>
-                    <property name="xalign">0</property>
-                    <property name="label" translatable="yes">Bytes per line:</property>
+                  <object class="GtkCheckButton" id="navigation">
+                    <property name="label" translatable="yes">Hide navigation buttons</property>
                   </object>
-                  <packing>
-                    <property name="left_attach">0</property>
-                    <property name="top_attach">0</property>
-                  </packing>
                 </child>
                 <child>
-                  <object class="GtkSpinButton" id="bytes">
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="adjustment">adjustment</property>
-                    <property name="climb_rate">1</property>
-                    <property name="snap_to_ticks">True</property>
-                    <property name="numeric">True</property>
+                  <object class="GtkCheckButton" id="description">
+                    <property name="label" translatable="yes">Hide description panel</property>
                   </object>
-                  <packing>
-                    <property name="left_attach">1</property>
-                    <property name="top_attach">0</property>
-                  </packing>
                 </child>
                 <child>
-                  <object class="GtkLabel">
-                    <property name="visible">True</property>
-                    <property name="xalign">0</property>
-                    <property name="label" translatable="yes">Justification:</property>
+                  <object class="GtkCheckButton" id="auto_analysis">
+                    <property name="label" translatable="yes">Automatic reanalysis after edition</property>
                   </object>
-                  <packing>
-                    <property name="left_attach">0</property>
-                    <property name="top_attach">1</property>
-                  </packing>
                 </child>
-                <child>
-                  <object class="GtkComboBoxText" id="justification">
-                    <property name="visible">True</property>
-                    <items>
-                      <item translatable="yes" id="left">Left</item>
-                      <item translatable="yes" id="center">Center</item>
-                      <item translatable="yes" id="right">Right</item>
-                    </items>
-                  </object>   
-                  <packing>
-                    <property name="left_attach">1</property>
-                    <property name="top_attach">1</property>
-                  </packing>
-                </child>
-                <child>
-                <object class="GtkCheckButton" id="navigation">
-                  <property name="label" translatable="yes">Show navigation buttons</property>
-                  <property name="visible">True</property>
-                  <property name="draw_indicator">True</property>
-                </object>
-                <packing>
-                  <property name="left_attach">0</property>
-                  <property name="top_attach">2</property>
-                  <property name="width">2</property>
-                </packing>
-              </child>
               </object>
             </child>
             <child type="tab">
               <object class="GtkLabel">
+                <property name="hexpand">t</property>
                 <property name="label" translatable="yes">View</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkGrid">
+                <property name="margin-start">10</property>
+                <property name="margin-end">10</property>
+                <property name="margin-top">10</property>
+                <property name="margin-bottom">10</property>
+                <property name="row-spacing">10</property>
+                <property name="column-spacing">20</property>
+                <child>
+                  <object class="GtkLabel">
+                    <property name="halign">GTK_ALIGN_START</property>
+                    <property name="label" translatable="yes">Background colors</property>
+                    <attributes>
+                      <attribute name="weight" value="PANGO_WEIGHT_BOLD"/>
+                    </attributes>
+                    <layout>
+                      <property name="row">0</property>
+                      <property name="column">0</property>
+                      <property name="row-span">1</property>
+                      <property name="column-span">6</property>
+                    </layout>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkColorButton" id="color0">
+                    <property name="modal">t</property>
+                    <property name="use-alpha">t</property>
+                    <property name="title" translatable="yes">Color 0</property>
+                    <layout>
+                      <property name="row">1</property>
+                      <property name="column">0</property>
+                      <property name="row-span">1</property>
+                      <property name="column-span">1</property>
+                    </layout>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkLabel">
+                    <property name="label" translatable="yes">Color 0</property>
+                    <layout>
+                      <property name="row">1</property>
+                      <property name="column">1</property>
+                      <property name="row-span">1</property>
+                      <property name="column-span">1</property>
+                    </layout>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkColorButton" id="color1">
+                    <property name="modal">t</property>
+                    <property name="use-alpha">t</property>
+                    <property name="title" translatable="yes">Color 1</property>
+                    <layout>
+                      <property name="row">1</property>
+                      <property name="column">2</property>
+                      <property name="row-span">1</property>
+                      <property name="column-span">1</property>
+                    </layout>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkLabel">
+                    <property name="label" translatable="yes">Color 1</property>
+                    <layout>
+                      <property name="row">1</property>
+                      <property name="column">3</property>
+                      <property name="row-span">1</property>
+                      <property name="column-span">1</property>
+                    </layout>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkColorButton" id="color2">
+                    <property name="modal">t</property>
+                    <property name="use-alpha">t</property>
+                    <property name="title" translatable="yes">Color 2</property>
+                    <layout>
+                      <property name="row">1</property>
+                      <property name="column">4</property>
+                      <property name="row-span">1</property>
+                      <property name="column-span">1</property>
+                    </layout>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkLabel">
+                    <property name="label" translatable="yes">Color 2</property>
+                    <layout>
+                      <property name="row">1</property>
+                      <property name="column">5</property>
+                      <property name="row-span">1</property>
+                      <property name="column-span">1</property>
+                    </layout>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkColorButton" id="color3">
+                    <property name="modal">t</property>
+                    <property name="use-alpha">t</property>
+                    <property name="title" translatable="yes">Color 3</property>
+                    <layout>
+                      <property name="row">2</property>
+                      <property name="column">0</property>
+                      <property name="row-span">1</property>
+                      <property name="column-span">1</property>
+                    </layout>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkLabel">
+                    <property name="label" translatable="yes">Color 3</property>
+                    <layout>
+                      <property name="row">2</property>
+                      <property name="column">1</property>
+                      <property name="row-span">1</property>
+                      <property name="column-span">1</property>
+                    </layout>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkColorButton" id="color4">
+                    <property name="modal">t</property>
+                    <property name="use-alpha">t</property>
+                    <property name="title" translatable="yes">Color 4</property>
+                    <layout>
+                      <property name="row">2</property>
+                      <property name="column">2</property>
+                      <property name="row-span">1</property>
+                      <property name="column-span">1</property>
+                    </layout>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkLabel">
+                    <property name="label" translatable="yes">Color 4</property>
+                    <layout>
+                      <property name="row">2</property>
+                      <property name="column">3</property>
+                      <property name="row-span">1</property>
+                      <property name="column-span">1</property>
+                    </layout>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkColorButton" id="color5">
+                    <property name="modal">t</property>
+                    <property name="use-alpha">t</property>
+                    <property name="title" translatable="yes">Color 5</property>
+                    <layout>
+                      <property name="row">2</property>
+                      <property name="column">4</property>
+                      <property name="row-span">1</property>
+                      <property name="column-span">1</property>
+                    </layout>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkLabel">
+                    <property name="label" translatable="yes">Color 5</property>
+                    <layout>
+                      <property name="row">2</property>
+                      <property name="column">5</property>
+                      <property name="row-span">1</property>
+                      <property name="column-span">1</property>
+                    </layout>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkLabel">
+                    <property name="halign">GTK_ALIGN_START</property>
+                    <property name="label" translatable="yes">Foreground colors</property>
+                    <attributes>
+                      <attribute name="weight" value="PANGO_WEIGHT_BOLD"/>
+                    </attributes>
+                    <layout>
+                      <property name="row">3</property>
+                      <property name="column">0</property>
+                      <property name="row-span">1</property>
+                      <property name="column-span">6</property>
+                    </layout>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkColorButton" id="color6">
+                    <property name="modal">t</property>
+                    <property name="use-alpha">t</property>
+                    <property name="title" translatable="yes">Color 6</property>
+                    <layout>
+                      <property name="row">4</property>
+                      <property name="column">0</property>
+                      <property name="row-span">1</property>
+                      <property name="column-span">1</property>
+                    </layout>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkLabel">
+                    <property name="label" translatable="yes">Color 6</property>
+                    <layout>
+                      <property name="row">4</property>
+                      <property name="column">1</property>
+                      <property name="row-span">1</property>
+                      <property name="column-span">1</property>
+                    </layout>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkColorButton" id="color7">
+                    <property name="modal">t</property>
+                    <property name="use-alpha">t</property>
+                    <property name="title" translatable="yes">Color 7</property>
+                    <layout>
+                      <property name="row">4</property>
+                      <property name="column">2</property>
+                      <property name="row-span">1</property>
+                      <property name="column-span">1</property>
+                    </layout>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkLabel">
+                    <property name="label" translatable="yes">Color 7</property>
+                    <layout>
+                      <property name="row">4</property>
+                      <property name="column">3</property>
+                      <property name="row-span">1</property>
+                      <property name="column-span">1</property>
+                    </layout>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkColorButton" id="color8">
+                    <property name="modal">t</property>
+                    <property name="use-alpha">t</property>
+                    <property name="title" translatable="yes">Color 8</property>
+                    <layout>
+                      <property name="row">4</property>
+                      <property name="column">4</property>
+                      <property name="row-span">1</property>
+                      <property name="column-span">1</property>
+                    </layout>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkLabel">
+                    <property name="label" translatable="yes">Color 8</property>
+                    <layout>
+                      <property name="row">4</property>
+                      <property name="column">5</property>
+                      <property name="row-span">1</property>
+                      <property name="column-span">1</property>
+                    </layout>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkLabel">
+                    <property name="halign">GTK_ALIGN_START</property>
+                    <property name="label" translatable="yes">Reset default colors</property>
+                    <attributes>
+                      <attribute name="weight" value="PANGO_WEIGHT_BOLD"/>
+                    </attributes>
+                    <layout>
+                      <property name="row">5</property>
+                      <property name="column">0</property>
+                      <property name="row-span">1</property>
+                      <property name="column-span">6</property>
+                    </layout>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkButton" id="default_colors">
+                    <property name="icon-name">view-refresh-symbolic</property>
+                    <style>
+                      <class name="flat"/>
+                    </style>
+                    <layout>
+                      <property name="row">6</property>
+                      <property name="column">0</property>
+                      <property name="row-span">1</property>
+                      <property name="column-span">6</property>
+                    </layout>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child type="tab">
+              <object class="GtkLabel">
+                <property name="hexpand">t</property>
+                <property name="label" translatable="yes">Color</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkBox">
+                <property name="orientation">GTK_ORIENTATION_VERTICAL</property>
+                <property name="margin-start">10</property>
+                <property name="margin-end">10</property>
+                <property name="margin-top">10</property>
+                <property name="margin-bottom">10</property>
+                <property name="spacing">10</property>
+                <child>
+                  <object class="GtkBox">
+                    <property name="orientation">GTK_ORIENTATION_HORIZONTAL</property>
+                    <property name="spacing">5</property>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="label" translatable="yes">File contents font:</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkFontButton" id="font_button">
+                        <property name="halign">GTK_ALIGN_START</property>
+                        <property name="modal">t</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkBox">
+                    <property name="orientation">GTK_ORIENTATION_HORIZONTAL</property>
+                    <property name="spacing">10</property>
+                    <child>
+                      <object class="GtkImage">
+                        <property name="icon-name">dialog-warning-symbolic</property>
+                        <property name="tooltip-text" translatable="yes">By default, Chirurgien tries to calculate the maximum number of bytes that can be printed per line
+This can sometimes be very off and not enough (or too many) bytes are printed per line
+If your desired font is not rendering properly, this allows you to manually set the number of bytes per line to print</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkCheckButton" id="manual_lines">
+                        <property name="label" translatable="yes">Manually adjust font</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkBox">
+                    <property name="visible">f</property>
+                    <property name="orientation">GTK_ORIENTATION_HORIZONTAL</property>
+                    <property name="spacing">5</property>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="label" translatable="yes">Bytes per line:</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkSpinButton" id="bytes">
+                        <property name="adjustment">adjustment</property>
+                        <property name="climb_rate">1</property>
+                        <property name="snap_to_ticks">t</property>
+                        <property name="numeric">t</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child type="tab">
+              <object class="GtkLabel">
+                <property name="hexpand">t</property>
+                <property name="label" translatable="yes">Font</property>
               </object>
             </child>
           </object>

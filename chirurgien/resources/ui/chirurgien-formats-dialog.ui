@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <template class="ChirurgienFormatsDialog" parent="GtkDialog">
+    <property name="title" translatable="yes">Formats</property>
+    <property name="resizable">f</property>
+    <property name="modal">t</property>
+    <property name="height-request">600</property>
+    <child internal-child="content_area">
+      <object class="GtkBox">
+        <property name="orientation">GTK_ORIENTATION_HORIZONTAL</property>
+        <child>
+          <object class="GtkStackSidebar">
+            <property name="stack">formats</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkStack" id="formats">
+            <property name="margin-start">10</property>
+            <property name="margin-end">10</property>
+            <property name="margin-top">10</property>
+            <property name="margin-bottom">10</property>
+          </object>
+        </child>
+      </object>
+    </child>
+  </template>
+</interface>

@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
   <object class="GtkShortcutsWindow" id="shortcuts">
-    <property name="modal">True</property>
+    <property name="modal">t</property>
     <child>
       <object class="GtkShortcutsSection">
-        <property name="visible">True</property>
+        <property name="visible">t</property>
         <property name="section-name">shortcuts</property>
         <child>
           <object class="GtkShortcutsGroup">
@@ -12,43 +12,76 @@
             <child>
               <object class="GtkShortcutsShortcut">
                 <property name="shortcut-type">GTK_SHORTCUT_ACCELERATOR</property>
-                <property name="accelerator">&lt;ctrl&gt;O</property>
+                <property name="accelerator">&lt;primary&gt;O</property>
                 <property name="title" translatable="yes">Open a file</property>
               </object>
             </child>
             <child>
               <object class="GtkShortcutsShortcut">
                 <property name="shortcut-type">GTK_SHORTCUT_ACCELERATOR</property>
-                <property name="accelerator">&lt;ctrl&gt;W</property>
+                <property name="accelerator">&lt;primary&gt;W</property>
                 <property name="title" translatable="yes">Close the file</property>
               </object>
             </child>
             <child>
               <object class="GtkShortcutsShortcut">
                 <property name="shortcut-type">GTK_SHORTCUT_ACCELERATOR</property>
-                <property name="accelerator">&lt;ctrl&gt;&lt;alt&gt;Page_Down</property>
+                <property name="accelerator">&lt;primary&gt;R</property>
+                <property name="title" translatable="yes">Reanalyze the file</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="shortcut-type">GTK_SHORTCUT_ACCELERATOR</property>
+                <property name="accelerator">&lt;primary&gt;S</property>
+                <property name="title" translatable="yes">Save the file</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="shortcut-type">GTK_SHORTCUT_ACCELERATOR</property>
+                <property name="accelerator">&lt;primary&gt;&lt;alt&gt;Page_Down</property>
                 <property name="title" translatable="yes">Switch to the next file</property>
               </object>
             </child>
             <child>
               <object class="GtkShortcutsShortcut">
                 <property name="shortcut-type">GTK_SHORTCUT_ACCELERATOR</property>
-                <property name="accelerator">&lt;ctrl&gt;&lt;alt&gt;Page_Up</property>
+                <property name="accelerator">&lt;primary&gt;&lt;alt&gt;Page_Up</property>
                 <property name="title" translatable="yes">Switch to the previous file</property>
               </object>
             </child>
             <child>
               <object class="GtkShortcutsShortcut">
                 <property name="shortcut-type">GTK_SHORTCUT_ACCELERATOR</property>
-                <property name="accelerator">&lt;ctrl&gt;H</property>
+                <property name="accelerator">&lt;primary&gt;H</property>
                 <property name="title" translatable="yes">Switch to hexadecimal view</property>
               </object>
             </child>
             <child>
               <object class="GtkShortcutsShortcut">
                 <property name="shortcut-type">GTK_SHORTCUT_ACCELERATOR</property>
-                <property name="accelerator">&lt;ctrl&gt;T</property>
+                <property name="accelerator">&lt;primary&gt;T</property>
                 <property name="title" translatable="yes">Switch to text view</property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="GtkShortcutsGroup">
+            <property name="title" translatable="yes">Undo and Redo</property>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="shortcut-type">GTK_SHORTCUT_ACCELERATOR</property>
+                <property name="accelerator">&lt;primary&gt;Z</property>
+                <property name="title" translatable="yes">Undo previous modification</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="shortcut-type">GTK_SHORTCUT_ACCELERATOR</property>
+                <property name="accelerator">&lt;primary&gt;&lt;shift&gt;Z</property>
+                <property name="title" translatable="yes">Redo previous modification</property>
               </object>
             </child>
           </object>
@@ -59,7 +92,7 @@
             <child>
               <object class="GtkShortcutsShortcut">
                 <property name="shortcut-type">GTK_SHORTCUT_ACCELERATOR</property>
-                <property name="accelerator">&lt;ctrl&gt;P</property>
+                <property name="accelerator">&lt;primary&gt;P</property>
                 <property name="title" translatable="yes">Preferences</property>
               </object>
             </child>
@@ -73,7 +106,7 @@
             <child>
               <object class="GtkShortcutsShortcut">
                 <property name="shortcut-type">GTK_SHORTCUT_ACCELERATOR</property>
-                <property name="accelerator">&lt;ctrl&gt;Q</property>
+                <property name="accelerator">&lt;primary&gt;Q</property>
                 <property name="title" translatable="yes">Quit the application</property>
               </object>
             </child>

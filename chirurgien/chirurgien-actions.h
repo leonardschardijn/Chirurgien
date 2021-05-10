@@ -20,17 +20,15 @@
 
 #include <gtk/gtk.h>
 #include "chirurgien-window.h"
+#include "chirurgien-view.h"
 
 G_BEGIN_DECLS
 
 /* Application actions */
-void       chirurgien_actions_disable_csd        (GSimpleAction *,
-                                                  GVariant *,
-                                                  gpointer);
 void       chirurgien_actions_preferences        (GSimpleAction *,
                                                   GVariant *,
                                                   gpointer);
-void       chirurgien_actions_analyzer_info      (GSimpleAction *,
+void       chirurgien_actions_formats            (GSimpleAction *,
                                                   GVariant *,
                                                   gpointer);
 void       chirurgien_actions_shortcuts          (GSimpleAction *,
@@ -47,7 +45,13 @@ void       chirurgien_actions_quit               (GSimpleAction *,
 void       chirurgien_actions_open               (GSimpleAction *,
                                                   GVariant *,
                                                   gpointer);
+void       chirurgien_actions_save               (GSimpleAction *,
+                                                  GVariant *,
+                                                  gpointer);
 void       chirurgien_actions_close              (GSimpleAction *,
+                                                  GVariant *,
+                                                  gpointer);
+void       chirurgien_actions_reanalyze          (GSimpleAction *,
                                                   GVariant *,
                                                   gpointer);
 void       chirurgien_actions_hex_view           (GSimpleAction *,
@@ -59,18 +63,23 @@ void       chirurgien_actions_text_view          (GSimpleAction *,
 void       chirurgien_actions_next_tab           (GSimpleAction *,
                                                   GVariant *,
                                                   gpointer);
+void       chirurgien_actions_undo               (GSimpleAction *,
+                                                  GVariant *,
+                                                  gpointer);
+void       chirurgien_actions_redo               (GSimpleAction *,
+                                                  GVariant *,
+                                                  gpointer);
 void       chirurgien_actions_previous_tab       (GSimpleAction *,
                                                   GVariant *,
                                                   gpointer);
-
-/* Window actions: Only used when using Window Manager decorations */
-void       chirurgien_actions_recent_open_wmd    (GSimpleAction *,
+void       chirurgien_actions_recent_open        (GSimpleAction *,
                                                   GVariant *,
                                                   gpointer);
 
 /* Others */
-void       chirurgien_actions_analyze_file       (ChirurgienWindow *,
+void       chirurgien_actions_new_view           (ChirurgienWindow *,
                                                   GFile *);
+void       chirurgien_actions_show_view          (ChirurgienWindow *,
+                                                  ChirurgienView *);
 
 G_END_DECLS
-

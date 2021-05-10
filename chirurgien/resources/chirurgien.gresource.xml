@@ -1,24 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <gresources>
   <gresource prefix="/io/github/leonardschardijn/chirurgien">
-    <!-- Menus: Client-side decorations & Window manager decorations -->
-    <file preprocess="xml-stripblanks">menus/menu-csd.ui</file>
-    <file preprocess="xml-stripblanks">menus/menu-wmd.ui</file>
+    <!-- Menus -->
+    <file preprocess="xml-stripblanks">menus/hamburger-menu.ui</file>
 
     <!-- UI definitions -->
-    <file preprocess="xml-stripblanks">ui/chirurgien-analyzer-view.ui</file>
+    <file preprocess="xml-stripblanks">ui/chirurgien-view.ui</file>
+    <file preprocess="xml-stripblanks">ui/chirurgien-view-tab.ui</file>
+    <file preprocess="xml-stripblanks">ui/chirurgien-editor.ui</file>
     <file preprocess="xml-stripblanks">ui/chirurgien-preferences-dialog.ui</file>
-    <file preprocess="xml-stripblanks">ui/chirurgien-analyzer-info-dialog.ui</file>
+    <file preprocess="xml-stripblanks">ui/chirurgien-formats-dialog.ui</file>
     <file preprocess="xml-stripblanks">ui/chirurgien-shortcuts-dialog.ui</file>
 
-    <!-- Analyzer information tabs -->
-    <file preprocess="xml-stripblanks">analyzer-info/intro-tab.ui</file>
-    <file preprocess="xml-stripblanks">analyzer-info/cpio-tab.ui</file>
-    <file preprocess="xml-stripblanks">analyzer-info/elf-tab.ui</file>
-    <file preprocess="xml-stripblanks">analyzer-info/gif-tab.ui</file>
-    <file preprocess="xml-stripblanks">analyzer-info/jpeg-tab.ui</file>
-    <file preprocess="xml-stripblanks">analyzer-info/png-tab.ui</file>
-    <file preprocess="xml-stripblanks">analyzer-info/tar-tab.ui</file>
-    <file preprocess="xml-stripblanks">analyzer-info/tiff-tab.ui</file>
+    <!-- Supported formats information tabs -->
+    <file preprocess="xml-stripblanks">formats/intro-tab.ui</file>
+    <file preprocess="xml-stripblanks">formats/cpio-tab.ui</file>
+    <file preprocess="xml-stripblanks">formats/elf-tab.ui</file>
+    <file preprocess="xml-stripblanks">formats/gif-tab.ui</file>
+    <file preprocess="xml-stripblanks">formats/jpeg-tab.ui</file>
+    <file preprocess="xml-stripblanks">formats/png-tab.ui</file>
+    <file preprocess="xml-stripblanks">formats/tar-tab.ui</file>
+    <file preprocess="xml-stripblanks">formats/tiff-tab.ui</file>
   </gresource>
 </gresources>

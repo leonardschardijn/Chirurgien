@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <template class="ChirurgienViewTab" parent="GtkWidget">
+    <child>
+      <object class="GtkImage" id="locked">
+        <property name="visible">f</property>
+        <property name="margin-end">5</property>
+        <property name="icon-name">changes-prevent-symbolic</property>
+        <property name="tooltip-text" translatable="yes">File is not writable</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkLabel" id="unsaved">
+        <property name="visible">f</property>
+        <property name="label">*</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkLabel" id="label">
+        <property name="margin-end">5</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkButton" id="close_button">
+        <property name="icon-name">window-close-symbolic</property>
+        <style>
+          <class name="flat"/>
+          <class name="circular"/>
+        </style>
+      </object>
+    </child>
+  </template>
+</interface>

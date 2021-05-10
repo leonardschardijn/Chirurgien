@@ -23,14 +23,10 @@
 
 G_BEGIN_DECLS
 
-#define CHIRURGIEN_PREFERENCES_DIALOG_TYPE (chirurgien_preferences_dialog_get_type ())
+#define CHIRURGIEN_TYPE_PREFERENCES_DIALOG (chirurgien_preferences_dialog_get_type ())
 
 G_DECLARE_FINAL_TYPE (ChirurgienPreferencesDialog, chirurgien_preferences_dialog, CHIRURGIEN, PREFERENCES_DIALOG, GtkDialog)
 
-
-GtkWidget *       chirurgien_preferences_dialog_new                (ChirurgienWindow *);
-
-void              chirurgien_preferences_dialog_update_settings    (ChirurgienPreferencesDialog *);
-
+GtkWidget * chirurgien_preferences_dialog_new (ChirurgienWindow *);
 
 G_END_DECLS

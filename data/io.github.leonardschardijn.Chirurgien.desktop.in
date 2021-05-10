@@ -1,6 +1,6 @@
 [Desktop Entry]
 Name=Chirurgien
-Comment=Understand file formats
+Comment=Understand and manipulate file formats
 Exec=chirurgien
 Icon=io.github.leonardschardijn.Chirurgien
 Terminal=false

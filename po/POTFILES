@@ -4,87 +4,90 @@ data/io.github.leonardschardijn.Chirurgien.gschema.xml
 
 # Application strings
 chirurgien/chirurgien-actions.c
-chirurgien/chirurgien-analyzer-info-dialog.c
-chirurgien/chirurgien-analyzer-view.c
+chirurgien/chirurgien-formats-dialog.c
+chirurgien/chirurgien-view.c
+chirurgien/chirurgien-view-tab.c
 chirurgien/chirurgien-window.c
-chirurgien/analyzers/chirurgien-analyzer.c
-chirurgien/resources/menus/menu-csd.ui
-chirurgien/resources/menus/menu-wmd.ui
-chirurgien/resources/ui/chirurgien-analyzer-info-dialog.ui
-chirurgien/resources/ui/chirurgien-analyzer-view.ui
+chirurgien/formats/chirurgien-formats.c
+chirurgien/formats/format-utils.c
+chirurgien/resources/menus/hamburger-menu.ui
+chirurgien/resources/ui/chirurgien-formats-dialog.ui
 chirurgien/resources/ui/chirurgien-preferences-dialog.ui
 chirurgien/resources/ui/chirurgien-shortcuts-dialog.ui
+chirurgien/resources/ui/chirurgien-view.ui
+chirurgien/resources/ui/chirurgien-view-tab.ui
 
-# Analyzer information strings
-chirurgien/resources/analyzer-info/intro-tab.ui
-chirurgien/resources/analyzer-info/cpio-tab.ui
-chirurgien/resources/analyzer-info/elf-tab.ui
-chirurgien/resources/analyzer-info/gif-tab.ui
-chirurgien/resources/analyzer-info/jpeg-tab.ui
-chirurgien/resources/analyzer-info/png-tab.ui
-chirurgien/resources/analyzer-info/tar-tab.ui
-chirurgien/resources/analyzer-info/tiff-tab.ui
+# Format information strings
+chirurgien/resources/formats/intro-tab.ui
+chirurgien/resources/formats/cpio-tab.ui
+chirurgien/resources/formats/elf-tab.ui
+chirurgien/resources/formats/gif-tab.ui
+chirurgien/resources/formats/jpeg-tab.ui
+chirurgien/resources/formats/png-tab.ui
+chirurgien/resources/formats/tar-tab.ui
+chirurgien/resources/formats/tiff-tab.ui
 
-# cpio analyzer strings
-chirurgien/analyzers/cpio/cpio-analyzer.c
+# cpio format strings
+chirurgien/formats/cpio/cpio-format.c
 
-# ELF analyzer strings
-chirurgien/analyzers/elf/elf-analyzer.c
-chirurgien/analyzers/elf/elf-program-header.c
-chirurgien/analyzers/elf/elf-section-header.c
+# ELF format strings
+chirurgien/formats/elf/elf-format.c
+chirurgien/formats/elf/elf-program-header.c
+chirurgien/formats/elf/elf-section-header.c
 
-# GIF analyzer strings
-chirurgien/analyzers/gif/gif-analyzer.c
-chirurgien/analyzers/gif/gif-logical-screen-descriptor-block.c
-chirurgien/analyzers/gif/gif-image-descriptor-block.c
-chirurgien/analyzers/gif/gif-application-ext-block.c
-chirurgien/analyzers/gif/gif-comment-ext-block.c
-chirurgien/analyzers/gif/gif-graphic-control-ext-block.c
-chirurgien/analyzers/gif/gif-plain-text-ext-block.c
+# GIF format strings
+chirurgien/formats/gif/gif-format.c
+chirurgien/formats/gif/gif-logical-screen-descriptor-block.c
+chirurgien/formats/gif/gif-image-descriptor-block.c
+chirurgien/formats/gif/gif-application-ext-block.c
+chirurgien/formats/gif/gif-comment-ext-block.c
+chirurgien/formats/gif/gif-graphic-control-ext-block.c
+chirurgien/formats/gif/gif-plain-text-ext-block.c
 
-# JPEG analyzer strings
-chirurgien/analyzers/jpeg/jpeg-analyzer.c
-chirurgien/analyzers/jpeg/jpeg-app0-marker.c
-chirurgien/analyzers/jpeg/jpeg-app2-marker.c
-chirurgien/analyzers/jpeg/jpeg-dqt-marker.c
-chirurgien/analyzers/jpeg/jpeg-dht-marker.c
-chirurgien/analyzers/jpeg/jpeg-dac-marker.c
-chirurgien/analyzers/jpeg/jpeg-sofn-marker.c
-chirurgien/analyzers/jpeg/jpeg-dri-marker.c
-chirurgien/analyzers/jpeg/jpeg-sos-marker.c
-chirurgien/analyzers/jpeg/jpeg-dnl-marker.c
-chirurgien/analyzers/jpeg/jpeg-com-marker.c
+# JPEG format strings
+chirurgien/formats/jpeg/jpeg-format.c
+chirurgien/formats/jpeg/jpeg-app0-marker.c
+chirurgien/formats/jpeg/jpeg-app1-marker.c
+chirurgien/formats/jpeg/jpeg-app2-marker.c
+chirurgien/formats/jpeg/jpeg-dqt-marker.c
+chirurgien/formats/jpeg/jpeg-dht-marker.c
+chirurgien/formats/jpeg/jpeg-dac-marker.c
+chirurgien/formats/jpeg/jpeg-sofn-marker.c
+chirurgien/formats/jpeg/jpeg-dri-marker.c
+chirurgien/formats/jpeg/jpeg-sos-marker.c
+chirurgien/formats/jpeg/jpeg-dnl-marker.c
+chirurgien/formats/jpeg/jpeg-com-marker.c
 
-# PNG analyzer strings
-chirurgien/analyzers/png/png-analyzer.c
-chirurgien/analyzers/png/png-ihdr-chunk.c
-chirurgien/analyzers/png/png-plte-chunk.c
-chirurgien/analyzers/png/png-idat-chunk.c
-chirurgien/analyzers/png/png-trns-chunk.c
-chirurgien/analyzers/png/png-chrm-chunk.c
-chirurgien/analyzers/png/png-gama-chunk.c
-chirurgien/analyzers/png/png-iccp-chunk.c
-chirurgien/analyzers/png/png-sbit-chunk.c
-chirurgien/analyzers/png/png-srgb-chunk.c
-chirurgien/analyzers/png/png-text-chunk.c
-chirurgien/analyzers/png/png-ztxt-chunk.c
-chirurgien/analyzers/png/png-itxt-chunk.c
-chirurgien/analyzers/png/png-bkgd-chunk.c
-chirurgien/analyzers/png/png-hist-chunk.c
-chirurgien/analyzers/png/png-phys-chunk.c
-chirurgien/analyzers/png/png-splt-chunk.c
-chirurgien/analyzers/png/png-time-chunk.c
+# PNG format strings
+chirurgien/formats/png/png-format.c
+chirurgien/formats/png/png-ihdr-chunk.c
+chirurgien/formats/png/png-plte-chunk.c
+chirurgien/formats/png/png-idat-chunk.c
+chirurgien/formats/png/png-trns-chunk.c
+chirurgien/formats/png/png-chrm-chunk.c
+chirurgien/formats/png/png-gama-chunk.c
+chirurgien/formats/png/png-iccp-chunk.c
+chirurgien/formats/png/png-sbit-chunk.c
+chirurgien/formats/png/png-srgb-chunk.c
+chirurgien/formats/png/png-text-chunk.c
+chirurgien/formats/png/png-ztxt-chunk.c
+chirurgien/formats/png/png-itxt-chunk.c
+chirurgien/formats/png/png-bkgd-chunk.c
+chirurgien/formats/png/png-hist-chunk.c
+chirurgien/formats/png/png-phys-chunk.c
+chirurgien/formats/png/png-splt-chunk.c
+chirurgien/formats/png/png-time-chunk.c
 
-# tar analyzer strings
-chirurgien/analyzers/tar/tar-analyzer.c
+# tar format strings
+chirurgien/formats/tar/tar-format.c
 
-# TIFF analyzer strings
-chirurgien/analyzers/tiff/tiff-analyzer.c
-chirurgien/analyzers/tiff/exif-analyzer.c
-chirurgien/analyzers/tiff/exif-gpsinfo-analyzer.c
-chirurgien/analyzers/tiff/tiff-ascii-tag.c
-chirurgien/analyzers/tiff/tiff-short-tag.c
-chirurgien/analyzers/tiff/tiff-long-tag.c
-chirurgien/analyzers/tiff/tiff-rational-tag.c
-chirurgien/analyzers/tiff/tiff-byte-undefined-tag.c
+# TIFF format strings
+chirurgien/formats/tiff/tiff-format.c
+chirurgien/formats/tiff/exif-format.c
+chirurgien/formats/tiff/exif-gpsinfo-format.c
+chirurgien/formats/tiff/tiff-ascii-tag.c
+chirurgien/formats/tiff/tiff-short-tag.c
+chirurgien/formats/tiff/tiff-long-tag.c
+chirurgien/formats/tiff/tiff-rational-tag.c
+chirurgien/formats/tiff/tiff-byte-undefined-tag.c
 
