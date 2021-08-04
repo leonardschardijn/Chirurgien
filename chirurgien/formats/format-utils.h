@@ -44,7 +44,7 @@ typedef struct
 #define FILE_HAS_DATA(file) (file->file_contents_index < file->file_size)
 #define FILE_HAS_DATA_N(file, count) ((file->file_contents_index + count) <= file->file_size)
 
-#define GET_FILE_SIZE(fine) (file->file_size)
+#define GET_FILE_SIZE(file) (file->file_size)
 
 #define GET_INDEX(file) (file->file_contents_index)
 #define SET_INDEX(file, idx) (file->file_contents_index = idx)

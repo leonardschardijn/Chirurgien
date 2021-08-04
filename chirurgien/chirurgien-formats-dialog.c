@@ -129,6 +129,7 @@ chirurgien_formats_dialog_init (ChirurgienFormatsDialog *dialog)
     add_format (dialog, "/io/github/leonardschardijn/chirurgien/formats/elf-tab.ui", "ELF");
     add_format (dialog, "/io/github/leonardschardijn/chirurgien/formats/gif-tab.ui", "GIF");
     add_format (dialog, "/io/github/leonardschardijn/chirurgien/formats/jpeg-tab.ui", "JPEG");
+    add_format (dialog, "/io/github/leonardschardijn/chirurgien/formats/pe-tab.ui", "PE");
     add_format (dialog, "/io/github/leonardschardijn/chirurgien/formats/png-tab.ui", "PNG");
     add_format (dialog, "/io/github/leonardschardijn/chirurgien/formats/tar-tab.ui", "tar");
     add_format (dialog, "/io/github/leonardschardijn/chirurgien/formats/tiff-tab.ui", "TIFF");

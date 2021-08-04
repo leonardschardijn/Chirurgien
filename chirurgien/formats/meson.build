@@ -40,6 +40,12 @@ chirurgien_sources += [
 ]
 
 chirurgien_sources += [
+  'formats/pe/pe-format.c',
+  'formats/pe/pe-data-directories.c',
+  'formats/pe/pe-section-table.c'
+]
+
+chirurgien_sources += [
   'formats/png/png-format.c',
   'formats/png/png-ihdr-chunk.c',
   'formats/png/png-plte-chunk.c',

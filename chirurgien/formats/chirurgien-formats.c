@@ -25,6 +25,7 @@
 #include "elf/chirurgien-elf.h"
 #include "gif/chirurgien-gif.h"
 #include "jpeg/chirurgien-jpeg.h"
+#include "pe/chirurgien-pe.h"
 #include "png/chirurgien-png.h"
 #include "tar/chirurgien-tar.h"
 #include "tiff/chirurgien-tiff.h"
@@ -38,10 +39,12 @@ chirurgien_formats_analyze (FormatsFile *file)
     const guchar cpio_magic_number3[] = { 0x30,0x37,0x30,0x37,0x30,0x37 };
     const guchar cpio_magic_number4[] = { 0x30,0x37,0x30,0x37,0x30,0x31 };
     const guchar cpio_magic_number5[] = { 0x30,0x37,0x30,0x37,0x30,0x32 };
+    const guchar dos_mz_magic_number[] = { 0x4D,0x5A };
     const guchar elf_magic_number[] = { 0x7F,0x45,0x4C,0x46 };
     const guchar gif_magic_number1[] = { 0x47,0x49,0x46,0x38,0x39,0x61 };
     const guchar gif_magic_number2[] = { 0x47,0x49,0x46,0x38,0x37,0x61 };
     const guchar jpeg_magic_number[] = { 0xFF,0xD8 };
+    const guchar pe_magic_number[] = { 0x50,0x45 };
     const guchar png_magic_number[] = { 0x89,0x50,0x4E,0x47,0x0D,0x0A,0x1A,0x0A };
     const guchar tar_magic_number[] = { 0x75,0x73,0x74,0x61,0x72 };
     const guchar tiff_magic_number1[] = { 0x49,0x49,0x2A,0x00 };
@@ -74,6 +77,24 @@ chirurgien_formats_analyze (FormatsFile *file)
         !memcmp (file->file_contents, cpio_magic_number5, 6))
     {
         chirurgien_cpio (file, NewCRC);
+    }
+    /* DOS MZ & PE */
+    else if (FILE_HAS_DATA_N (file, 2) &&
+        !memcmp (file->file_contents, dos_mz_magic_number, 2))
+    {
+        guint32 pe_offset;
+
+        if (FILE_HAS_DATA_N (file, 64))
+            memcpy (&pe_offset, file->file_contents + 60, 4);
+        else
+            pe_offset = 0;
+
+        if (pe_offset && FILE_HAS_DATA_N (file, pe_offset + 4) &&
+            !memcmp (file->file_contents + pe_offset, pe_magic_number, 2))
+        {
+            chirurgien_pe (file, pe_offset);
+            format_has_unused_bytes = TRUE;
+        }
     }
     /* ELF */
     else if (FILE_HAS_DATA_N (file, 4) &&

@@ -306,12 +306,12 @@ format_utils_add_field_full (FormatsFile *file,
 
     new_field = g_slice_new (FileField);
 
-    new_field->field_name = field_name;
+    new_field->field_name = g_strdup (field_name);
     new_field->field_offset = file->file_contents_index;
     new_field->field_length = field_length;
     new_field->color_index = color_index;
     new_field->background = background;
-    new_field->navigation_label = navigation_label;
+    new_field->navigation_label = g_strdup (navigation_label);
     new_field->additional_color_index = additional_color_index;
 
     file->file_fields = g_slist_prepend (file->file_fields, new_field);

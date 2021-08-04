@@ -913,7 +913,7 @@ find_unused_bytes (ChirurgienView *view)
         {
             unused_data = g_slice_new (FileField);
 
-            unused_data->field_name = _("Unused data");
+            unused_data->field_name = g_strdup (_("Unused data"));
             unused_data->field_offset = tagged_up_to;
             unused_data->field_length = file_field->field_offset - tagged_up_to;
             unused_data->color_index = UNUSED_DATA_COLOR;
@@ -934,7 +934,7 @@ find_unused_bytes (ChirurgienView *view)
     {
         unused_data = g_slice_new (FileField);
 
-        unused_data->field_name = _("Unused data");
+        unused_data->field_name = g_strdup (_("Unused data"));
         unused_data->field_offset = tagged_up_to;
         unused_data->field_length = view->file_size - tagged_up_to;
         unused_data->color_index = UNUSED_DATA_COLOR;
@@ -984,6 +984,7 @@ static void
 chirurgien_view_dispose (GObject *object)
 {
     ChirurgienView *view;
+    FileField *file_field;
     FileModification *modification;
 
     view = CHIRURGIEN_VIEW (object);
@@ -991,7 +992,12 @@ chirurgien_view_dispose (GObject *object)
     gtk_widget_unparent (GTK_WIDGET (g_steal_pointer (&view->main)));
 
     for (GSList *i = view->file_fields; i != NULL; i = i->next)
-        g_slice_free (FileField, i->data);
+    {
+        file_field = i->data;
+        g_free (file_field->field_name);
+        g_free (file_field->navigation_label);
+        g_slice_free (FileField, file_field);
+    }
     g_slist_free (g_steal_pointer (&view->file_fields));
 
     for (GList *i = view->modifications.head; i != NULL; i = i->next)

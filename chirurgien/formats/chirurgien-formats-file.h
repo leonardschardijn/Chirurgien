@@ -25,7 +25,7 @@ G_BEGIN_DECLS
 typedef struct
 {
     /* The name of the field */
-    const gchar    *field_name;
+    gchar          *field_name;
 
     /* Field offset */
     gsize           field_offset;
@@ -40,7 +40,7 @@ typedef struct
     gboolean        background; /* TRUE = background, FALSE = foregound*/
 
     /* Navigation label */
-    const gchar    *navigation_label;
+    gchar          *navigation_label;
 
     /* Additional color
      * If defined, it is used to color the first byte of the field
