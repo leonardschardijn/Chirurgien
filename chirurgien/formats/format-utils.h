@@ -109,6 +109,8 @@ void       format_utils_add_field_full            (FormatsFile *,
                                                    const gchar *,
                                                    gint);
 
+void       format_utils_find_unused_bytes         (FormatsFile *);
+
 gboolean   format_utils_read                      (FormatsFile *,
                                                    gpointer,
                                                    guint);

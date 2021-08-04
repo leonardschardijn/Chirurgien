@@ -23,6 +23,6 @@
 
 G_BEGIN_DECLS
 
-gboolean chirurgien_formats_analyze (FormatsFile *);
+void chirurgien_formats_analyze (FormatsFile *);
 
 G_END_DECLS

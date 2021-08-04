@@ -20,6 +20,8 @@
 
 #include <glib/gi18n.h>
 
+#define UNUSED_DATA_COLOR 8
+
 
 static void
 create_section (GtkWidget  **expander,
@@ -317,6 +319,73 @@ format_utils_add_field_full (FormatsFile *file,
     file->file_fields = g_slist_prepend (file->file_fields, new_field);
 
     file->file_contents_index += field_length;
+}
+
+static gint
+sort_file_fields (gconstpointer a,
+                  gconstpointer b)
+{
+    const FileField *field_a, *field_b;
+
+    field_a = a;
+    field_b = b;
+
+    return field_a->field_offset - field_b->field_offset;
+}
+
+void
+format_utils_find_unused_bytes (FormatsFile *file)
+{
+    FileField *file_field, *unused_data;
+    GSList *new_fields;
+    gsize tagged_up_to, field_end;
+
+    new_fields = NULL;
+    tagged_up_to = 0;
+
+    file->file_fields = g_slist_sort (file->file_fields, sort_file_fields);
+
+    for (GSList *i = file->file_fields; i != NULL; i = i->next)
+    {
+        file_field = i->data;
+        if (tagged_up_to < file_field->field_offset)
+        {
+            unused_data = g_slice_new (FileField);
+
+            unused_data->field_name = g_strdup (_("Unused data"));
+            unused_data->field_offset = tagged_up_to;
+            unused_data->field_length = file_field->field_offset - tagged_up_to;
+            unused_data->color_index = UNUSED_DATA_COLOR;
+            unused_data->background = FALSE;
+            unused_data->navigation_label = NULL;
+            unused_data->additional_color_index = -1;
+
+            new_fields = g_slist_prepend (new_fields, unused_data);
+        }
+
+        field_end = file_field->field_offset + file_field->field_length;
+
+        if (tagged_up_to < field_end)
+            tagged_up_to = field_end;
+    }
+
+    if (tagged_up_to < file->file_size)
+    {
+        unused_data = g_slice_new (FileField);
+
+        unused_data->field_name = g_strdup (_("Unused data"));
+        unused_data->field_offset = tagged_up_to;
+        unused_data->field_length = file->file_size - tagged_up_to;
+        unused_data->color_index = UNUSED_DATA_COLOR;
+        unused_data->background = FALSE;
+        unused_data->navigation_label = NULL;
+        unused_data->additional_color_index = -1;
+
+        new_fields = g_slist_prepend (new_fields, unused_data);
+    }
+
+    if (new_fields)
+        file->file_fields = g_slist_sort (g_slist_concat (file->file_fields, new_fields), sort_file_fields);
 }
 
 gboolean

@@ -29,8 +29,6 @@
 #include "chirurgien-editor.h"
 #include "chirurgien-actions.h"
 
-#define UNUSED_DATA_COLOR 8
-
 
 typedef struct {
     /* File offset of the modification */
@@ -884,71 +882,6 @@ build_navigation_buttons (ChirurgienView *view)
     }
 }
 
-static gint
-sort_file_fields (gconstpointer a,
-                  gconstpointer b)
-{
-    const FileField *field_a, *field_b;
-
-    field_a = a;
-    field_b = b;
-
-    return field_a->field_offset - field_b->field_offset;
-}
-
-static void
-find_unused_bytes (ChirurgienView *view)
-{
-    FileField *file_field, *unused_data;
-    GSList *new_fields;
-    gsize tagged_up_to, field_end;
-
-    new_fields = NULL;
-    tagged_up_to = 0;
-
-    for (GSList *i = view->file_fields; i != NULL; i = i->next)
-    {
-        file_field = i->data;
-        if (tagged_up_to < file_field->field_offset)
-        {
-            unused_data = g_slice_new (FileField);
-
-            unused_data->field_name = g_strdup (_("Unused data"));
-            unused_data->field_offset = tagged_up_to;
-            unused_data->field_length = file_field->field_offset - tagged_up_to;
-            unused_data->color_index = UNUSED_DATA_COLOR;
-            unused_data->background = FALSE;
-            unused_data->navigation_label = NULL;
-            unused_data->additional_color_index = -1;
-
-            new_fields = g_slist_prepend (new_fields, unused_data);
-        }
-
-        field_end = file_field->field_offset + file_field->field_length;
-
-        if (tagged_up_to < field_end)
-            tagged_up_to = field_end;
-    }
-
-    if (tagged_up_to < view->file_size)
-    {
-        unused_data = g_slice_new (FileField);
-
-        unused_data->field_name = g_strdup (_("Unused data"));
-        unused_data->field_offset = tagged_up_to;
-        unused_data->field_length = view->file_size - tagged_up_to;
-        unused_data->color_index = UNUSED_DATA_COLOR;
-        unused_data->background = FALSE;
-        unused_data->navigation_label = NULL;
-        unused_data->additional_color_index = -1;
-
-        new_fields = g_slist_prepend (new_fields, unused_data);
-    }
-
-    if (new_fields)
-        view->file_fields = g_slist_sort (g_slist_concat (view->file_fields, new_fields), sort_file_fields);
-}
-
 static void
 get_view_measures (ChirurgienView *view)
 {
@@ -1180,7 +1113,6 @@ void
 chirurgien_view_do_analysis (ChirurgienView *view)
 {
     FormatsFile file;
-    gboolean unused_bytes;
 
     file.file_contents = view->file_contents;
     file.file_size = view->file_size;
@@ -1189,12 +1121,9 @@ chirurgien_view_do_analysis (ChirurgienView *view)
     file.description = view->description;
     file.overview = view->overview;
 
-    unused_bytes = chirurgien_formats_analyze (&file);
+    chirurgien_formats_analyze (&file);
 
-    view->file_fields = g_slist_sort (file.file_fields, sort_file_fields);
-
-    if (unused_bytes)
-        find_unused_bytes (view);
+    view->file_fields = file.file_fields;
 
     build_navigation_buttons (view);
 }
