@@ -5,8 +5,8 @@ Chirurgien helps understand and manipulate file formats.
 Features:
 
 * File format highlighting
-* Description panel interpreting the highlighted fields and offering additional information about the format
-* Double click on a highlighted field for edition or extraction to a separate tab
+* File description panel
+* Field edition and extraction
 
 
 ## Dependencies

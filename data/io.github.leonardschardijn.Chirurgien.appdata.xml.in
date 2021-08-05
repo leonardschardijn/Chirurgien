@@ -10,8 +10,8 @@
     <p>Features:</p>
     <ul>
       <li>File format highlighting</li>
-      <li>Description panel interpreting the highlighted fields and offering additional information about the format</li>
-      <li>Double click on a highlighted field for edition or extraction to a separate tab</li>
+      <li>File description panel</li>
+      <li>Field edition and extraction</li>
     </ul>
   </description>
   <screenshots>
@@ -32,10 +32,10 @@
   <developer_name>Daniel Léonard Schardijn</developer_name>
   <content_rating type="oars-1.1" />
   <releases>
+    <release version="1.1" date="2021-08-05" />
     <release version="1.0" date="2021-05-10" />
     <release version="0.5" date="2021-02-23" />
     <release version="0.4" date="2021-01-30" />
     <release version="0.3" date="2021-01-03" />
-    <release version="0.2" date="2020-12-24" />
   </releases>
 </component>
