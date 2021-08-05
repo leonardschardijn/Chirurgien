@@ -95,6 +95,21 @@ notify_size_change (GObject *gobject,
     }
 }
 
+static gboolean
+handle_drop (G_GNUC_UNUSED GtkDropTarget *drop_target,
+             const GValue* value,
+             G_GNUC_UNUSED gdouble        x,
+             G_GNUC_UNUSED gdouble        y,
+             gpointer      user_data)
+{
+    if (!G_VALUE_HOLDS (value, G_TYPE_FILE))
+        return FALSE;
+
+    chirurgien_actions_new_view (user_data, g_value_get_object (value));
+
+    return TRUE;
+}
+
 /*
  * Escape underscores for the recent file list
  * (Shamelessly copied from Xfce's Mousepad (Thanks!))
@@ -525,6 +540,7 @@ static void
 chirurgien_window_init (ChirurgienWindow *window)
 {
     GtkWidget *widget;
+    GtkDropTarget *drop_target;
     gchar *color_string;
 
     g_action_map_add_action_entries (G_ACTION_MAP (window),
@@ -568,6 +584,10 @@ chirurgien_window_init (ChirurgienWindow *window)
     restore_window_size (window);
 
     gtk_window_set_title (GTK_WINDOW (window), "Chirurgien");
+
+    drop_target = gtk_drop_target_new (G_TYPE_FILE, GDK_ACTION_COPY);
+    g_signal_connect (drop_target, "drop", G_CALLBACK (handle_drop), window);
+    gtk_widget_add_controller (GTK_WIDGET (window), GTK_EVENT_CONTROLLER (drop_target));
 
     chirurgien_window_load_view_font (window);
 
