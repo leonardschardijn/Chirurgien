@@ -77,15 +77,15 @@ pe_section_table (FormatsFile *file,
                     multipurpose_string = g_string_truncate (multipurpose_string, 10);
                     multipurpose_string = g_string_append (multipurpose_string, " [...]");
                 }
-                else
+                else if (multipurpose_string->len)
                 {
                     g_string_append_printf (multipurpose_string, " [%s]", section_name_buffer);
                 }
 
-                if (!g_utf8_validate (multipurpose_string->str, -1, NULL))
+                if (!multipurpose_string->len || !g_utf8_validate (multipurpose_string->str, -1, NULL))
                 {
-                    section_name = g_strdup_printf ("Section [%s]", section_name_buffer);
-                    section_name_in_panel = "<span foreground=\"red\">INVALID</span>";
+                    section_name = g_strdup_printf ("Section %d [%s]", i + 1, section_name_buffer);
+                    section_name_in_panel = NULL;
                 }
                 else
                 {
@@ -99,8 +99,8 @@ pe_section_table (FormatsFile *file,
         {
             if (section_name_buffer[0] == '\0' || !g_utf8_validate (section_name_buffer, -1, NULL))
             {
-                section_name = g_strdup ("Section");
-                section_name_in_panel = "<span foreground=\"red\">INVALID</span>";
+                section_name = g_strdup_printf ("Section %d", i + 1);
+                section_name_in_panel = NULL;
             }
             else
             {

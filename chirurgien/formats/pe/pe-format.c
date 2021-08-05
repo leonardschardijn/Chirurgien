@@ -270,7 +270,7 @@ chirurgien_pe (FormatsFile *file,
         if (!process_pe_field_simple (file, NULL,
                 "ImageBase",
                 _("The preferred address of the first byte of image when loaded into memory; must be a multiple of 64KiB"),
-                HEADER_DATA_COLOR_2, field_length, "%X<sub>16</sub>"))
+                HEADER_DATA_COLOR_2, field_length, "%lX<sub>16</sub>"))
             return;
 
         /* SectionAlignment */
@@ -453,28 +453,28 @@ chirurgien_pe (FormatsFile *file,
         if (!process_pe_field_simple (file, NULL,
                 "SizeOfStackReserve",
                 _("The size of the stack to reserve"),
-                HEADER_DATA_COLOR_1, field_length, "%u"))
+                HEADER_DATA_COLOR_1, field_length, "%lu"))
             return;
 
         /* SizeOfStackCommit */
         if (!process_pe_field_simple (file, NULL,
                 "SizeOfStackCommit",
                 _("The size of the stack to commit"),
-                HEADER_DATA_COLOR_2, field_length, "%u"))
+                HEADER_DATA_COLOR_2, field_length, "%lu"))
             return;
 
         /* SizeOfHeapReserve */
         if (!process_pe_field_simple (file, NULL,
                 "SizeOfHeapReserve",
                 _("The size of the local heap space to reserve"),
-                HEADER_DATA_COLOR_1, field_length, "%u"))
+                HEADER_DATA_COLOR_1, field_length, "%lu"))
             return;
 
         /* SizeOfHeapCommit */
         if (!process_pe_field_simple (file, NULL,
                 "SizeOfHeapCommit",
                 _("The size of the local heap space to commit"),
-                HEADER_DATA_COLOR_2, field_length, "%u"))
+                HEADER_DATA_COLOR_2, field_length, "%lu"))
             return;
 
         /* LoaderFlags */
