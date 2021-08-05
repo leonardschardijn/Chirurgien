@@ -32,6 +32,7 @@ chirurgien_elf (FormatsFile *file)
     gboolean is_64bits;
     gboolean is_little_endian;
 
+    guint field_length;
     guint16 program_header_entries, section_header_entries;
     guint64 program_header_offset = 0, section_header_offset = 0;
 
@@ -39,47 +40,55 @@ chirurgien_elf (FormatsFile *file)
 
     format_utils_set_title (file, "Executable and Linkable Format");
 
-    format_utils_add_field (file, SIGNATURE_COLOR, TRUE, 4, _("ELF file signature"), "ELF");
+    format_utils_add_field (file, SIGNATURE_COLOR, TRUE, 4, "ELF file signature", "ELF");
 
-    format_utils_start_section (file, _("ELF header"));
+    format_utils_start_section (file, "ELF header");
 
     /* Class*/
     guint32 class_values[] = { 1, 2 };
     const gchar *class_value_description[] = {
-        _("32 bits"),
-        _("64 bits"),
-        _("<span foreground=\"red\">INVALID</span>")
+        "ELFCLASS32 (32 bits)",
+        "ELFCLASS64 (64 bits)",
+        "<span foreground=\"red\">INVALID</span>"
     };
     if (!process_elf_field (file, NULL,
-            _("Class"), NULL,
-            _("Class\n"
-              "<tt>01<sub>16</sub></tt>\t32 bits\n"
-              "<tt>02<sub>16</sub></tt>\t64 bits"),
-            HEADER_DATA_COLOR_1, 1, FALSE, G_N_ELEMENTS (class_values),
-            class_values, class_value_description, NULL, FALSE, &byte))
+              "Class", NULL,
+              "Class\n"
+              "<tt>01<sub>16</sub></tt>\tELFCLASS32 (32 bits)\n"
+              "<tt>02<sub>16</sub></tt>\tELFCLASS64 (64 bits)",
+            HEADER_DATA_COLOR_1, 1, FALSE,
+            G_N_ELEMENTS (class_values), class_values, class_value_description,
+            NULL, FALSE, &byte))
         return;
 
     if (byte == 1)
+    {
         is_64bits = FALSE;
+        field_length = 4;
+    }
     else if (byte == 2)
+    {
         is_64bits = TRUE;
+        field_length = 8;
+    }
     else
         return;
 
     /* Endianness */
     guint32 endianness_values[] = { 1, 2 };
     const gchar *endianness_value_description[] = {
-        _("Little-endian"),
-        _("Big-endian"),
-        _("<span foreground=\"red\">INVALID</span>")
+        "ELFDATA2LSB (Little-endian)",
+        "ELFDATA2MSB (Big-endian)",
+        "<span foreground=\"red\">INVALID</span>"
     };
     if (!process_elf_field (file, NULL,
-            _("Endianness"), NULL,
-            _("Endianness\n"
-              "<tt>01<sub>16</sub></tt>\tLittle-endian\n"
-              "<tt>02<sub>16</sub></tt>\tBig-endian"),
-            HEADER_DATA_COLOR_2, 1, FALSE, G_N_ELEMENTS (endianness_values),
-            endianness_values, endianness_value_description, NULL, FALSE, &byte))
+              "Endianness", NULL,
+              "Endianness\n"
+              "<tt>01<sub>16</sub></tt>\tELFDATA2LSB (Little-endian)\n"
+              "<tt>02<sub>16</sub></tt>\tELFDATA2MSB (Big-endian)",
+            HEADER_DATA_COLOR_2, 1, FALSE,
+            G_N_ELEMENTS (endianness_values), endianness_values, endianness_value_description,
+            NULL, FALSE, &byte))
         return;
 
     if (byte == 1)
@@ -92,21 +101,22 @@ chirurgien_elf (FormatsFile *file)
     /* ELF header version */
     guint32 elf_header_version_values[] = { 1 };
     const gchar *elf_header_version_value_description[] = {
-        _("Version 1"),
-        _("<span foreground=\"red\">INVALID</span>")
+        "EV_CURRENT (Current version)",
+        "<span foreground=\"red\">INVALID</span>"
     };
     if (!process_elf_field (file, NULL,
-            _("ELF header version"), NULL,
-            _("ELF header version\n"
-              "<tt>01<sub>16</sub></tt>\tVersion 1"),
-            HEADER_DATA_COLOR_1, 1, FALSE, G_N_ELEMENTS (elf_header_version_values),
-            elf_header_version_values, elf_header_version_value_description, NULL, FALSE, NULL))
+              "ELF header version", NULL,
+              "ELF header version\n"
+              "<tt>01<sub>16</sub></tt>\tEV_CURRENT (Current version)",
+            HEADER_DATA_COLOR_1, 1, FALSE,
+            G_N_ELEMENTS (elf_header_version_values), elf_header_version_values, elf_header_version_value_description,
+            NULL, FALSE, NULL))
         return;
 
     /* Application Binary Interface */
     guint32 abi_values[] = { 0x0, 0x1, 0x2, 0x3, 0x6, 0x7, 0x8, 0x9, 0xC };
     const gchar *abi_value_description[] = {
-        _("Unspecified/System V"),
+          "Unspecified/System V",
           "HP-UX",
           "NetBSD",
           "Linux",
@@ -115,11 +125,11 @@ chirurgien_elf (FormatsFile *file)
           "IRIX",
           "FreeBSD",
           "OpenBSD",
-        _("<span foreground=\"red\">\?\?\?</span>")
+          "<span foreground=\"red\">\?\?\?</span>"
     };
     if (!process_elf_field (file, NULL,
-            _("Application Binary Interface"), NULL,
-            _("Application Binary Interface (incomplete list)\n"
+              "Application Binary Interface", NULL,
+              "Application Binary Interface (incomplete list)\n"
               "<tt>00<sub>16</sub></tt>\tUnspecified/System V\n"
               "<tt>01<sub>16</sub></tt>\tHP-UX\n"
               "<tt>02<sub>16</sub></tt>\tNetBSD\n"
@@ -128,51 +138,55 @@ chirurgien_elf (FormatsFile *file)
               "<tt>07<sub>16</sub></tt>\tAIX\n"
               "<tt>08<sub>16</sub></tt>\tIRIX\n"
               "<tt>09<sub>16</sub></tt>\tFreeBSD\n"
-              "<tt>0C<sub>16</sub></tt>\tOpenBSD"),
-            HEADER_DATA_COLOR_2, 1, FALSE, G_N_ELEMENTS (abi_values),
-            abi_values, abi_value_description, NULL, FALSE, NULL))
+              "<tt>0C<sub>16</sub></tt>\tOpenBSD",
+            HEADER_DATA_COLOR_2, 1, FALSE,
+            G_N_ELEMENTS (abi_values), abi_values, abi_value_description,
+            NULL, FALSE, NULL))
         return;
 
     /* ABI version */
     if (!process_elf_field (file, NULL,
-            _("ABI version"), NULL,
+            "ABI version", NULL,
             _("Identifies the ABI version, if incompatibilities exist"),
-            HEADER_DATA_COLOR_1, 1, FALSE, 0, NULL, NULL, "%u", TRUE, NULL))
+            HEADER_DATA_COLOR_1, 1, FALSE,
+            0, NULL, NULL,
+            "%u", TRUE, NULL))
         return;
 
     /* Unused data */
     if (!FILE_HAS_DATA_N (file, 7))
         return;
 
-    format_utils_add_field (file, HEADER_DATA_COLOR_2, TRUE, 7, _("Unused"), NULL);
+    format_utils_add_field (file, HEADER_DATA_COLOR_2, TRUE, 7, "Unused", NULL);
 
     /* Object file type */
     guint32 object_file_type_values[] = { 0, 1, 2, 3, 4 };
     const gchar *object_file_type_value_description[] = {
-        _("Unspecified"),
-        _("Relocatable file"),
-        _("Executable file"),
-        _("Shared object file"),
-        _("Core file"),
-        _("<span foreground=\"red\">INVALID</span>")
+        "ET_NONE (Unspecified)",
+        "ET_REL (Relocatable file)",
+        "ET_EXEC (Executable file)",
+        "ET_DYN (Shared object file)",
+        "ET_CORE (Core file)",
+        "<span foreground=\"red\">INVALID</span>"
     };
     if (!process_elf_field (file, NULL,
-            _("Object file type"), NULL,
-            _("Object file type\n"
-              "<tt>00 00<sub>16</sub></tt>\tUnspecified\n"
-              "<tt>00 01<sub>16</sub></tt>\tRelocatable file\n"
-              "<tt>00 02<sub>16</sub></tt>\tExecutable file\n"
-              "<tt>00 03<sub>16</sub></tt>\tShared object file\n"
-              "<tt>00 04<sub>16</sub></tt>\tCore file"),
-            HEADER_DATA_COLOR_1, 2, is_little_endian, G_N_ELEMENTS (object_file_type_values),
-            object_file_type_values, object_file_type_value_description, NULL, FALSE, NULL))
+              "Object file type", NULL,
+              "Object file type\n"
+              "<tt>00 00<sub>16</sub></tt>\tET_NONE (Unspecified)\n"
+              "<tt>00 01<sub>16</sub></tt>\tET_REL (Relocatable file)\n"
+              "<tt>00 02<sub>16</sub></tt>\tET_EXEC (Executable file)\n"
+              "<tt>00 03<sub>16</sub></tt>\tET_DYN (Shared object file)\n"
+              "<tt>00 04<sub>16</sub></tt>\tET_CORE (Core file)",
+            HEADER_DATA_COLOR_1, 2, is_little_endian,
+            G_N_ELEMENTS (object_file_type_values), object_file_type_values, object_file_type_value_description,
+            NULL, FALSE, NULL))
         return;
 
     /* Instruction Set Architecture */
     guint32 isa_values[] = { 0x0, 0x2, 0x3, 0x4, 0x5, 0x14, 0x15, 0x16, 0x28,
         0x2B, 0x32, 0x3E, 0xB7, 0xF3 };
     const gchar *isa_value_description[] = {
-        _("No machine"),
+          "No machine",
           "SPARC",
           "Intel 80386",
           "Motorola 68000",
@@ -186,11 +200,11 @@ chirurgien_elf (FormatsFile *file)
           "AMD64",
           "ARM 64-bit",
           "RISC-V",
-        _("<span foreground=\"red\">Unknown</span>")
+          "<span foreground=\"red\">Unknown</span>"
     };
     if (!process_elf_field (file, NULL,
-            _("Instruction Set Architecture"), NULL,
-            _("Instruction Set Architecture (incomplete list)\n"
+              "Instruction Set Architecture", NULL,
+              "Instruction Set Architecture (incomplete list)\n"
               "<tt>00 00<sub>16</sub></tt>\tNo machine\n"
               "<tt>00 02<sub>16</sub></tt>\tSPARC\n"
               "<tt>00 03<sub>16</sub></tt>\tIntel 80386\n"
@@ -204,128 +218,112 @@ chirurgien_elf (FormatsFile *file)
               "<tt>00 32<sub>16</sub></tt>\tIntel IA-64\n"
               "<tt>00 3E<sub>16</sub></tt>\tAMD64\n"
               "<tt>00 B7<sub>16</sub></tt>\tARM 64-bit\n"
-              "<tt>00 F3<sub>16</sub></tt>\tRISC-V"),
-            HEADER_DATA_COLOR_2, 2, is_little_endian, G_N_ELEMENTS (isa_values),
-            isa_values, isa_value_description, NULL, FALSE, NULL))
+              "<tt>00 F3<sub>16</sub></tt>\tRISC-V",
+            HEADER_DATA_COLOR_2, 2, is_little_endian,
+            G_N_ELEMENTS (isa_values), isa_values, isa_value_description,
+            NULL, FALSE, NULL))
         return;
 
     /* Object file version */
     guint32 obj_file_version_values[] = { 1 };
     const gchar *obj_file_value_description[] = {
-        _("Version 1"),
-        _("<span foreground=\"red\">INVALID</span>")
+        "EV_CURRENT (Current version)",
+        "<span foreground=\"red\">INVALID</span>"
     };
     if (!process_elf_field (file, NULL,
-            _("Object file version"), NULL,
-            _("Object file version\n"
-             "<tt>00 00 00 01<sub>16</sub></tt>\tVersion 1"),
-            HEADER_DATA_COLOR_1, 4, is_little_endian, G_N_ELEMENTS (obj_file_version_values),
-            obj_file_version_values, obj_file_value_description, NULL, FALSE, NULL))
+              "Object file version", NULL,
+              "Object file version\n"
+              "<tt>00 00 00 01<sub>16</sub></tt>\tEV_CURRENT (Current version)",
+            HEADER_DATA_COLOR_1, 4, is_little_endian,
+            G_N_ELEMENTS (obj_file_version_values), obj_file_version_values, obj_file_value_description,
+            NULL, FALSE, NULL))
         return;
 
-    if (is_64bits)
-    {
-        /* Entry point */
-        if (!process_elf_field (file, NULL,
-                _("Entry point"), NULL,
-                _("Virtual address of the entry point"),
-                HEADER_DATA_COLOR_2, 8, is_little_endian, 0, NULL,
-                NULL, "%lX<sub>16</sub>", FALSE, NULL))
-            return;
+    /* Entry point */
+    if (!process_elf_field (file, NULL,
+            "Entry point", NULL,
+            _("Virtual address of the entry point"),
+            HEADER_DATA_COLOR_2, field_length, is_little_endian,
+            0, NULL, NULL,
+            "%lX<sub>16</sub>" , FALSE, NULL))
+        return;
 
-        /* Program header table offset */
-        if (!process_elf_field (file, NULL,
-                _("Program header table offset"), NULL,
-                _("Offset of the program header table"),
-                HEADER_DATA_COLOR_1, 8, is_little_endian, 0, NULL,
-                NULL, "%lX<sub>16</sub>", FALSE, &program_header_offset))
-            return;
+    /* Program header table offset */
+    if (!process_elf_field (file, NULL,
+            "Program header table offset", NULL,
+            _("Offset of the program header table"),
+            HEADER_DATA_COLOR_1, field_length, is_little_endian,
+            0, NULL, NULL,
+            "%lX<sub>16</sub>", FALSE, &program_header_offset))
+        return;
 
-        /* Section header table offset */
-        if (!process_elf_field (file, NULL,
-                _("Section header table offset"), NULL,
-                _("Offset of the section header table"),
-                HEADER_DATA_COLOR_2, 8, is_little_endian, 0, NULL,
-                NULL, "%lX<sub>16</sub>", FALSE, &section_header_offset))
-            return;
-    }
-    else
-    {
-        /* Entry point */
-        if (!process_elf_field (file, NULL,
-                _("Entry point"), NULL,
-                _("Virtual address of the entry point"),
-                HEADER_DATA_COLOR_2, 4, is_little_endian, 0, NULL,
-                NULL, "%X<sub>16</sub>", FALSE, NULL))
-            return;
-
-        /* Program header table offset */
-        if (!process_elf_field (file, NULL,
-                _("Program header table offset"), NULL,
-                _("File offset of the program header table"),
-                HEADER_DATA_COLOR_1, 4, is_little_endian, 0, NULL,
-                NULL, "%X<sub>16</sub>", FALSE, &program_header_offset))
-            return;
-
-        /* Section header table offset */
-        if (!process_elf_field (file, NULL,
-                _("Section header table offset"), NULL,
-                _("File offset of the section header table"),
-                HEADER_DATA_COLOR_2, 4, is_little_endian, 0, NULL,
-                NULL, "%X<sub>16</sub>", FALSE, &section_header_offset))
-            return;
-    }
+    /* Section header table offset */
+    if (!process_elf_field (file, NULL,
+            "Section header table offset", NULL,
+            _("Offset of the section header table"),
+            HEADER_DATA_COLOR_2, field_length, is_little_endian,
+            0, NULL, NULL,
+            "%lX<sub>16</sub>", FALSE, &section_header_offset))
+        return;
 
     /* Flags */
     if (!FILE_HAS_DATA_N (file, 4))
         return;
 
-    format_utils_add_field (file, HEADER_DATA_COLOR_1, TRUE, 4, _("Flags"), NULL);
+    format_utils_add_field (file, HEADER_DATA_COLOR_1, TRUE, 4, "Flags", NULL);
 
     /* ELF header size */
     if (!process_elf_field (file, NULL,
-            _("ELF header size"), NULL,
+            "ELF header size", NULL,
             _("Size of the ELF header, in bytes"),
-            HEADER_DATA_COLOR_2, 2, is_little_endian, 0, NULL,
-            NULL, "%u", FALSE, NULL))
+            HEADER_DATA_COLOR_2, 2, is_little_endian,
+            0, NULL, NULL,
+            "%u", FALSE, NULL))
         return;
 
     /* Program header table entry size */
     if (!process_elf_field (file, NULL,
-            _("Program header table entry size"), NULL,
+            "Program header table entry size", NULL,
             _("Size of the entries in the program header table, in bytes"),
-            HEADER_DATA_COLOR_1, 2, is_little_endian, 0,
-            NULL, NULL, "%u", FALSE, NULL))
+            HEADER_DATA_COLOR_1, 2, is_little_endian,
+            0, NULL, NULL,
+            "%u", FALSE, NULL))
         return;
 
     /* Number of entries in the program header table */
     if (!process_elf_field (file, NULL,
-            _("Number of entries in the program header table"), NULL,
-            NULL, HEADER_DATA_COLOR_2, 2, is_little_endian, 0,
-            NULL, NULL, NULL, FALSE, &program_header_entries))
+            "Number of entries in the program header table", NULL,
+            NULL,
+            HEADER_DATA_COLOR_2, 2, is_little_endian,
+            0, NULL, NULL,
+            NULL, FALSE, &program_header_entries))
         return;
 
     /* Section header table entry size */
     if (!process_elf_field (file, NULL,
-            _("Section header table entry size"), NULL,
+            "Section header table entry size", NULL,
             _("Size of the entries in the section header table, in bytes"),
-            HEADER_DATA_COLOR_1, 2, is_little_endian, 0,
-            NULL, NULL, "%u", FALSE, &section_header_entry_size))
+            HEADER_DATA_COLOR_1, 2, is_little_endian,
+            0, NULL, NULL,
+            "%u", FALSE, &section_header_entry_size))
         return;
 
     /* Number of entries in the section header table */
     if (!process_elf_field (file, NULL,
-            _("Number of entries in the section header table"), NULL,
-            NULL, HEADER_DATA_COLOR_2, 2, is_little_endian, 0,
-            NULL, NULL, NULL, FALSE, &section_header_entries))
+            "Number of entries in the section header table", NULL,
+            NULL,
+            HEADER_DATA_COLOR_2, 2, is_little_endian,
+            0, NULL, NULL,
+            NULL, FALSE, &section_header_entries))
         return;
 
     /* Section names index */
     if (!process_elf_field (file, NULL,
-            _("Section names index"), NULL,
+            "Section names index", NULL,
             _("Section header index of the section with the section names"),
-            HEADER_DATA_COLOR_1, 2, is_little_endian, 0,
-            NULL, NULL, _("Section index %u"), FALSE, &section_names_index))
+            HEADER_DATA_COLOR_1, 2, is_little_endian,
+            0, NULL, NULL,
+            "Section index %u", FALSE, &section_names_index))
         return;
 
     elf_program_header (file, is_64bits, is_little_endian, program_header_offset, program_header_entries);
@@ -394,7 +392,7 @@ process_elf_field (FormatsFile    *file,
     }
     else if (field_format)
     {
-        if (!(ignore_empty && !eight_bytes))
+        if (!ignore_empty || eight_bytes)
         {
             field_description = g_strdup_printf (field_format, eight_bytes);
             if (tab)
@@ -419,4 +417,3 @@ process_elf_field (FormatsFile    *file,
 
     return TRUE;
 }
-

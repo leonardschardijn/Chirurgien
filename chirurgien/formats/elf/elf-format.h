@@ -30,7 +30,6 @@ G_BEGIN_DECLS
 #define HEADER_DATA_COLOR_2      3
 #define SEGMENT_TYPE_COLOR       4
 #define START_SECTION_DATA_COLOR 5
-#define ERROR_COLOR              6
 
 gboolean    process_elf_field          (FormatsFile *,
                                         DescriptionTab *,

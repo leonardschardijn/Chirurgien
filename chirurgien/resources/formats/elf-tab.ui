@@ -174,7 +174,7 @@
       </object>
     </child>
     <child>
-      <object class="GtkColorButton" id="color6">
+      <object class="GtkColorButton" id="color8">
         <property name="can-target">f</property>
         <property name="halign">GTK_ALIGN_END</property>
         <layout>
@@ -187,33 +187,10 @@
     </child>
     <child>
       <object class="GtkLabel">
-        <property name="label" translatable="yes">Error</property>
-        <layout>
-          <property name="row">5</property>
-          <property name="column">1</property>
-          <property name="row-span">1</property>
-          <property name="column-span">1</property>
-        </layout>
-      </object>
-    </child>
-    <child>
-      <object class="GtkColorButton" id="color8">
-        <property name="can-target">f</property>
-        <property name="halign">GTK_ALIGN_END</property>
-        <layout>
-          <property name="row">5</property>
-          <property name="column">2</property>
-          <property name="row-span">1</property>
-          <property name="column-span">1</property>
-        </layout>
-      </object>
-    </child>
-    <child>
-      <object class="GtkLabel">
         <property name="label" translatable="yes">Unused data</property>
         <layout>
           <property name="row">5</property>
-          <property name="column">3</property>
+          <property name="column">1</property>
           <property name="row-span">1</property>
           <property name="column-span">1</property>
         </layout>
@@ -264,6 +241,8 @@
 The SHT_SYMTAB_SHNDX section type is not recognized
 The sh_info field of a section is not interpreted
 ELF files with more than 65280 (FF00) sections are not supported
+
+The contents of a section are not currently analyzed
 
 The following are also <span foreground="red">not recognized</span>:
     - Object file types in the reserved ranges:
