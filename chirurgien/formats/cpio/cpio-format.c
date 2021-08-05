@@ -16,11 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-
 #include "cpio-format.h"
-
-#include <glib/gi18n.h>
 
 #include "chirurgien-cpio.h"
 
@@ -51,15 +47,15 @@ chirurgien_cpio (FormatsFile *file,
     gchar final_header[121];
 
     if (cpio_format == BinaryLittleEndian)
-        format_utils_set_title (file, _("Little-endian binary cpio archive"));
+        format_utils_set_title (file, "Little-endian binary cpio archive");
     else if (cpio_format == BinaryBigEndian)
-        format_utils_set_title (file, _("Big-endian binary cpio archive"));
+        format_utils_set_title (file, "Big-endian binary cpio archive");
     else if (cpio_format == OldASCII)
-        format_utils_set_title (file, _("ASCII-encoded octal cpio archive"));
+        format_utils_set_title (file, "ASCII-encoded octal cpio archive");
     else if (cpio_format == NewASCII)
-        format_utils_set_title (file, _("ASCII-encoded hexadecimal cpio archive"));
+        format_utils_set_title (file, "ASCII-encoded hexadecimal cpio archive");
     else if (cpio_format == NewCRC)
-        format_utils_set_title (file, _("ASCII-encoded hexadecimal CRC cpio archive"));
+        format_utils_set_title (file, "ASCII-encoded hexadecimal CRC cpio archive");
 
     build_final_header (final_header, cpio_format);
 
@@ -72,24 +68,24 @@ chirurgien_cpio (FormatsFile *file,
                 !memcmp (final_header, GET_CONTENT_POINTER (file), BINARY_HEADER_SIZE))
             {
                 format_utils_add_field (file, FINAL_HEADER_COLOR, TRUE, BINARY_HEADER_SIZE,
-                                      _("Special final header"), _("End"));
+                                        "Special final header", "End");
                 break;
             }
 
-            format_utils_start_section (file, _("File"));
+            format_utils_start_section (file, "File");
 
             /* Magic number */
-            if (!process_cpio_field (file, _("Magic number"), NULL, HEADER_DATA_COLOR_1, 2,
+            if (!process_cpio_field (file, "Magic number", NULL, HEADER_DATA_COLOR_1, 2,
                                      FALSE, NULL, cpio_format))
                 goto END_ERROR;
 
             /* Device number */
-            if (!process_cpio_field (file, _("Device number"), NULL, HEADER_DATA_COLOR_2, 2,
+            if (!process_cpio_field (file, "Device number", NULL, HEADER_DATA_COLOR_2, 2,
                                      TRUE, NULL, cpio_format))
                 goto END_ERROR;
 
             /* inode number */
-            if (!process_cpio_field (file, _("inode number"), NULL, HEADER_DATA_COLOR_1, 2,
+            if (!process_cpio_field (file, "inode number", NULL, HEADER_DATA_COLOR_1, 2,
                                      TRUE, NULL, cpio_format))
                 goto END_ERROR;
 
@@ -98,37 +94,37 @@ chirurgien_cpio (FormatsFile *file,
                 goto END_ERROR;
 
             /* User ID */
-            if (!process_cpio_field (file, _("User ID"), NULL, HEADER_DATA_COLOR_1, 2,
+            if (!process_cpio_field (file, "User ID", NULL, HEADER_DATA_COLOR_1, 2,
                                      TRUE, NULL, cpio_format))
                 goto END_ERROR;
 
             /* Group ID */
-            if (!process_cpio_field (file, _("Group ID"), NULL, HEADER_DATA_COLOR_2, 2,
+            if (!process_cpio_field (file, "Group ID", NULL, HEADER_DATA_COLOR_2, 2,
                                      TRUE, NULL, cpio_format))
                 goto END_ERROR;
 
             /* Number of links */
-            if (!process_cpio_field (file, _("Number of links"), NULL, HEADER_DATA_COLOR_1, 2,
+            if (!process_cpio_field (file, "Number of links", NULL, HEADER_DATA_COLOR_1, 2,
                                      TRUE, NULL, cpio_format))
                 goto END_ERROR;
 
             /* Character/block special file device number */
-            if (!process_cpio_field (file, _("Character/block special file device number"), NULL, HEADER_DATA_COLOR_2, 2,
+            if (!process_cpio_field (file, "Character/block special file device number", NULL, HEADER_DATA_COLOR_2, 2,
                                      FALSE, NULL, cpio_format))
                 goto END_ERROR;
 
             /* Last modification time */
-            if (!process_cpio_field (file, _("Last modification time"), NULL, HEADER_DATA_COLOR_1, 4,
+            if (!process_cpio_field (file, "Last modification time", NULL, HEADER_DATA_COLOR_1, 4,
                                      TRUE, NULL, cpio_format))
                 goto END_ERROR;
 
             /* File name size */
-            if (!process_cpio_field (file, _("File name size"), _("The file name size, in bytes"), HEADER_DATA_COLOR_2, 2,
+            if (!process_cpio_field (file, "File name size", "The file name size, in bytes", HEADER_DATA_COLOR_2, 2,
                                      TRUE, &file_name_size, cpio_format))
                 goto END_ERROR;
 
             /* File size */
-            if (!process_cpio_field (file, _("File size"), _("The file size, in bytes"), HEADER_DATA_COLOR_1, 4,
+            if (!process_cpio_field (file, "File size", "The file size, in bytes", HEADER_DATA_COLOR_1, 4,
                                      TRUE, &file_size, cpio_format))
                 goto END_ERROR;
         }
@@ -138,24 +134,24 @@ chirurgien_cpio (FormatsFile *file,
                 !memcmp (final_header, GET_CONTENT_POINTER (file), OLD_ASCII_HEADER_SIZE))
             {
                 format_utils_add_field (file, FINAL_HEADER_COLOR, TRUE, OLD_ASCII_HEADER_SIZE,
-                                      _("Special final header"), _("End"));
+                                        "Special final header", "End");
                 break;
             }
 
-            format_utils_start_section (file, _("File"));
+            format_utils_start_section (file, "File");
 
             /* Magic number */
-            if (!process_cpio_field (file, _("Magic number"), NULL, HEADER_DATA_COLOR_1, 6,
+            if (!process_cpio_field (file, "Magic number", NULL, HEADER_DATA_COLOR_1, 6,
                                      FALSE, NULL, cpio_format))
                 goto END_ERROR;
 
             /* Device number */
-            if (!process_cpio_field (file, _("Device number"), NULL, HEADER_DATA_COLOR_2, 6,
+            if (!process_cpio_field (file, "Device number", NULL, HEADER_DATA_COLOR_2, 6,
                                      TRUE, NULL, cpio_format))
                 goto END_ERROR;
 
             /* inode number */
-            if (!process_cpio_field (file, _("inode number"), NULL, HEADER_DATA_COLOR_1, 6,
+            if (!process_cpio_field (file, "inode number", NULL, HEADER_DATA_COLOR_1, 6,
                                      TRUE, NULL, cpio_format))
                 goto END_ERROR;
 
@@ -164,37 +160,37 @@ chirurgien_cpio (FormatsFile *file,
                 goto END_ERROR;
 
             /* User ID */
-            if (!process_cpio_field (file, _("User ID"), NULL, HEADER_DATA_COLOR_2, 6,
+            if (!process_cpio_field (file, "User ID", NULL, HEADER_DATA_COLOR_2, 6,
                                      TRUE, NULL, cpio_format))
                 goto END_ERROR;
 
             /* Group ID */
-            if (!process_cpio_field (file, _("Group ID"), NULL, HEADER_DATA_COLOR_1, 6,
+            if (!process_cpio_field (file, "Group ID", NULL, HEADER_DATA_COLOR_1, 6,
                                      TRUE, NULL, cpio_format))
                 goto END_ERROR;
 
             /* Number of links */
-            if (!process_cpio_field (file, _("Number of links"), NULL, HEADER_DATA_COLOR_2, 6,
+            if (!process_cpio_field (file, "Number of links", NULL, HEADER_DATA_COLOR_2, 6,
                                      TRUE, NULL, cpio_format))
                 goto END_ERROR;
 
             /* Character/block special file device number */
-            if (!process_cpio_field (file, _("Character/block special file device number"), NULL, HEADER_DATA_COLOR_1, 6,
+            if (!process_cpio_field (file, "Character/block special file device number", NULL, HEADER_DATA_COLOR_1, 6,
                                      FALSE, NULL, cpio_format))
                 goto END_ERROR;
 
             /* Last modification time */
-            if (!process_cpio_field (file, _("Last modification time"), NULL, HEADER_DATA_COLOR_2, 11,
+            if (!process_cpio_field (file, "Last modification time", NULL, HEADER_DATA_COLOR_2, 11,
                                      TRUE, NULL, cpio_format))
                 goto END_ERROR;
 
             /* File name size */
-            if (!process_cpio_field (file, _("File name size"), _("The file name size, in bytes"), HEADER_DATA_COLOR_1, 6,
+            if (!process_cpio_field (file, "File name size", "The file name size, in bytes", HEADER_DATA_COLOR_1, 6,
                                      TRUE, &file_name_size, cpio_format))
                 goto END_ERROR;
 
             /* File size */
-            if (!process_cpio_field (file, _("File size"), _("The file size, in bytes"), HEADER_DATA_COLOR_2, 11,
+            if (!process_cpio_field (file, "File size", "The file size, in bytes", HEADER_DATA_COLOR_2, 11,
                                      TRUE, &file_size, cpio_format))
                 goto END_ERROR;
         }
@@ -204,19 +200,19 @@ chirurgien_cpio (FormatsFile *file,
                 !memcmp (final_header, GET_CONTENT_POINTER (file), NEW_ASCII_HEADER_SIZE))
             {
                 format_utils_add_field (file, FINAL_HEADER_COLOR, TRUE, NEW_ASCII_HEADER_SIZE,
-                                      _("Special final header"), _("End"));
+                                        "Special final header", "End");
                 break;
             }
 
-            format_utils_start_section (file, _("File"));
+            format_utils_start_section (file, "File");
 
             /* Magic number */
-            if (!process_cpio_field (file, _("Magic number"), NULL, HEADER_DATA_COLOR_1, 6,
+            if (!process_cpio_field (file, "Magic number", NULL, HEADER_DATA_COLOR_1, 6,
                                      FALSE, NULL, cpio_format))
                 goto END_ERROR;
 
             /* inode number */
-            if (!process_cpio_field (file, _("inode number"), NULL, HEADER_DATA_COLOR_2, 8,
+            if (!process_cpio_field (file, "inode number", NULL, HEADER_DATA_COLOR_2, 8,
                                      TRUE, NULL, cpio_format))
                 goto END_ERROR;
 
@@ -225,60 +221,60 @@ chirurgien_cpio (FormatsFile *file,
                 goto END_ERROR;
 
             /* User ID */
-            if (!process_cpio_field (file, _("User ID"), NULL, HEADER_DATA_COLOR_2, 8,
+            if (!process_cpio_field (file, "User ID", NULL, HEADER_DATA_COLOR_2, 8,
                                      TRUE, NULL, cpio_format))
                 goto END_ERROR;
 
             /* Group ID */
-            if (!process_cpio_field (file, _("Group ID"), NULL, HEADER_DATA_COLOR_1, 8,
+            if (!process_cpio_field (file, "Group ID", NULL, HEADER_DATA_COLOR_1, 8,
                                      TRUE, NULL, cpio_format))
                 goto END_ERROR;
 
             /* Number of links */
-            if (!process_cpio_field (file, _("Number of links"), NULL, HEADER_DATA_COLOR_2, 8,
+            if (!process_cpio_field (file, "Number of links", NULL, HEADER_DATA_COLOR_2, 8,
                                      TRUE, NULL, cpio_format))
                 goto END_ERROR;
 
             /* Last modification time */
-            if (!process_cpio_field (file, _("Last modification time"), NULL, HEADER_DATA_COLOR_1, 8,
+            if (!process_cpio_field (file, "Last modification time", NULL, HEADER_DATA_COLOR_1, 8,
                                      TRUE, NULL, cpio_format))
                 goto END_ERROR;
 
             /* File size */
-            if (!process_cpio_field (file, _("File size"), _("The file size, in bytes"), HEADER_DATA_COLOR_2, 8,
+            if (!process_cpio_field (file, "File size", "The file size, in bytes", HEADER_DATA_COLOR_2, 8,
                                      TRUE, &file_size, cpio_format))
                 goto END_ERROR;
 
             /* Device major number */
-            if (!process_cpio_field (file, _("Device major number"), NULL, HEADER_DATA_COLOR_1, 8,
+            if (!process_cpio_field (file, "Device major number", NULL, HEADER_DATA_COLOR_1, 8,
                                      TRUE, NULL, cpio_format))
                 goto END_ERROR;
 
             /* Device minor number */
-            if (!process_cpio_field (file, _("Device minor number"), NULL, HEADER_DATA_COLOR_2, 8,
+            if (!process_cpio_field (file, "Device minor number", NULL, HEADER_DATA_COLOR_2, 8,
                                      TRUE, NULL, cpio_format))
                 goto END_ERROR;
 
             /* Character/block special file device major number */
-            if (!process_cpio_field (file, _("Character/block special file device major number"), NULL, HEADER_DATA_COLOR_1, 8,
+            if (!process_cpio_field (file, "Character/block special file device major number", NULL, HEADER_DATA_COLOR_1, 8,
                                      FALSE, NULL, cpio_format))
                 goto END_ERROR;
 
             /* Character/block special file device minor number */
-            if (!process_cpio_field (file, _("Character/block special file device minor number"), NULL, HEADER_DATA_COLOR_2, 8,
+            if (!process_cpio_field (file, "Character/block special file device minor number", NULL, HEADER_DATA_COLOR_2, 8,
                                      FALSE, NULL, cpio_format))
                 goto END_ERROR;
 
             /* File name size */
-            if (!process_cpio_field (file, _("File name size"), _("The file name size, in bytes"), HEADER_DATA_COLOR_1, 8,
+            if (!process_cpio_field (file, "File name size", "The file name size, in bytes", HEADER_DATA_COLOR_1, 8,
                                      TRUE, &file_name_size, cpio_format))
                 goto END_ERROR;
 
             /* Use the file_name variable because it is available */
             if (cpio_format == NewASCII)
-                file_name = _("Unused");
+                file_name = "Unused";
             else
-                file_name = _("Checksum");
+                file_name = "Checksum";
 
             /* Unused / Checksum */
             if (!process_cpio_field (file, file_name, NULL, HEADER_DATA_COLOR_2, 8,
@@ -294,7 +290,7 @@ chirurgien_cpio (FormatsFile *file,
                 file_name = (const gchar *) GET_CONTENT_POINTER (file);
 
                 format_utils_add_field (file, FILE_NAME_COLOR, TRUE, file_name_size,
-                                      _("File name"), NULL);
+                                        "File name", NULL);
 
                 /* Padding */
                 if (cpio_format == BinaryLittleEndian || cpio_format == BinaryBigEndian)
@@ -303,7 +299,7 @@ chirurgien_cpio (FormatsFile *file,
                     {
                         if (FILE_HAS_DATA (file))
                             format_utils_add_field (file, PADDING_COLOR, FALSE, 1,
-                                                  _("File name padding"), NULL);
+                                                    "File name padding", NULL);
                         else
                             return;
                     }
@@ -317,12 +313,12 @@ chirurgien_cpio (FormatsFile *file,
                         if (FILE_HAS_DATA_N (file, file_padding))
                         {
                             format_utils_add_field (file, PADDING_COLOR, FALSE, file_padding,
-                                                  _("File name padding"), NULL);
+                                                    "File name padding", NULL);
                         }
                         else
                         {
                             format_utils_add_field (file, ERROR_COLOR, FALSE, G_MAXUINT,
-                                                  _("Incomplete file name padding"), NULL);
+                                                    "Incomplete file name padding", NULL);
                             return;
                         }
                     }
@@ -334,7 +330,7 @@ chirurgien_cpio (FormatsFile *file,
             }
             else
             {
-                format_utils_add_field (file, ERROR_COLOR, FALSE, G_MAXUINT, _("Incomplete file name"), NULL);
+                format_utils_add_field (file, ERROR_COLOR, FALSE, G_MAXUINT, "Incomplete file name", NULL);
                 return;
             }
         }
@@ -343,14 +339,14 @@ chirurgien_cpio (FormatsFile *file,
             file_name = "";
         }
 
-        format_utils_add_line (file, _("File name"), file_name, NULL);
+        format_utils_add_line (file, "File name", file_name, NULL);
 
         /* File contents */
         if (file_size)
         {
             if (FILE_HAS_DATA_N (file, file_size))
             {
-                format_utils_add_field (file, FILE_CONTENTS_COLOR, TRUE, file_size, _("File contents"), NULL);
+                format_utils_add_field (file, FILE_CONTENTS_COLOR, TRUE, file_size, "File contents", NULL);
 
                 /* Padding */
                 if (cpio_format == BinaryLittleEndian || cpio_format == BinaryBigEndian)
@@ -359,7 +355,7 @@ chirurgien_cpio (FormatsFile *file,
                     {
                         if (FILE_HAS_DATA (file))
                             format_utils_add_field (file, PADDING_COLOR, FALSE, 1,
-                                                  _("File contents padding"), NULL);
+                                                    "File contents padding", NULL);
                         else
                             return;
                     }
@@ -373,12 +369,12 @@ chirurgien_cpio (FormatsFile *file,
                         if (FILE_HAS_DATA_N (file, file_padding))
                         {
                             format_utils_add_field (file, PADDING_COLOR, FALSE, file_padding,
-                                                  _("File contents padding"), NULL);
+                                                    "File contents padding", NULL);
                         }
                         else
                         {
                             format_utils_add_field (file, ERROR_COLOR, FALSE, G_MAXUINT,
-                                                  _("Incomplete file contents padding"), NULL);
+                                                    "Incomplete file contents padding", NULL);
                             return;
                         }
                     }
@@ -387,7 +383,7 @@ chirurgien_cpio (FormatsFile *file,
             else
             {
                 format_utils_add_field (file, ERROR_COLOR, FALSE, G_MAXUINT,
-                                      _("Incomplete file contents"), NULL);
+                                        "Incomplete file contents", NULL);
                 return;
             }
         }
@@ -395,12 +391,12 @@ chirurgien_cpio (FormatsFile *file,
 
     if (FILE_HAS_DATA (file))
         format_utils_add_field (file, PADDING_COLOR, FALSE, G_MAXUINT,
-                              _("Archive padding"), NULL);
+                                "Archive padding", NULL);
     return;
 
     END_ERROR:
     format_utils_add_field (file, ERROR_COLOR, FALSE, G_MAXUINT,
-                          _("Unrecognized data"), NULL);
+                            "Unrecognized data", NULL);
 }
 
 static gboolean
@@ -424,8 +420,8 @@ process_cpio_field (FormatsFile *file,
     if (!format_utils_read (file, cpio_field, field_length))
         return FALSE;
 
-    if (!g_strcmp0 (_("Magic number"), field_name))
-        format_utils_add_field (file, color_index, TRUE, field_length, field_name, _("File"));
+    if (!g_strcmp0 ("Magic number", field_name))
+        format_utils_add_field (file, color_index, TRUE, field_length, field_name, "File");
     else
         format_utils_add_field (file, color_index, TRUE, field_length, field_name, NULL);
 
@@ -466,12 +462,12 @@ process_cpio_field (FormatsFile *file,
         }
         else
         {
-            field_description = _("n/a");
+            field_description = "n/a";
         }
 
         if (field_description == NULL)
         {
-            if (!g_strcmp0 (_("Last modification time"), field_name))
+            if (!g_strcmp0 ("Last modification time", field_name))
             {
                 date = g_date_time_new_from_unix_utc (numeric_value);
 
@@ -515,17 +511,17 @@ process_file_type_mode (FormatsFile *file,
 
     if (cpio_format == OldASCII)
     {
-        format_utils_add_field (file, HEADER_DATA_COLOR_2, TRUE, 2, _("File type"), NULL);
-        format_utils_add_field (file, HEADER_DATA_COLOR_1, TRUE, 4, _("File mode"), NULL);
+        format_utils_add_field (file, HEADER_DATA_COLOR_2, TRUE, 2, "File type", NULL);
+        format_utils_add_field (file, HEADER_DATA_COLOR_1, TRUE, 4, "File mode", NULL);
 
-        file_type_tooltip = _("File type\n"
-                              "<tt>30 31<sub>16</sub></tt>\tFIFO special file\n"
-                              "<tt>30 32<sub>16</sub></tt>\tCharacter special file\n"
-                              "<tt>30 34<sub>16</sub></tt>\tDirectory\n"
-                              "<tt>30 36<sub>16</sub></tt>\tBlock special file\n"
-                              "<tt>31 30<sub>16</sub></tt>\tRegular file\n"
-                              "<tt>31 32<sub>16</sub></tt>\tSymbolic link\n"
-                              "<tt>31 34<sub>16</sub></tt>\tSocket");
+        file_type_tooltip = "File type\n"
+                            "<tt>30 31<sub>16</sub></tt>\tFIFO special file\n"
+                            "<tt>30 32<sub>16</sub></tt>\tCharacter special file\n"
+                            "<tt>30 34<sub>16</sub></tt>\tDirectory\n"
+                            "<tt>30 36<sub>16</sub></tt>\tBlock special file\n"
+                            "<tt>31 30<sub>16</sub></tt>\tRegular file\n"
+                            "<tt>31 32<sub>16</sub></tt>\tSymbolic link\n"
+                            "<tt>31 34<sub>16</sub></tt>\tSocket";
     }
     else if (cpio_format == BinaryLittleEndian ||
              cpio_format == BinaryBigEndian)
@@ -537,16 +533,16 @@ process_file_type_mode (FormatsFile *file,
             numeric_value = g_ntohs (*(guint16*) file_type_mode);
         g_snprintf (file_type_mode, 7, "%6.6lo", numeric_value);
 
-        format_utils_add_field (file, HEADER_DATA_COLOR_2, TRUE, 2, _("File mode and type"), NULL);
+        format_utils_add_field (file, HEADER_DATA_COLOR_2, TRUE, 2, "File mode and type", NULL);
 
-        file_type_tooltip = _("File type (upper 4 bits)\n"
-                              "<tt>1<sub>16</sub></tt>\tFIFO special file\n"
-                              "<tt>2<sub>16</sub></tt>\tCharacter special file\n"
-                              "<tt>4<sub>16</sub></tt>\tDirectory\n"
-                              "<tt>6<sub>16</sub></tt>\tBlock special file\n"
-                              "<tt>8<sub>16</sub></tt>\tRegular file\n"
-                              "<tt>A<sub>16</sub></tt>\tSymbolic link\n"
-                              "<tt>C<sub>16</sub></tt>\tSocket");
+        file_type_tooltip = "File type (upper 4 bits)\n"
+                            "<tt>1<sub>16</sub></tt>\tFIFO special file\n"
+                            "<tt>2<sub>16</sub></tt>\tCharacter special file\n"
+                            "<tt>4<sub>16</sub></tt>\tDirectory\n"
+                            "<tt>6<sub>16</sub></tt>\tBlock special file\n"
+                            "<tt>8<sub>16</sub></tt>\tRegular file\n"
+                            "<tt>A<sub>16</sub></tt>\tSymbolic link\n"
+                            "<tt>C<sub>16</sub></tt>\tSocket";
     }
     else
     {
@@ -555,47 +551,47 @@ process_file_type_mode (FormatsFile *file,
         numeric_value = g_ascii_strtoull (file_type_mode, NULL, 16);
         g_snprintf (file_type_mode, 7, "%6.6lo", numeric_value);
 
-        format_utils_add_field (file, HEADER_DATA_COLOR_1, TRUE, 4, _("Unused"), NULL);
-        format_utils_add_field (file, HEADER_DATA_COLOR_2, TRUE, 1, _("File type"), NULL);
-        format_utils_add_field (file, HEADER_DATA_COLOR_1, TRUE, 3, _("File mode"), NULL);
+        format_utils_add_field (file, HEADER_DATA_COLOR_1, TRUE, 4, "Unused", NULL);
+        format_utils_add_field (file, HEADER_DATA_COLOR_2, TRUE, 1, "File type", NULL);
+        format_utils_add_field (file, HEADER_DATA_COLOR_1, TRUE, 3, "File mode", NULL);
 
-        file_type_tooltip = _("File type\n"
-                              "<tt>31<sub>16</sub></tt>\tFIFO special file\n"
-                              "<tt>32<sub>16</sub></tt>\tCharacter special file\n"
-                              "<tt>34<sub>16</sub></tt>\tDirectory\n"
-                              "<tt>36<sub>16</sub></tt>\tBlock special file\n"
-                              "<tt>38<sub>16</sub></tt>\tRegular file\n"
-                              "<tt>41<sub>16</sub></tt>\tSymbolic link\n"
-                              "<tt>43<sub>16</sub></tt>\tSocket");
+        file_type_tooltip = "File type\n"
+                            "<tt>31<sub>16</sub></tt>\tFIFO special file\n"
+                            "<tt>32<sub>16</sub></tt>\tCharacter special file\n"
+                            "<tt>34<sub>16</sub></tt>\tDirectory\n"
+                            "<tt>36<sub>16</sub></tt>\tBlock special file\n"
+                            "<tt>38<sub>16</sub></tt>\tRegular file\n"
+                            "<tt>41<sub>16</sub></tt>\tSymbolic link\n"
+                            "<tt>43<sub>16</sub></tt>\tSocket";
     }
 
     if (!memcmp (file_type_mode, "01", 2))
-        value = _("FIFO special file");
+        value = "FIFO special file";
     else if (!memcmp (file_type_mode, "02", 2))
-        value = _("Character special file");
+        value = "Character special file";
     else if (!memcmp (file_type_mode, "04", 2))
-        value = _("Directory");
+        value = "Directory";
     else if (!memcmp (file_type_mode, "06", 2))
-        value = _("Block special file");
+        value = "Block special file";
     else if (!memcmp (file_type_mode, "10", 2))
-        value = _("Regular file");
+        value = "Regular file";
     else if (!memcmp (file_type_mode, "12", 2))
-        value = _("Symbolic link");
+        value = "Symbolic link";
     else if (!memcmp (file_type_mode, "14", 2))
-        value = _("Socket");
+        value = "Socket";
     else
-        value = _("<span foreground=\"red\">INVALID</span>");
+        value = "<span foreground=\"red\">INVALID</span>";
 
-    format_utils_add_line (file, _("File type"), value, file_type_tooltip);
+    format_utils_add_line (file, "File type", value, file_type_tooltip);
 
     file_type_mode[6] = '\0';
     if (g_utf8_validate (file_type_mode + 2, 4, NULL))
         value = file_type_mode + 2;
     else
-        value = _("<span foreground=\"red\">INVALID</span>");
+        value = "<span foreground=\"red\">INVALID</span>";
 
-    format_utils_add_line (file, _("File mode"), value,
-                         _("File mode in octal format"));
+    format_utils_add_line (file, "File mode", value,
+                           "File mode in octal format");
 
     return TRUE;
 }

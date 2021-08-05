@@ -16,10 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-
-#include <glib/gi18n.h>
-
 #include "png-format.h"
 
 
@@ -42,18 +38,18 @@ png_hist_chunk (FormatsFile *file,
     if (!chunk_counts[IHDR])
     {
         format_utils_add_field (file, ERROR_COLOR_1, FALSE, chunk_length,
-                              _("The first chunk must be the IHDR chunk"), NULL);
+                                "The first chunk must be the IHDR chunk", NULL);
         return TRUE;
     }
 
     if (palette_entries << 1 != chunk_length)
     {
         format_utils_add_field (file, ERROR_COLOR_1, FALSE, chunk_length,
-                              _("The hIST chunk must have an entry for every palette entry"), NULL);
+                                "The hIST chunk must have an entry for every palette entry", NULL);
         return TRUE;
     }
 
-    format_utils_init_tab (&tab, _("Palette entry frequency"));
+    format_utils_init_tab (&tab, "Palette entry frequency");
 
     for (guint i = 0; i < palette_entries; i++)
     {
@@ -62,10 +58,13 @@ png_hist_chunk (FormatsFile *file,
         else
             color_toggle = CHUNK_DATA_COLOR_1;
 
-        entry_number = g_strdup_printf (_("Entry %u"), i);
+        entry_number = g_strdup_printf ("Entry %u", i);
 
-        if (!process_png_field (file, &tab, entry_number, _("Entry frequency"),
-                           NULL, color_toggle, 2, 0, NULL, NULL, "%u", NULL))
+        if (!process_png_field (file, &tab, entry_number, "Entry frequency",
+                                NULL,
+                                color_toggle, 2,
+                                0, NULL, NULL,
+                                "%u", NULL))
         {
             g_free (entry_number);
             return FALSE;

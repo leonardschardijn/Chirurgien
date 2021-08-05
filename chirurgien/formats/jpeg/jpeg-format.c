@@ -16,11 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-
 #include "jpeg-format.h"
-
-#include <glib/gi18n.h>
 
 #include "chirurgien-jpeg.h"
 
@@ -96,7 +92,7 @@ chirurgien_jpeg (FormatsFile *file)
 
     format_utils_set_title (file, "Joint Photographic Experts Group");
 
-    format_utils_start_section (file, _("JFIF and/or Exif header"));
+    format_utils_start_section (file, "JFIF and/or Exif header");
 
     /* Marker loop */
     while (FILE_HAS_DATA (file))
@@ -105,7 +101,7 @@ chirurgien_jpeg (FormatsFile *file)
         if (marker_counts[EOI])
         {
             format_utils_add_field (file, ERROR_COLOR_1, FALSE, G_MAXUINT,
-                                  _("Unrecognized data, file ends at EOI marker"), NULL);
+                                    "Unrecognized data, file ends at EOI marker", NULL);
             break;
         }
 
@@ -117,13 +113,13 @@ chirurgien_jpeg (FormatsFile *file)
         if (!memcmp (marker_type, marker_types[SOI], 2))
         {
             format_utils_add_field (file, MARKER_TYPE_COLOR, TRUE, 2,
-                                  _("Marker type: SOI"), marker_names[SOI]);
+                                    "Marker type: SOI", marker_names[SOI]);
             marker_counts[SOI]++;
         }
         else if (!memcmp (marker_type, marker_types[APP0], 2))
         {
             format_utils_add_field (file, MARKER_TYPE_COLOR, TRUE, 2,
-                                  _("Marker type: APP0"), marker_names[APP0]);
+                                    "Marker type: APP0", marker_names[APP0]);
 
             if (!jpeg_app0_marker (file, marker_counts))
                 break;
@@ -131,7 +127,7 @@ chirurgien_jpeg (FormatsFile *file)
         else if (!memcmp (marker_type, marker_types[APP1], 2))
         {
             format_utils_add_field (file, MARKER_TYPE_COLOR, TRUE, 2,
-                                  _("Marker type: APP1"), marker_names[APP1]);
+                                    "Marker type: APP1", marker_names[APP1]);
 
             if (!jpeg_app1_marker (file, marker_counts))
                 break;
@@ -139,7 +135,7 @@ chirurgien_jpeg (FormatsFile *file)
         else if (!memcmp (marker_type, marker_types[APP2], 2))
         {
             format_utils_add_field (file, MARKER_TYPE_COLOR, TRUE, 2,
-                                  _("Marker type: APP2"), marker_names[APP2]);
+                                    "Marker type: APP2", marker_names[APP2]);
 
             if (!jpeg_app2_marker (file, marker_counts))
                 break;
@@ -147,7 +143,7 @@ chirurgien_jpeg (FormatsFile *file)
         else if (!memcmp (marker_type, marker_types[DQT], 2))
         {
             format_utils_add_field (file, MARKER_TYPE_COLOR, TRUE, 2,
-                                  _("Marker type: DQT"), marker_names[DQT]);
+                                    "Marker type: DQT", marker_names[DQT]);
 
             if (!jpeg_dqt_marker (file, marker_counts))
                 break;
@@ -155,7 +151,7 @@ chirurgien_jpeg (FormatsFile *file)
         else if (!memcmp (marker_type, marker_types[DHT], 2))
         {
             format_utils_add_field (file, MARKER_TYPE_COLOR, TRUE, 2,
-                                  _("Marker type: DHT"), marker_names[DHT]);
+                                    "Marker type: DHT", marker_names[DHT]);
 
             if (!jpeg_dht_marker (file, marker_counts))
                 break;
@@ -163,7 +159,7 @@ chirurgien_jpeg (FormatsFile *file)
         else if (!memcmp (marker_type, marker_types[DAC], 2))
         {
             format_utils_add_field (file, MARKER_TYPE_COLOR, TRUE, 2,
-                                  _("Marker type: DAC"), marker_names[DAC]);
+                                    "Marker type: DAC", marker_names[DAC]);
 
             if (!jpeg_dac_marker (file, marker_counts))
                 break;
@@ -171,7 +167,7 @@ chirurgien_jpeg (FormatsFile *file)
         else if (!memcmp (marker_type, marker_types[SOF0], 2))
         {
             format_utils_add_field (file, MARKER_TYPE_COLOR, TRUE, 2,
-                                  _("Marker type: SOF0"), marker_names[SOF0]);
+                                    "Marker type: SOF0", marker_names[SOF0]);
 
             if (!jpeg_sofn_marker (file, marker_counts, SOF0, "Baseline DCT"))
                 break;
@@ -179,7 +175,7 @@ chirurgien_jpeg (FormatsFile *file)
         else if (!memcmp (marker_type, marker_types[SOF1], 2))
         {
             format_utils_add_field (file, MARKER_TYPE_COLOR, TRUE, 2,
-                                  _("Marker type: SOF1"), marker_names[SOF1]);
+                                    "Marker type: SOF1", marker_names[SOF1]);
 
             if (!jpeg_sofn_marker (file, marker_counts, SOF1, "Extended sequential DCT - Huffman coding"))
                 break;
@@ -187,7 +183,7 @@ chirurgien_jpeg (FormatsFile *file)
         else if (!memcmp (marker_type, marker_types[SOF2], 2))
         {
             format_utils_add_field (file, MARKER_TYPE_COLOR, TRUE, 2,
-                                  _("Marker type: SOF2"), marker_names[SOF2]);
+                                    "Marker type: SOF2", marker_names[SOF2]);
 
             if (!jpeg_sofn_marker (file, marker_counts, SOF2, "Progressive DCT - Huffman coding"))
                 break;
@@ -195,7 +191,7 @@ chirurgien_jpeg (FormatsFile *file)
         else if (!memcmp (marker_type, marker_types[SOF3], 2))
         {
             format_utils_add_field (file, MARKER_TYPE_COLOR, TRUE, 2,
-                                  _("Marker type: SOF3"), marker_names[SOF3]);
+                                    "Marker type: SOF3", marker_names[SOF3]);
 
             if (!jpeg_sofn_marker (file, marker_counts, SOF3, "Lossless (sequential) - Huffman coding"))
                 break;
@@ -203,7 +199,7 @@ chirurgien_jpeg (FormatsFile *file)
         else if (!memcmp (marker_type, marker_types[SOF5], 2))
         {
             format_utils_add_field (file, MARKER_TYPE_COLOR, TRUE, 2,
-                                  _("Marker type: SOF5"), marker_names[SOF5]);
+                                    "Marker type: SOF5", marker_names[SOF5]);
 
             if (!jpeg_sofn_marker (file, marker_counts, SOF5, "Differential sequential DCT - Huffman coding"))
                 break;
@@ -211,7 +207,7 @@ chirurgien_jpeg (FormatsFile *file)
         else if (!memcmp (marker_type, marker_types[SOF6], 2))
         {
             format_utils_add_field (file, MARKER_TYPE_COLOR, TRUE, 2,
-                                  _("Marker type: SOF6"), marker_names[SOF6]);
+                                    "Marker type: SOF6", marker_names[SOF6]);
 
             if (!jpeg_sofn_marker (file, marker_counts, SOF6, "Differential progressive DCT - Huffman coding"))
                 break;
@@ -219,7 +215,7 @@ chirurgien_jpeg (FormatsFile *file)
         else if (!memcmp (marker_type, marker_types[SOF7], 2))
         {
             format_utils_add_field (file, MARKER_TYPE_COLOR, TRUE, 2,
-                                  _("Marker type: SOF7"), marker_names[SOF7]);
+                                    "Marker type: SOF7", marker_names[SOF7]);
 
             if (!jpeg_sofn_marker (file, marker_counts, SOF7, "Differential lossless (sequential) - Huffman coding"))
                 break;
@@ -227,7 +223,7 @@ chirurgien_jpeg (FormatsFile *file)
         else if (!memcmp (marker_type, marker_types[SOF9], 2))
         {
             format_utils_add_field (file, MARKER_TYPE_COLOR, TRUE, 2,
-                                  _("Marker type: SOF9"), marker_names[SOF9]);
+                                    "Marker type: SOF9", marker_names[SOF9]);
 
             if (!jpeg_sofn_marker (file, marker_counts, SOF9, "Extended sequential DCT - Arithmetic coding"))
                 break;
@@ -235,7 +231,7 @@ chirurgien_jpeg (FormatsFile *file)
         else if (!memcmp (marker_type, marker_types[SOF10], 2))
         {
             format_utils_add_field (file, MARKER_TYPE_COLOR, TRUE, 2,
-                                  _("Marker type: SOF10"), marker_names[SOF10]);
+                                    "Marker type: SOF10", marker_names[SOF10]);
 
             if (!jpeg_sofn_marker (file, marker_counts, SOF10, "Progressive DCT - Arithmetic coding"))
                 break;
@@ -243,7 +239,7 @@ chirurgien_jpeg (FormatsFile *file)
         else if (!memcmp (marker_type, marker_types[SOF11], 2))
         {
             format_utils_add_field (file, MARKER_TYPE_COLOR, TRUE, 2,
-                                  _("Marker type: SOF11"), marker_names[SOF11]);
+                                    "Marker type: SOF11", marker_names[SOF11]);
 
             if (!jpeg_sofn_marker (file, marker_counts, SOF11, "Lossless (sequential) - Arithmetic coding"))
                 break;
@@ -251,7 +247,7 @@ chirurgien_jpeg (FormatsFile *file)
         else if (!memcmp (marker_type, marker_types[SOF13], 2))
         {
             format_utils_add_field (file, MARKER_TYPE_COLOR, TRUE, 2,
-                                  _("Marker type: SOF13"), marker_names[SOF13]);
+                                    "Marker type: SOF13", marker_names[SOF13]);
 
             if (!jpeg_sofn_marker (file, marker_counts, SOF13, "Differential sequential DCT - Arithmetic coding"))
                 break;
@@ -259,7 +255,7 @@ chirurgien_jpeg (FormatsFile *file)
         else if (!memcmp (marker_type, marker_types[SOF14], 2))
         {
             format_utils_add_field (file, MARKER_TYPE_COLOR, TRUE, 2,
-                                  _("Marker type: SOF14"), marker_names[SOF14]);
+                                    "Marker type: SOF14", marker_names[SOF14]);
 
             if (!jpeg_sofn_marker (file, marker_counts, SOF14, "Differential progressive DCT - Arithmetic coding"))
                 break;
@@ -267,7 +263,7 @@ chirurgien_jpeg (FormatsFile *file)
         else if (!memcmp (marker_type, marker_types[SOF15], 2))
         {
             format_utils_add_field (file, MARKER_TYPE_COLOR, TRUE, 2,
-                                  _("Marker type: SOF15"), marker_names[SOF15]);
+                                    "Marker type: SOF15", marker_names[SOF15]);
 
             if (!jpeg_sofn_marker (file, marker_counts, SOF15, "Differential lossless (sequential) - Arithmetic coding"))
                 break;
@@ -275,7 +271,7 @@ chirurgien_jpeg (FormatsFile *file)
         else if (!memcmp (marker_type, marker_types[DRI], 2))
         {
             format_utils_add_field (file, MARKER_TYPE_COLOR, TRUE, 2,
-                                  _("Marker type: DRI"), marker_names[DRI]);
+                                    "Marker type: DRI", marker_names[DRI]);
 
             if (!jpeg_dri_dnl_marker (file, marker_counts, DRI))
                 break;
@@ -283,7 +279,7 @@ chirurgien_jpeg (FormatsFile *file)
         else if (!memcmp (marker_type, marker_types[SOS], 2))
         {
             format_utils_add_field (file, MARKER_TYPE_COLOR, TRUE, 2,
-                                  _("Marker type: SOS"), marker_names[SOS]);
+                                    "Marker type: SOS", marker_names[SOS]);
 
             if (!jpeg_sos_marker (file, marker_counts))
                 break;
@@ -291,7 +287,7 @@ chirurgien_jpeg (FormatsFile *file)
         else if (!memcmp (marker_type, marker_types[DNL], 2))
         {
             format_utils_add_field (file, MARKER_TYPE_COLOR, TRUE, 2,
-                                  _("Marker type: DNL"), marker_names[DNL]);
+                                    "Marker type: DNL", marker_names[DNL]);
 
             if (!jpeg_dri_dnl_marker (file, marker_counts, DNL))
                 break;
@@ -299,7 +295,7 @@ chirurgien_jpeg (FormatsFile *file)
         else if (!memcmp (marker_type, marker_types[COM], 2))
         {
             format_utils_add_field (file, MARKER_TYPE_COLOR, TRUE, 2,
-                                  _("Marker type: COM"), marker_names[COM]);
+                                    "Marker type: COM", marker_names[COM]);
 
             if (!jpeg_com_marker (file, marker_counts))
                 break;
@@ -307,33 +303,33 @@ chirurgien_jpeg (FormatsFile *file)
         else if (!memcmp (marker_type, marker_types[EOI], 2))
         {
             format_utils_add_field (file, MARKER_TYPE_COLOR, TRUE, 2,
-                                  _("Marker type: EOI"), marker_names[EOI]);
+                                    "Marker type: EOI", marker_names[EOI]);
             marker_counts[EOI]++;
         }
         else
         {
             format_utils_add_field (file, ERROR_COLOR_1, FALSE, 2,
-                                  _("Marker type: Unknown"), "???");
+                                    "Marker type: Unknown", "???");
 
             /* Data length */
             if (!format_utils_read (file, &unrecognized_data, 2))
                 break;
 
             format_utils_add_field (file, ERROR_COLOR_2, FALSE, 2,
-                                  _("Unknown marker data length"), NULL);
+                                    "Unknown marker data length", NULL);
 
             unrecognized_data = g_ntohs (unrecognized_data);
             if (unrecognized_data > 2)
                 format_utils_add_field (file, ERROR_COLOR_1, FALSE, unrecognized_data - 2,
-                                      _("Unrecognized data"), NULL);
+                                        "Unrecognized data", NULL);
         }
     }
 
     /* If there is still data available after the loop, tag it as unrecognized */
     format_utils_add_field (file, ERROR_COLOR_1, FALSE, G_MAXUINT,
-                          _("Unrecognized data"), NULL);
+                            "Unrecognized data", NULL);
 
-    format_utils_start_section (file, _("Marker count"));
+    format_utils_start_section (file, "Marker count");
 
     for (gint i = SOI; i <= EOI; i++)
     {
@@ -423,7 +419,7 @@ jpeg_data_length (FormatsFile *file,
         return FALSE;
 
     format_utils_add_field (file, MARKER_LENGTH_COLOR, TRUE, 2,
-                          _("Data length"), NULL);
+                            "Data length", NULL);
 
     *data_length_out = g_ntohs (*data_length_out);
 

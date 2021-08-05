@@ -16,10 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-
-#include <glib/gi18n.h>
-
 #include "png-format.h"
 
 
@@ -76,7 +72,7 @@ collect_idat_chunk (FormatsFile *file,
     if (!chunk_counts[IHDR])
     {
         format_utils_add_field (file, ERROR_COLOR_1, FALSE, chunk_length,
-                              _("The first chunk must be the IHDR chunk"), NULL);
+                                "The first chunk must be the IHDR chunk", NULL);
         return TRUE;
     }
 
@@ -93,7 +89,7 @@ collect_idat_chunk (FormatsFile *file,
     }
 
     format_utils_add_field (file, ERROR_COLOR_1, FALSE, G_MAXUINT,
-                          _("Chunk length exceeds available data"), NULL);
+                            "Chunk length exceeds available data", NULL);
     return FALSE;
 }
 
@@ -132,7 +128,7 @@ png_idat_chunk (FormatsFile *file,
 
         if (!compression_method) /* zlib-format DEFLATE */
         {
-            format_utils_start_section (file, _("ZLIB compressed image"));
+            format_utils_start_section (file, "ZLIB compressed image");
 
             png_zlib_deflate (file,
                               NULL,
@@ -149,27 +145,27 @@ png_idat_chunk (FormatsFile *file,
             if (compression_method_found)
             {
                 idat_chunk_field (idat_data, file, CHUNK_DATA_COLOR_1, TRUE, 1,
-                                _("ZLIB compression method and flags (CMF)\n"
+                                  "ZLIB compression method and flags (CMF)\n"
                                   "Lower four bits: compression method (CM)\n"
-                                  "Upper four bits: compression info (CINFO)"));
+                                  "Upper four bits: compression info (CINFO)");
                 idat_data->compressed_image_size--;
 
                 if (flags_found)
                 {
                     idat_chunk_field (idat_data, file, CHUNK_DATA_COLOR_2, TRUE, 1,
-                                    _("ZLIB flags (FLG)"));
+                                      "ZLIB flags (FLG)");
                     idat_data->compressed_image_size--;
 
                     if (decompression_success)
                     {
                         idat_chunk_field (idat_data, file, CHUNK_DATA_COLOR_1, TRUE, deflate_size,
-                                        _("ZLIB compressed image"));
+                                          "ZLIB compressed image");
                         idat_data->compressed_image_size -= deflate_size;
 
                         if (checksum_found)
                         {
                             idat_chunk_field (idat_data, file, CHUNK_DATA_COLOR_2, TRUE, 4,
-                                            _("ZLIB Adler32 checksum"));
+                                              "ZLIB Adler32 checksum");
                             idat_data->compressed_image_size -= 4;
                         }
                     }
@@ -179,7 +175,7 @@ png_idat_chunk (FormatsFile *file,
 
         /* If there is data left, tag it as unrecognized */
         idat_chunk_field (idat_data, file, ERROR_COLOR_1, FALSE,
-                          idat_data->compressed_image_size, _("Unrecognized data"));
+                          idat_data->compressed_image_size, "Unrecognized data");
     }
 
     g_slist_free (idat_data->chunks);

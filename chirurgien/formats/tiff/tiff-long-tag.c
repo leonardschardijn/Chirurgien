@@ -16,10 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-
-#include <glib/gi18n.h>
-
 #include "tiff-format.h"
 #include "chirurgien-exif.h"
 
@@ -74,31 +70,31 @@ process_long_tag_fields (FormatsFile  *file,
 
     if (field_type == expected_field_type)
     {
-        format_utils_add_field (file, FIELD_TYPE_COLOR, TRUE, 2, _("Field type: LONG"), NULL);
+        format_utils_add_field (file, FIELD_TYPE_COLOR, TRUE, 2, "Field type: LONG", NULL);
 
         if (!is_little_endian)
             *value_offset = g_ntohl (*value_offset);
     }
     else
     {
-        format_utils_add_field (file, ERROR_COLOR_1, FALSE, 2, _("Invalid field type"), NULL);
+        format_utils_add_field (file, ERROR_COLOR_1, FALSE, 2, "Invalid field type", NULL);
         valid = FALSE;
     }
 
     if (count != expected_count)
-        format_utils_add_field (file, ERROR_COLOR_1, FALSE, 4, _("Invalid count"), NULL);
+        format_utils_add_field (file, ERROR_COLOR_1, FALSE, 4, "Invalid count", NULL);
     else
-        format_utils_add_field (file, COUNT_COLOR, TRUE, 4, _("Count"), NULL);
+        format_utils_add_field (file, COUNT_COLOR, TRUE, 4, "Count", NULL);
 
     if (expected_count > 1)
     {
-        format_utils_add_field (file, VALUE_OFFSET_COLOR_1, TRUE, 4, _("Tag offset"), NULL);
+        format_utils_add_field (file, VALUE_OFFSET_COLOR_1, TRUE, 4, "Tag offset", NULL);
         if (is_offset)
             *is_offset = TRUE;
     }
     else
     {
-        format_utils_add_field (file, VALUE_OFFSET_COLOR_1, TRUE, 4, _("Tag value"), NULL);
+        format_utils_add_field (file, VALUE_OFFSET_COLOR_1, TRUE, 4, "Tag value", NULL);
         if (is_offset)
             *is_offset = FALSE;
     }
@@ -116,25 +112,25 @@ special_long_tag (FormatsFile *file,
     if (!g_strcmp0 (tag_name, "NewSubfileType"))
     {
         if (value_offset & 0x1)
-            value = _("Yes");
+            value = "Yes";
         else
-            value = _("No");
-        format_utils_add_line (file, _("Reducen resolution version of another image"), value,
-                             _("Bit 0 of the NewSubfileType tag value"));
+            value = "No";
+        format_utils_add_line (file, "Reducen resolution version of another image", value,
+                               "Bit 0 of the NewSubfileType tag value");
 
         if (value_offset & 0x2)
-            value = _("Yes");
+            value = "Yes";
         else
-            value = _("No");
-        format_utils_add_line (file, _("Single page of multi-page image"), value,
-                             _("Bit 1 of the NewSubfileType tag value"));
+            value = "No";
+        format_utils_add_line (file, "Single page of multi-page image", value,
+                               "Bit 1 of the NewSubfileType tag value");
 
         if (value_offset & 0x3)
-            value = _("Yes");
+            value = "Yes";
         else
-            value = _("No");
-        format_utils_add_line (file, _("Defines a transparency mask for another image"), value,
-                             _("Bit 2 of the NewSubfileType tag value"));
+            value = "No";
+        format_utils_add_line (file, "Defines a transparency mask for another image", value,
+                               "Bit 2 of the NewSubfileType tag value");
 
         return TRUE;
     }
@@ -177,7 +173,7 @@ process_long_tag (FormatsFile    *file,
     if (!process_long_tag_fields (file, field_type, expected_field_type, count, expected_count,
                              &value_offset, is_little_endian, &is_offset))
     {
-        value = _("<span foreground=\"red\">INVALID</span>");
+        value = "<span foreground=\"red\">INVALID</span>";
     }
     else
     {

@@ -16,10 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-
-#include <glib/gi18n.h>
-
 #include "png-format.h"
 
 
@@ -41,40 +37,55 @@ png_bkgd_chunk (FormatsFile *file,
     if (!chunk_counts[IHDR])
     {
         format_utils_add_field (file, ERROR_COLOR_1, FALSE, chunk_length,
-                              _("The first chunk must be the IHDR chunk"), NULL);
+                                "The first chunk must be the IHDR chunk", NULL);
         return TRUE;
     }
 
-    format_utils_init_tab (&tab, _("Background color"));
+    format_utils_init_tab (&tab, "Background color");
 
     if (colortype == 0 || colortype == 4)
     {
-        if (!process_png_field (file, &tab, _("Grayscale background"), NULL,
-                           NULL, CHUNK_DATA_COLOR_1, 2, 0, NULL, NULL, "%u", NULL))
+        if (!process_png_field (file, &tab, "Grayscale background", NULL,
+                                NULL,
+                                CHUNK_DATA_COLOR_1, 2,
+                                0, NULL, NULL,
+                                "%u", NULL))
             return FALSE;
 
         chunk_used += 2;
     }
     else if (colortype == 2 || colortype == 6)
     {
-        if (!process_png_field (file, &tab, _("Background red sample"), NULL,
-                           NULL, CHUNK_DATA_COLOR_1, 2, 0, NULL, NULL, "%u", NULL))
+        if (!process_png_field (file, &tab, "Background red sample", NULL,
+                                NULL,
+                                CHUNK_DATA_COLOR_1, 2,
+                                0, NULL, NULL,
+                                "%u", NULL))
             return FALSE;
 
-        if (!process_png_field (file, &tab, _("Background green sample"), NULL,
-                           NULL, CHUNK_DATA_COLOR_2, 2, 0, NULL, NULL, "%u", NULL))
+        if (!process_png_field (file, &tab, "Background green sample", NULL,
+                                NULL,
+                                CHUNK_DATA_COLOR_2, 2,
+                                0, NULL, NULL,
+                                "%u", NULL))
             return FALSE;
 
-        if (!process_png_field (file, &tab, _("Background blue sample"), NULL,
-                           NULL, CHUNK_DATA_COLOR_1, 2, 0, NULL, NULL, "%u", NULL))
+        if (!process_png_field (file, &tab, "Background blue sample", NULL,
+                                NULL,
+                                CHUNK_DATA_COLOR_1, 2,
+                                0, NULL, NULL,
+                                "%u", NULL))
             return FALSE;
 
         chunk_used += 6;
     }
     else if (colortype == 3)
     {
-        if (!process_png_field (file, &tab, _("Background palette index"), NULL,
-                           NULL, CHUNK_DATA_COLOR_1, 1, 0, NULL, NULL, "%u", NULL))
+        if (!process_png_field (file, &tab, "Background palette index", NULL,
+                                NULL,
+                                CHUNK_DATA_COLOR_1, 1,
+                                0, NULL, NULL,
+                                "%u", NULL))
             return FALSE;
 
         chunk_used++;
@@ -82,13 +93,13 @@ png_bkgd_chunk (FormatsFile *file,
     else
     {
         format_utils_add_field (file, ERROR_COLOR_1, FALSE, chunk_length,
-                              _("Invalid color type"), NULL);
+                                "Invalid color type", NULL);
         return TRUE;
     }
 
     if (chunk_used < chunk_length)
         format_utils_add_field (file, ERROR_COLOR_1, FALSE, chunk_length - chunk_used,
-                              _("Unrecognized data"), NULL);
+                                "Unrecognized data", NULL);
 
     format_utils_insert_tab (file, &tab, chunk_types[bKGD]);
 

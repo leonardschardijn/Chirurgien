@@ -16,11 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-
 #include "png-format.h"
-
-#include <glib/gi18n.h>
 
 
 const gchar * const chunk_types[CHUNK_TYPES] = {
@@ -66,9 +62,9 @@ chirurgien_png (FormatsFile *file)
     format_utils_set_title (file, "Portable Network Graphics");
 
     format_utils_add_field (file, SIGNATURE_COLOR, TRUE, 8,
-                          _("PNG file signature"), NULL);
+                            "PNG file signature", NULL);
 
-    format_utils_start_section (file, _("Image details"));
+    format_utils_start_section (file, "Image details");
 
     /* Chunk loop */
     while (FILE_HAS_DATA (file))
@@ -77,7 +73,7 @@ chirurgien_png (FormatsFile *file)
         if (chunk_counts[IEND])
         {
             format_utils_add_field (file, ERROR_COLOR_1, FALSE, G_MAXUINT,
-                                  _("Unrecognized data, file ends at IEND chunk"), NULL);
+                                    "Unrecognized data, file ends at IEND chunk", NULL);
             break;
         }
 
@@ -87,7 +83,7 @@ chirurgien_png (FormatsFile *file)
 
         chunk_length = g_ntohl (chunk_length);
         format_utils_add_field (file, CHUNK_LENGTH_COLOR, TRUE, 4,
-                              _("Chunk length"), NULL);
+                                "Chunk length", NULL);
 
         /* Chunk type */
         if (!format_utils_read (file, &chunk_type, 4))
@@ -97,7 +93,7 @@ chirurgien_png (FormatsFile *file)
         if (!memcmp (chunk_type, chunk_types[IDAT], 4))
         {
             format_utils_add_field (file, CHUNK_TYPE_COLOR, TRUE, 4,
-                                  _("Chunk type: IDAT"), chunk_types[IDAT]);
+                                    "Chunk type: IDAT", chunk_types[IDAT]);
 
             if (!collect_idat_chunk (file, chunk_length, chunk_counts, &idat_data))
                 break;
@@ -105,7 +101,7 @@ chirurgien_png (FormatsFile *file)
         else if (!memcmp (chunk_type, chunk_types[IHDR], 4))
         {
             format_utils_add_field (file, CHUNK_TYPE_COLOR, TRUE, 4,
-                                  _("Chunk type: IHDR"), chunk_types[IHDR]);
+                                    "Chunk type: IHDR", chunk_types[IHDR]);
 
             if (!png_ihdr_chunk (file, chunk_length, chunk_counts, &colortype, &compression_method))
                 break;
@@ -113,7 +109,7 @@ chirurgien_png (FormatsFile *file)
         else if (!memcmp (chunk_type, chunk_types[IEND], 4))
         {
             format_utils_add_field (file, CHUNK_TYPE_COLOR, TRUE, 4,
-                                  _("Chunk type: IEND"), chunk_types[IEND]);
+                                    "Chunk type: IEND", chunk_types[IEND]);
 
             /* IEND chunks have no data, increase counter and move on */
             chunk_counts[IEND]++;
@@ -121,7 +117,7 @@ chirurgien_png (FormatsFile *file)
         else if (!memcmp (chunk_type, chunk_types[PLTE], 4))
         {
             format_utils_add_field (file, CHUNK_TYPE_COLOR, TRUE, 4,
-                                  _("Chunk type: PLTE"), chunk_types[PLTE]);
+                                    "Chunk type: PLTE", chunk_types[PLTE]);
 
             if (!png_plte_chunk (file, chunk_length, chunk_counts, &palette_entries))
                 break;
@@ -129,7 +125,7 @@ chirurgien_png (FormatsFile *file)
         else if (!memcmp (chunk_type, chunk_types[tRNS], 4))
         {
             format_utils_add_field (file, CHUNK_TYPE_COLOR, TRUE, 4,
-                                  _("Chunk type: tRNS"), chunk_types[tRNS]);
+                                    "Chunk type: tRNS", chunk_types[tRNS]);
 
             if (!png_trns_chunk (file, chunk_length, chunk_counts, colortype, palette_entries))
                 break;
@@ -137,7 +133,7 @@ chirurgien_png (FormatsFile *file)
         else if (!memcmp (chunk_type, chunk_types[cHRM], 4))
         {
             format_utils_add_field (file, CHUNK_TYPE_COLOR, TRUE, 4,
-                                  _("Chunk type: cHRM"), chunk_types[cHRM]);
+                                    "Chunk type: cHRM", chunk_types[cHRM]);
 
             if (!png_chrm_chunk (file, chunk_length, chunk_counts))
                 break;
@@ -145,7 +141,7 @@ chirurgien_png (FormatsFile *file)
         else if (!memcmp (chunk_type, chunk_types[gAMA], 4))
         {
             format_utils_add_field (file, CHUNK_TYPE_COLOR, TRUE, 4,
-                                  _("Chunk type: gAMA"), chunk_types[gAMA]);
+                                    "Chunk type: gAMA", chunk_types[gAMA]);
 
             if (!png_gama_chunk (file, chunk_length, chunk_counts))
                 break;
@@ -153,7 +149,7 @@ chirurgien_png (FormatsFile *file)
         else if (!memcmp (chunk_type, chunk_types[iCCP], 4))
         {
             format_utils_add_field (file, CHUNK_TYPE_COLOR, TRUE, 4,
-                                  _("Chunk type: iCCP"), chunk_types[iCCP]);
+                                    "Chunk type: iCCP", chunk_types[iCCP]);
 
             if (!png_iccp_chunk (file, chunk_length, chunk_counts))
                 break;
@@ -161,7 +157,7 @@ chirurgien_png (FormatsFile *file)
         else if (!memcmp (chunk_type, chunk_types[sBIT], 4))
         {
             format_utils_add_field (file, CHUNK_TYPE_COLOR, TRUE, 4,
-                                  _("Chunk type: sBIT"), chunk_types[sBIT]);
+                                    "Chunk type: sBIT", chunk_types[sBIT]);
 
             if (!png_sbit_chunk (file, chunk_length, chunk_counts, colortype))
                 break;
@@ -169,7 +165,7 @@ chirurgien_png (FormatsFile *file)
         else if (!memcmp (chunk_type, chunk_types[sRGB], 4))
         {
             format_utils_add_field (file, CHUNK_TYPE_COLOR, TRUE, 4,
-                                  _("Chunk type: sRGB"), chunk_types[sRGB]);
+                                    "Chunk type: sRGB", chunk_types[sRGB]);
 
             if (!png_srgb_chunk (file, chunk_length, chunk_counts))
                 break;
@@ -177,7 +173,7 @@ chirurgien_png (FormatsFile *file)
         else if (!memcmp (chunk_type, chunk_types[tEXt], 4))
         {
             format_utils_add_field (file, CHUNK_TYPE_COLOR, TRUE, 4,
-                                  _("Chunk type: tEXt"), chunk_types[tEXt]);
+                                    "Chunk type: tEXt", chunk_types[tEXt]);
 
             if (!png_text_chunk (file, chunk_length, chunk_counts))
                 break;
@@ -185,7 +181,7 @@ chirurgien_png (FormatsFile *file)
         else if (!memcmp (chunk_type, chunk_types[zTXt], 4))
         {
             format_utils_add_field (file, CHUNK_TYPE_COLOR, TRUE, 4,
-                                  _("Chunk type: zTXt"), chunk_types[zTXt]);
+                                    "Chunk type: zTXt", chunk_types[zTXt]);
 
             if (!png_ztxt_chunk (file, chunk_length, chunk_counts))
                 break;
@@ -193,7 +189,7 @@ chirurgien_png (FormatsFile *file)
         else if (!memcmp (chunk_type, chunk_types[iTXt], 4))
         {
             format_utils_add_field (file, CHUNK_TYPE_COLOR, TRUE, 4,
-                                  _("Chunk type: iTXt"), chunk_types[iTXt]);
+                                    "Chunk type: iTXt", chunk_types[iTXt]);
 
             if (!png_itxt_chunk (file, chunk_length, chunk_counts))
                 break;
@@ -201,7 +197,7 @@ chirurgien_png (FormatsFile *file)
         else if (!memcmp (chunk_type, chunk_types[bKGD], 4))
         {
             format_utils_add_field (file, CHUNK_TYPE_COLOR, TRUE, 4,
-                                  _("Chunk type: bKGD"), chunk_types[bKGD]);
+                                    "Chunk type: bKGD", chunk_types[bKGD]);
 
             if (!png_bkgd_chunk (file, chunk_length, chunk_counts, colortype))
                 break;
@@ -209,7 +205,7 @@ chirurgien_png (FormatsFile *file)
         else if (!memcmp (chunk_type, chunk_types[hIST], 4))
         {
             format_utils_add_field (file, CHUNK_TYPE_COLOR, TRUE, 4,
-                                  _("Chunk type: hIST"), chunk_types[hIST]);
+                                    "Chunk type: hIST", chunk_types[hIST]);
 
             if (!png_hist_chunk (file, chunk_length, chunk_counts, palette_entries))
                 break;
@@ -217,7 +213,7 @@ chirurgien_png (FormatsFile *file)
         else if (!memcmp (chunk_type, chunk_types[pHYs], 4))
         {
             format_utils_add_field (file, CHUNK_TYPE_COLOR, TRUE, 4,
-                                  _("Chunk type: pHYs"), chunk_types[pHYs]);
+                                    "Chunk type: pHYs", chunk_types[pHYs]);
 
             if (!png_phys_chunk (file, chunk_length, chunk_counts))
                 break;
@@ -225,7 +221,7 @@ chirurgien_png (FormatsFile *file)
         else if (!memcmp (chunk_type, chunk_types[sPLT], 4))
         {
             format_utils_add_field (file, CHUNK_TYPE_COLOR, TRUE, 4,
-                                  _("Chunk type: sPLT"), chunk_types[sPLT]);
+                                    "Chunk type: sPLT", chunk_types[sPLT]);
 
             if (!png_splt_chunk (file, chunk_length, chunk_counts))
                 break;
@@ -233,7 +229,7 @@ chirurgien_png (FormatsFile *file)
         else if (!memcmp (chunk_type, chunk_types[tIME], 4))
         {
             format_utils_add_field (file, CHUNK_TYPE_COLOR, TRUE, 4,
-                                  _("Chunk type: tIME"), chunk_types[tIME]);
+                                    "Chunk type: tIME", chunk_types[tIME]);
 
             if (!png_time_chunk (file, chunk_length, chunk_counts))
                 break;
@@ -241,9 +237,9 @@ chirurgien_png (FormatsFile *file)
         else
         {
             format_utils_add_field (file, ERROR_COLOR_2, FALSE, 4,
-                                  _("Chunk type: Unknown"), "???");
+                                    "Chunk type: Unknown", "???");
             format_utils_add_field (file, ERROR_COLOR_1, FALSE, chunk_length,
-                                  _("Unrecognized data"), NULL);
+                                    "Unrecognized data", NULL);
         }
 
         /* Chunk CRC */
@@ -251,18 +247,18 @@ chirurgien_png (FormatsFile *file)
             break;
 
         format_utils_add_field (file, CHUNK_CRC_COLOR, TRUE, 4,
-                              _("Cyclic redundancy check"), NULL);
+                                "Cyclic redundancy check", NULL);
     }
 
     /* If there is still data available after the loop, tag it as unrecognized */
     format_utils_add_field (file, ERROR_COLOR_1, FALSE, G_MAXUINT,
-                          _("Unrecognized data"), NULL);
+                            "Unrecognized data", NULL);
 
     if (chunk_counts[PLTE])
     {
         value = g_strdup_printf ("%u", palette_entries);
-        format_utils_add_line_full (file, _("Palette entries"), value,
-                                  _("Number of available colors in the palette"), 10, 0);
+        format_utils_add_line_full (file, "Palette entries", value,
+                                    "Number of available colors in the palette", 10, 0);
         g_free (value);
     }
 
@@ -270,7 +266,7 @@ chirurgien_png (FormatsFile *file)
 
     if (chunk_counts[IHDR])
     {
-        format_utils_start_section (file, _("Chunk count"));
+        format_utils_start_section (file, "Chunk count");
 
         for (gint i = IHDR; i <= tIME; i++)
         {

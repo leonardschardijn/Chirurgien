@@ -16,11 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-
 #include "pe-format.h"
-
-#include <glib/gi18n.h>
 
 
 void
@@ -74,7 +70,7 @@ pe_data_directories (FormatsFile *file,
         /* VirtualAddress */
         if (!process_pe_field (file, &tab,
                 "VirtualAddress", directory_field,
-                _("Relative virtual address of the data directory"),
+                "Relative virtual address of the data directory",
                 DATA_DIRECTORY_COLOR, 4,
                 0, NULL, NULL,
                 "%X<sub>16</sub>", &directory_offset))
@@ -91,7 +87,7 @@ pe_data_directories (FormatsFile *file,
         /* Size */
         if (!process_pe_field (file, &tab,
                 "Size", directory_field,
-                _("Size in bytes"),
+                "Size in bytes",
                 HEADER_DATA_COLOR_1, 4,
                 0, NULL, NULL,
                 "%u", &directory_size))

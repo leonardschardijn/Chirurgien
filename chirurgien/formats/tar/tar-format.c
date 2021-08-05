@@ -16,11 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-
 #include "tar-format.h"
-
-#include <glib/gi18n.h>
 
 #include "chirurgien-tar.h"
 
@@ -46,7 +42,7 @@ chirurgien_tar (FormatsFile *file)
 
     memset (empty_block, 0, 512);
 
-    format_utils_set_title (file, _("tar archive"));
+    format_utils_set_title (file, "tar archive");
 
     while (FILE_HAS_DATA (file))
     {
@@ -54,44 +50,44 @@ chirurgien_tar (FormatsFile *file)
             !memcmp (empty_block, GET_CONTENT_POINTER (file), 512))
         {
             format_utils_add_field (file, EMPTY_BLOCK_COLOR, TRUE, 512,
-                                  _("Final empty block"), _("End"));
+                                    "Final empty block", "End");
             break;
         }
 
-        format_utils_start_section (file, _("File"));
+        format_utils_start_section (file, "File");
 
         /* File name */
-        if (!process_tar_field (file, _("File name"), NULL, HEADER_DATA_COLOR_1, 100,
+        if (!process_tar_field (file, "File name", NULL, HEADER_DATA_COLOR_1, 100,
                                 FALSE, TRUE, NULL))
             goto END_ERROR;
 
         /* File mode */
-        if (!process_tar_field (file, _("File mode"), _("File mode in octal format"),
+        if (!process_tar_field (file, "File mode", "File mode in octal format",
                                 HEADER_DATA_COLOR_2, 8, FALSE, TRUE, NULL))
             goto END_ERROR;
 
         /* User ID */
-        if (!process_tar_field (file, _("User ID"), NULL, HEADER_DATA_COLOR_1, 8,
+        if (!process_tar_field (file, "User ID", NULL, HEADER_DATA_COLOR_1, 8,
                                 TRUE, TRUE, NULL))
             goto END_ERROR;
 
         /* Group ID */
-        if (!process_tar_field (file, _("Group ID"), NULL, HEADER_DATA_COLOR_2, 8,
+        if (!process_tar_field (file, "Group ID", NULL, HEADER_DATA_COLOR_2, 8,
                                 TRUE, TRUE, NULL))
             goto END_ERROR;
 
         /* File size */
-        if (!process_tar_field (file, _("File size"), _("The file size, in bytes"),
+        if (!process_tar_field (file, "File size", "The file size, in bytes",
                                 HEADER_DATA_COLOR_1, 12, TRUE, TRUE, &file_size))
             goto END_ERROR;
 
         /* Last modification time */
-        if (!process_tar_field (file, _("Last modification time"), NULL, HEADER_DATA_COLOR_2, 12,
+        if (!process_tar_field (file, "Last modification time", NULL, HEADER_DATA_COLOR_2, 12,
                                 TRUE, TRUE, NULL))
             goto END_ERROR;
 
         /* Header checksum */
-        if (!process_tar_field (file, _("Header checksum"), NULL, HEADER_DATA_COLOR_1, 8,
+        if (!process_tar_field (file, "Header checksum", NULL, HEADER_DATA_COLOR_1, 8,
                                 FALSE, FALSE, NULL))
             goto END_ERROR;
 
@@ -100,42 +96,42 @@ chirurgien_tar (FormatsFile *file)
             return;
 
         /* Linked file name */
-        if (!process_tar_field (file, _("Linked file name"), _("Only relevant on hard/symbolic link type files"),
+        if (!process_tar_field (file, "Linked file name", "Only relevant on hard/symbolic link type files",
                                 HEADER_DATA_COLOR_1, 100, FALSE, TRUE, NULL))
             goto END_ERROR;
 
         /* UStar identifier */
-        if (!process_tar_field (file, _("UStar identifier"), NULL, HEADER_DATA_COLOR_2, 6,
+        if (!process_tar_field (file, "UStar identifier", NULL, HEADER_DATA_COLOR_2, 6,
                                 FALSE, FALSE, NULL))
             goto END_ERROR;
 
         /* UStar version */
-        if (!process_tar_field (file, _("UStar version"), NULL, HEADER_DATA_COLOR_1, 2,
+        if (!process_tar_field (file, "UStar version", NULL, HEADER_DATA_COLOR_1, 2,
                                 FALSE, FALSE, NULL))
             goto END_ERROR;
 
         /* Owner user name */
-        if (!process_tar_field (file, _("Owner user name"), NULL, HEADER_DATA_COLOR_2, 32,
+        if (!process_tar_field (file, "Owner user name", NULL, HEADER_DATA_COLOR_2, 32,
                                 FALSE, TRUE, NULL))
             goto END_ERROR;
 
         /* Owner group name */
-        if (!process_tar_field (file, _("Owner group name"), NULL, HEADER_DATA_COLOR_1, 32,
+        if (!process_tar_field (file, "Owner group name", NULL, HEADER_DATA_COLOR_1, 32,
                                 FALSE, TRUE, NULL))
             goto END_ERROR;
 
         /* Device major number */
-        if (!process_tar_field (file, _("Device major number"), NULL, HEADER_DATA_COLOR_2, 8,
+        if (!process_tar_field (file, "Device major number", NULL, HEADER_DATA_COLOR_2, 8,
                                 TRUE, TRUE, NULL))
             goto END_ERROR;
 
         /* Device minor number */
-        if (!process_tar_field (file, _("Device minor number"), NULL, HEADER_DATA_COLOR_1, 8,
+        if (!process_tar_field (file, "Device minor number", NULL, HEADER_DATA_COLOR_1, 8,
                                 TRUE, TRUE, NULL))
             goto END_ERROR;
 
         /* File name prefix */
-        if (!process_tar_field (file, _("File name prefix"), NULL, HEADER_DATA_COLOR_2, 155,
+        if (!process_tar_field (file, "File name prefix", NULL, HEADER_DATA_COLOR_2, 155,
                                 FALSE, TRUE, NULL))
             goto END_ERROR;
 
@@ -143,12 +139,12 @@ chirurgien_tar (FormatsFile *file)
         if (FILE_HAS_DATA_N (file, 12))
         {
             format_utils_add_field (file, PADDING_COLOR, FALSE, 12,
-                                  _("Header block padding"), NULL);
+                                    "Header block padding", NULL);
         }
         else
         {
             format_utils_add_field (file, ERROR_COLOR, FALSE, G_MAXUINT,
-                                  _("Incomplete header block padding"), NULL);
+                                    "Incomplete header block padding", NULL);
             return;
         }
 
@@ -158,12 +154,12 @@ chirurgien_tar (FormatsFile *file)
             if (FILE_HAS_DATA_N (file, file_size))
             {
                 format_utils_add_field (file, FILE_CONTENTS_COLOR, TRUE, file_size,
-                                      _("File contents"), NULL);
+                                        "File contents", NULL);
             }
             else
             {
                 format_utils_add_field (file, ERROR_COLOR, FALSE, G_MAXUINT,
-                                      _("Incomplete file contents"), NULL);
+                                        "Incomplete file contents", NULL);
                 return;
             }
         }
@@ -175,12 +171,12 @@ chirurgien_tar (FormatsFile *file)
             if (FILE_HAS_DATA_N (file, file_padding))
             {
                 format_utils_add_field (file, PADDING_COLOR, FALSE, file_padding,
-                                      _("File contents padding"), NULL);
+                                        "File contents padding", NULL);
             }
             else
             {
                 format_utils_add_field (file, ERROR_COLOR, FALSE, G_MAXUINT,
-                                      _("Incomplete file contents padding"), NULL);
+                                        "Incomplete file contents padding", NULL);
                 return;
             }
         }
@@ -188,12 +184,12 @@ chirurgien_tar (FormatsFile *file)
 
     if (FILE_HAS_DATA (file))
         format_utils_add_field (file, PADDING_COLOR, FALSE, G_MAXUINT,
-                              _("Archive padding"), NULL);
+                                "Archive padding", NULL);
     return;
 
     END_ERROR:
     format_utils_add_field (file, ERROR_COLOR, FALSE, G_MAXUINT,
-                          _("Unrecognized data"), NULL);
+                            "Unrecognized data", NULL);
 }
 
 static gboolean
@@ -217,8 +213,8 @@ process_tar_field (FormatsFile *file,
     if (!format_utils_read (file, &tar_field, field_length))
         return FALSE;
 
-    if (!g_strcmp0 (_("File name"), field_name))
-        format_utils_add_field (file, color_index, TRUE, field_length, field_name, _("File"));
+    if (!g_strcmp0 ("File name", field_name))
+        format_utils_add_field (file, color_index, TRUE, field_length, field_name, "File");
     else
         format_utils_add_field (file, color_index, TRUE, field_length, field_name, NULL);
 
@@ -232,7 +228,7 @@ process_tar_field (FormatsFile *file,
             {
                 numeric_value = g_ascii_strtoull (tar_field, NULL, 8);
 
-                if (!g_strcmp0 (_("Last modification time"), field_name))
+                if (!g_strcmp0 ("Last modification time", field_name))
                 {
                     date = g_date_time_new_from_unix_utc (numeric_value);
 
@@ -252,12 +248,12 @@ process_tar_field (FormatsFile *file,
                 if (g_utf8_validate (tar_field, -1, NULL))
                     field_description = tar_field;
                 else
-                    field_description = _("<span foreground=\"red\">INVALID ENCODING</span>");
+                    field_description = "<span foreground=\"red\">INVALID ENCODING</span>";
             }
         }
         else
         {
-            field_description = _("n/a");
+            field_description = "n/a";
         }
 
         format_utils_add_line (file, field_name, field_description, field_tooltip);
@@ -282,33 +278,33 @@ process_file_type (FormatsFile *file)
         return FALSE;
 
     format_utils_add_field (file, HEADER_DATA_COLOR_2, TRUE, 1,
-                          _("File type"), NULL);
+                          "File type", NULL);
 
     if (file_type == 0x0 || file_type == '0')
-        value = _("Regular file");
+        value = "Regular file";
     else if (file_type == '1')
-        value = _("Hard link");
+        value = "Hard link";
     else if (file_type == '2')
-        value = _("Symbolic link");
+        value = "Symbolic link";
     else if (file_type == '3')
-        value = _("Character special file");
+        value = "Character special file";
     else if (file_type == '4')
-        value = _("Block special file");
+        value = "Block special file";
     else if (file_type == '5')
-        value = _("Directory");
+        value = "Directory";
     else if (file_type == '6')
-        value = _("FIFO special file");
+        value = "FIFO special file";
     else if (file_type == 'g')
-        value = _("Global extended header");
+        value = "Global extended header";
     else if (file_type == 'x')
-        value = _("Extended header");
+        value = "Extended header";
     else if (file_type == '7' || (file_type > 'A' && file_type < 'Z'))
-        value = _("Reserved");
+        value = "Reserved";
     else
-        value = _("<span foreground=\"red\">INVALID</span>");
+        value = "<span foreground=\"red\">INVALID</span>";
 
-    format_utils_add_line (file, _("File type"), value,
-                         _("File type\n"
+    format_utils_add_line (file, "File type", value,
+                           "File type\n"
                            "<tt>00<sub>16</sub></tt>\tRegular file\n"
                            "<tt>30<sub>16</sub></tt>\tRegular file\n"
                            "<tt>31<sub>16</sub></tt>\tHard link\n"
@@ -318,7 +314,7 @@ process_file_type (FormatsFile *file)
                            "<tt>35<sub>16</sub></tt>\tDirectory\n"
                            "<tt>36<sub>16</sub></tt>\tFIFO special file\n"
                            "<tt>67<sub>16</sub></tt>\tGlobal extended header\n"
-                           "<tt>78<sub>16</sub></tt>\tExtended header"));
+                           "<tt>78<sub>16</sub></tt>\tExtended header");
 
     return TRUE;
 }

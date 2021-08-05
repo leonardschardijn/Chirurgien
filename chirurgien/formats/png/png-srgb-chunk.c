@@ -16,10 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-
-#include <glib/gi18n.h>
-
 #include "png-format.h"
 
 
@@ -38,35 +34,35 @@ png_srgb_chunk (FormatsFile *file,
     if (!chunk_counts[IHDR])
     {
         format_utils_add_field (file, ERROR_COLOR_1, FALSE, chunk_length,
-                              _("The first chunk must be the IHDR chunk"), NULL);
+                                "The first chunk must be the IHDR chunk", NULL);
         return TRUE;
     }
 
-    format_utils_init_tab (&tab, _("Standard RGB color space"));
+    format_utils_init_tab (&tab, "Standard RGB color space");
 
     guint8 rendering_intent_values[] = { 0x0, 0x1, 0x2, 0x3 };
     const gchar *rendering_intent_value_description[] = {
-        _("Perceptual"),
-        _("Relative colorimetric"),
-        _("Saturation"),
-        _("Absolute colorimetric"),
-        _("<span foreground=\"red\">INVALID</span>")
+        "Perceptual",
+        "Relative colorimetric",
+        "Saturation",
+        "Absolute colorimetric",
+        "<span foreground=\"red\">INVALID</span>"
     };
-    if (!process_png_field (file, &tab, _("Rendering intent"), NULL,
-                       _("Rendering intent\n"
-                         "<tt>00<sub>16</sub></tt>\tPerceptual\n"
-                         "<tt>01<sub>16</sub></tt>\tRelative colorimetric\n"
-                         "<tt>02<sub>16</sub></tt>\tSaturation\n"
-                         "<tt>03<sub>16</sub></tt>\tAbsolute colorimetric"),
-                       CHUNK_DATA_COLOR_1, 1,
-                       sizeof (rendering_intent_values), rendering_intent_values, rendering_intent_value_description,
-                       NULL, NULL))
+    if (!process_png_field (file, &tab, "Rendering intent", NULL,
+                            "Rendering intent\n"
+                            "<tt>00<sub>16</sub></tt>\tPerceptual\n"
+                            "<tt>01<sub>16</sub></tt>\tRelative colorimetric\n"
+                            "<tt>02<sub>16</sub></tt>\tSaturation\n"
+                            "<tt>03<sub>16</sub></tt>\tAbsolute colorimetric",
+                            CHUNK_DATA_COLOR_1, 1,
+                            sizeof (rendering_intent_values), rendering_intent_values, rendering_intent_value_description,
+                            NULL, NULL))
         return FALSE;
 
     /* Fixed length chunk */
     if (chunk_length > 1)
         format_utils_add_field (file, ERROR_COLOR_1, FALSE, chunk_length - 1,
-                              _("Unrecognized data"), NULL);
+                                "Unrecognized data", NULL);
 
     format_utils_insert_tab (file, &tab, chunk_types[sRGB]);
 

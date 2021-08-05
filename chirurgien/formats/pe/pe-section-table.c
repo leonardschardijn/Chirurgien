@@ -16,11 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-
 #include "pe-format.h"
-
-#include <glib/gi18n.h>
 
 
 void
@@ -116,21 +112,21 @@ pe_section_table (FormatsFile *file,
         /* VirtualSize */
         if (!process_pe_field_simple (file, &tab,
                 "VirtualSize",
-                _("The total size of the section when loaded into memory"),
+                "The total size of the section when loaded into memory",
                  HEADER_DATA_COLOR_1, 4, "%u"))
             return;
 
         /* VirtualAddress */
         if (!process_pe_field_simple (file, &tab,
                 "VirtualAddress",
-                _("Address of the first byte of the section relative to the image base when the section is loaded into memory"),
+                "Address of the first byte of the section relative to the image base when the section is loaded into memory",
                 HEADER_DATA_COLOR_2, 4, NULL))
             return;
 
         /* SizeOfRawData */
         if (!process_pe_field (file, &tab,
                 "SizeOfRawData", NULL,
-                _("The size of the section on disk"),
+                "The size of the section on disk",
                 HEADER_DATA_COLOR_1, 4,
                 0, NULL, NULL,
                 "%u", &section_size))
@@ -139,7 +135,7 @@ pe_section_table (FormatsFile *file,
         /* PointerToRawData */
         if (!process_pe_field (file, &tab,
                 "PointerToRawData", NULL,
-                _("The file pointer to the first page of the section within the COFF file"),
+                "The file pointer to the first page of the section within the COFF file",
                 HEADER_DATA_COLOR_2, 4,
                 0, NULL, NULL,
                 "%X<sub>16</sub>", &section_offset))
@@ -148,21 +144,21 @@ pe_section_table (FormatsFile *file,
         /* PointerToRelocations */
         if (!process_pe_field_simple (file, &tab,
                 "PointerToRelocations",
-                _("The file pointer to the beginning of relocation entries for the section"),
+                "The file pointer to the beginning of relocation entries for the section",
                 HEADER_DATA_COLOR_1, 4, "%X<sub>16</sub>"))
             return;
 
         /* PointerToLinenumbers */
         if (!process_pe_field_simple (file, &tab,
                 "PointerToLinenumbers",
-                _("The file pointer to the beginning of line-number entries for the section"),
+                "The file pointer to the beginning of line-number entries for the section",
                 HEADER_DATA_COLOR_2, 4, "%X<sub>16</sub>"))
             return;
 
         /* NumberOfRelocations */
         if (!process_pe_field (file, &tab,
                 "NumberOfRelocations", NULL,
-                _("The number of relocation entries for the section"),
+                "The number of relocation entries for the section",
                 HEADER_DATA_COLOR_1, 2,
                 0, NULL, NULL,
                 "%u", NULL))
@@ -171,7 +167,7 @@ pe_section_table (FormatsFile *file,
         /* NumberOfLinenumbers */
         if (!process_pe_field_simple (file, &tab,
                 "NumberOfLinenumbers",
-                _("The number of line-number entries for the section"),
+                "The number of line-number entries for the section",
                 HEADER_DATA_COLOR_2, 2, "%u"))
             return;
 

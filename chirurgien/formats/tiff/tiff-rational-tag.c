@@ -16,12 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-
-#include <glib/gi18n.h>
-
 #include "tiff-format.h"
-#include "exif-format.h"
 
 
 static guint
@@ -86,21 +81,21 @@ process_rational_tag_fields (FormatsFile  *file,
     if (field_type == expected_field_type)
     {
         if (field_type == RATIONAL)
-            format_utils_add_field (file, FIELD_TYPE_COLOR, TRUE, 2, _("Field type: RATIONAL"), NULL);
+            format_utils_add_field (file, FIELD_TYPE_COLOR, TRUE, 2, "Field type: RATIONAL", NULL);
         else if (field_type == SRATIONAL)
-            format_utils_add_field (file, FIELD_TYPE_COLOR, TRUE, 2, _("Field type: SRATIONAL"), NULL);
+            format_utils_add_field (file, FIELD_TYPE_COLOR, TRUE, 2, "Field type: SRATIONAL", NULL);
     }
     else
     {
-        format_utils_add_field (file, ERROR_COLOR_1, FALSE, 2, _("Invalid field type"), NULL);
+        format_utils_add_field (file, ERROR_COLOR_1, FALSE, 2, "Invalid field type", NULL);
     }
 
     if (expected_count && count != expected_count)
-        format_utils_add_field (file, ERROR_COLOR_1, FALSE, 4, _("Invalid count"), NULL);
+        format_utils_add_field (file, ERROR_COLOR_1, FALSE, 4, "Invalid count", NULL);
     else
-        format_utils_add_field (file, COUNT_COLOR, TRUE, 4, _("Count"), NULL);
+        format_utils_add_field (file, COUNT_COLOR, TRUE, 4, "Count", NULL);
 
-    format_utils_add_field (file, VALUE_OFFSET_COLOR_1, TRUE, 4, _("Tag offset"), NULL);
+    format_utils_add_field (file, VALUE_OFFSET_COLOR_1, TRUE, 4, "Tag offset", NULL);
 
     if (!is_little_endian)
         value_offset = g_ntohl (value_offset);
@@ -225,7 +220,7 @@ process_rational_tag (FormatsFile    *file,
     }
 
     if (!field_description->len)
-        g_string_append (field_description, _("<span foreground=\"red\">INVALID</span>"));
+        g_string_append (field_description, "<span foreground=\"red\">INVALID</span>");
 
     if (tab)
         format_utils_add_line_tab (tab, tag_name, field_description->str, tag_tooltip);

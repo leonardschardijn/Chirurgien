@@ -16,10 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-
-#include <glib/gi18n.h>
-
 #include "jpeg-format.h"
 
 
@@ -54,35 +50,35 @@ jpeg_dac_marker (FormatsFile *file,
             return FALSE;
 
         format_utils_add_field (file, HUFFMAN_ARITH_TABLE_COLOR, TRUE, 1,
-                              _("Arithmetic conditioning table information\n"
+                                "Arithmetic conditioning table information\n"
                                 "Lower four bits: Arithmetic conditioning table identifier\n"
-                                "Upper four bits: Table class"), NULL);
+                                "Upper four bits: Table class", NULL);
 
-        format_utils_start_section_tab (&tab, _("Arithmetic conditioning table"));
+        format_utils_start_section_tab (&tab, "Arithmetic conditioning table");
 
         value = g_strdup_printf ("%u", arithmetic_info & 0x0F);
-        format_utils_add_line_tab (&tab, _("Arithmetic conditioning table identifier"), value, NULL);
+        format_utils_add_line_tab (&tab, "Arithmetic conditioning table identifier", value, NULL);
         g_free (value);
 
         switch (arithmetic_info >> 4)
         {
             case 0:
-                value = _("DC table (or lossless table)");
+                value = "DC table (or lossless table)";
                 break;
             case 1:
-                value = _("AC table");
+                value = "AC table";
                 break;
             default:
-                value = _("<span foreground=\"red\">INVALID</span>");
+                value = "<span foreground=\"red\">INVALID</span>";
         }
 
-        format_utils_add_line_tab (&tab, _("Table class"), value,
-                                 _("Table class\n"
+        format_utils_add_line_tab (&tab, "Table class", value,
+                                   "Table class\n"
                                    "<tt>0<sub>16</sub></tt>\tDC table (or lossless table)\n"
-                                   "<tt>1<sub>16</sub></tt>\tAC table"));
+                                   "<tt>1<sub>16</sub></tt>\tAC table");
 
         format_utils_add_field (file, MARKER_DATA_COLOR_1, TRUE, 1,
-                              _("Conditioning table value"), NULL);
+                                "Conditioning table value", NULL);
 
         if (data_length > 1)
             data_length -= 2;

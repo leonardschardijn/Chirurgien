@@ -16,10 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-
-#include <glib/gi18n.h>
-
 #include "exif-format.h"
 
 
@@ -63,24 +59,24 @@ process_byte_undefined_tag_fields (FormatsFile  *file,
     if (field_type == expected_field_type)
     {
         if (field_type == BYTE)
-            format_utils_add_field (file, FIELD_TYPE_COLOR, TRUE, 2, _("Field type: BYTE"), NULL);
+            format_utils_add_field (file, FIELD_TYPE_COLOR, TRUE, 2, "Field type: BYTE", NULL);
         else if (field_type == UNDEFINED)
-            format_utils_add_field (file, FIELD_TYPE_COLOR, TRUE, 2, _("Field type: UNDEFINED"), NULL);
+            format_utils_add_field (file, FIELD_TYPE_COLOR, TRUE, 2, "Field type: UNDEFINED", NULL);
     }
     else
     {
-        format_utils_add_field (file, ERROR_COLOR_1, FALSE, 2, _("Invalid field type"), NULL);
+        format_utils_add_field (file, ERROR_COLOR_1, FALSE, 2, "Invalid field type", NULL);
     }
 
     if (count != expected_count)
-        format_utils_add_field (file, ERROR_COLOR_1, FALSE, 4, _("Invalid count"), NULL);
+        format_utils_add_field (file, ERROR_COLOR_1, FALSE, 4, "Invalid count", NULL);
     else
-        format_utils_add_field (file, COUNT_COLOR, TRUE, 4, _("Count"), NULL);
+        format_utils_add_field (file, COUNT_COLOR, TRUE, 4, "Count", NULL);
 
     if (expected_count > 4)
-        format_utils_add_field (file, VALUE_OFFSET_COLOR_1, TRUE, 4, _("Tag offset"), NULL);
+        format_utils_add_field (file, VALUE_OFFSET_COLOR_1, TRUE, 4, "Tag offset", NULL);
     else
-        format_utils_add_field (file, VALUE_OFFSET_COLOR_1, TRUE, 4, _("Tag value"), NULL);
+        format_utils_add_field (file, VALUE_OFFSET_COLOR_1, TRUE, 4, "Tag value", NULL);
 }
 
 /*

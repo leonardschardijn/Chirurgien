@@ -16,10 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-
-#include <glib/gi18n.h>
-
 #include "gif-format.h"
 
 
@@ -29,7 +25,7 @@ gif_application_ext_block (FormatsFile *file)
     DescriptionTab tab;
 
     /* Block size */
-    if (!process_gif_field (file, NULL, NULL, _("Data block size"),
+    if (!process_gif_field (file, NULL, NULL, "Data block size",
                             NULL, DATA_SUBBLOCK_START_COLOR, 1, NULL, NULL))
         return FALSE;
 
@@ -39,24 +35,24 @@ gif_application_ext_block (FormatsFile *file)
 
     format_utils_init_tab (&tab, NULL);
 
-    format_utils_add_text_tab (&tab, _("Application identifier"),
+    format_utils_add_text_tab (&tab, "Application identifier",
                               (const gchar *) GET_CONTENT_POINTER (file), 8);
     format_utils_add_field (file, BLOCK_DATA_COLOR_1, TRUE, 8,
-                          _("Application identifier"), NULL);
+                            "Application identifier", NULL);
 
-    format_utils_start_section_tab (&tab, _("Authentication code"));
+    format_utils_start_section_tab (&tab, "Authentication code");
 
     /* Application authentication code */
-    if (!process_gif_field (file, &tab, _("Authentication code"), NULL,
-                            _("Used to authenticate the application identifier"),
+    if (!process_gif_field (file, &tab, "Authentication code", NULL,
+                            "Used to authenticate the application identifier",
                             BLOCK_DATA_COLOR_2, 3, "%X", NULL))
         return FALSE;
 
-    if (!process_data_subblocks (file, _("Application Extension data block"), NULL,
+    if (!process_data_subblocks (file, "Application Extension data block", NULL,
                                  DATA_SUBBLOCK_START_COLOR, BLOCK_DATA_COLOR_1, TRUE))
         return FALSE;
 
-    format_utils_insert_tab (file, &tab, _("Application ext."));
+    format_utils_insert_tab (file, &tab, "Application ext.");
 
     return TRUE;
 }

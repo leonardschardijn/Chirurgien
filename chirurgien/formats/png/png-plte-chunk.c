@@ -16,10 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-
-#include <glib/gi18n.h>
-
 #include "png-format.h"
 
 
@@ -37,21 +33,21 @@ png_plte_chunk (FormatsFile *file,
     if (chunk_counts[PLTE] != 1)
     {
         format_utils_add_field (file, ERROR_COLOR_1, FALSE, chunk_length,
-                              _("Only one PLTE chunk is allowed"), NULL);
+                                "Only one PLTE chunk is allowed", NULL);
         return TRUE;
     }
 
     if (!chunk_counts[IHDR])
     {
         format_utils_add_field (file, ERROR_COLOR_1, FALSE, chunk_length,
-                              _("The first chunk must be the IHDR chunk"), NULL);
+                                "The first chunk must be the IHDR chunk", NULL);
         return TRUE;
     }
 
     if (chunk_length % 3)
     {
         format_utils_add_field (file, ERROR_COLOR_1, FALSE, chunk_length,
-                              _("Incorrect palette length (not a multiple of 3)"), NULL);
+                                "Incorrect palette length (not a multiple of 3)", NULL);
         return TRUE;
     }
 
@@ -60,7 +56,7 @@ png_plte_chunk (FormatsFile *file,
     if (*palette_entries > 256)
     {
         format_utils_add_field (file, ERROR_COLOR_1, FALSE, chunk_length,
-                              _("Palettes cannot have more than 256 entries"), NULL);
+                                "Palettes cannot have more than 256 entries", NULL);
         return TRUE;
     }
 
@@ -68,10 +64,10 @@ png_plte_chunk (FormatsFile *file,
     {
         if (i % 2)
             format_utils_add_field (file, CHUNK_DATA_COLOR_2, TRUE, 3,
-                                  _("Palette entry"), NULL );
+                                    "Palette entry", NULL );
         else
             format_utils_add_field (file, CHUNK_DATA_COLOR_1, TRUE, 3,
-                                  _("Palette entry"), NULL );
+                                    "Palette entry", NULL );
     }
 
     return TRUE;

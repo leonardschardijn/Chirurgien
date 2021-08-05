@@ -16,11 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-
 #include "elf-format.h"
-
-#include <glib/gi18n.h>
 
 
 static gboolean process_segment_flags (FormatsFile *,
@@ -42,7 +38,7 @@ elf_program_header (FormatsFile *file,
     format_utils_init_tab (&tab, "Program header table");
 
     text_value = g_strdup_printf ("%u", program_header_entries);
-    format_utils_add_line_tab (&tab, _("Number of entries"), text_value, NULL);
+    format_utils_add_line_tab (&tab, "Number of entries", text_value, NULL);
     g_free (text_value);
 
     SET_INDEX (file, program_header_offset);
@@ -91,7 +87,7 @@ elf_program_header (FormatsFile *file,
             /* Segment offset (p_offset) */
             if (!process_elf_field (file, &tab,
                     "Segment offset", "Segment offset (p_offset)",
-                    _("File offset of the segment"),
+                    "File offset of the segment",
                     HEADER_DATA_COLOR_2, 8, is_little_endian,
                     0, NULL, NULL,
                     "%lX<sub>16</sub>", TRUE, NULL))
@@ -100,7 +96,7 @@ elf_program_header (FormatsFile *file,
             /* Segment virtual address (p_vaddr) */
             if (!process_elf_field (file, &tab,
                     "Segment virtual address", "Segment virtual address (p_vaddr)",
-                    _("Virtual address of the segment in memory"),
+                    "Virtual address of the segment in memory",
                     HEADER_DATA_COLOR_1, 8, is_little_endian,
                     0, NULL, NULL,
                     "%lX<sub>16</sub>", TRUE, NULL))
@@ -109,7 +105,7 @@ elf_program_header (FormatsFile *file,
             /* Segment physical address (p_paddr) */
             if (!process_elf_field (file, &tab,
                     "Segment physical address", "Segment physical address (p_paddr)",
-                    _("Physical address of the segment in memory"),
+                    "Physical address of the segment in memory",
                     HEADER_DATA_COLOR_2, 8, is_little_endian,
                     0, NULL, NULL,
                     "%lX<sub>16</sub>", TRUE, NULL))
@@ -118,7 +114,7 @@ elf_program_header (FormatsFile *file,
             /* Segment size in file (p_filesz) */
             if (!process_elf_field (file, &tab,
                     "Segment size (file)", "File segment size (p_filesz)",
-                    _("Size of the segment in the file, in bytes"),
+                    "Size of the segment in the file, in bytes",
                     HEADER_DATA_COLOR_1, 8, is_little_endian,
                     0, NULL, NULL,
                     "%lu", TRUE, NULL))
@@ -127,7 +123,7 @@ elf_program_header (FormatsFile *file,
             /* Segment size in memory (p_memsz) */
             if (!process_elf_field (file, &tab,
                     "Segment size (memory)", "Memory segment size (p_memsz)",
-                    _("Size of the segment in memory, in bytes"),
+                    "Size of the segment in memory, in bytes",
                     HEADER_DATA_COLOR_2, 8, is_little_endian,
                     0, NULL, NULL,
                     "%lu", TRUE, NULL))
@@ -136,7 +132,7 @@ elf_program_header (FormatsFile *file,
             /* Segment address alignment (p_align) */
             if (!process_elf_field (file, &tab,
                     "Segment address alignment", "Segment address alignment (p_align)",
-                    _("Loadable segments have address alignment constraints"),
+                    "Loadable segments have address alignment constraints",
                     HEADER_DATA_COLOR_1, 8, is_little_endian,
                     0, NULL, NULL,
                     "%lu", TRUE, NULL))
@@ -147,7 +143,7 @@ elf_program_header (FormatsFile *file,
             /* Segment offset (p_offset) */
             if (!process_elf_field (file, &tab,
                     "Segment offset ", "Segment offset (p_offset)",
-                    _("File offset of the segment"),
+                    "File offset of the segment",
                     HEADER_DATA_COLOR_1, 4, is_little_endian,
                     0, NULL, NULL,
                     "%X<sub>16</sub>", TRUE, NULL))
@@ -156,7 +152,7 @@ elf_program_header (FormatsFile *file,
             /* Segment virtual address (p_vaddr) */
             if (!process_elf_field (file, &tab,
                     "Segment virtual address", "Segment virtual address (p_vaddr)",
-                    _("Virtual address of the segment in memory"),
+                    "Virtual address of the segment in memory",
                     HEADER_DATA_COLOR_2, 4, is_little_endian,
                     0, NULL, NULL,
                     "%X<sub>16</sub>", TRUE, NULL))
@@ -165,7 +161,7 @@ elf_program_header (FormatsFile *file,
             /* Segment physical address (p_paddr) */
             if (!process_elf_field (file, &tab,
                     "Segment physical address", "Segment physical address (p_paddr)",
-                    _("Physical address of the segment in memory"),
+                    "Physical address of the segment in memory",
                     HEADER_DATA_COLOR_1, 4, is_little_endian,
                     0, NULL, NULL,
                     "%X<sub>16</sub>", TRUE, NULL))
@@ -174,7 +170,7 @@ elf_program_header (FormatsFile *file,
             /* Segment size in file (p_filesz) */
             if (!process_elf_field (file, &tab,
                     "Segment size (file)", "File segment size (p_filesz)",
-                    _("Size of the segment in the file"),
+                    "Size of the segment in the file",
                     HEADER_DATA_COLOR_2, 4, is_little_endian,
                     0, NULL, NULL,
                     "%u", TRUE, NULL))
@@ -183,7 +179,7 @@ elf_program_header (FormatsFile *file,
             /* Segment size in memory (p_memsz) */
             if (!process_elf_field (file, &tab,
                     "Segment size (memory)", "Memory segment size (p_memsz)",
-                    _("Size of the segment in memory"),
+                    "Size of the segment in memory",
                     HEADER_DATA_COLOR_1, 4, is_little_endian,
                     0, NULL, NULL,
                     "%u", TRUE, NULL))
@@ -196,7 +192,7 @@ elf_program_header (FormatsFile *file,
             /* Segment address alignment (p_align) */
             if (!process_elf_field (file, &tab,
                     "Segment address alignment", "Segment address alignment (p_align)",
-                    _("Loadable segments have address alignment constraints"),
+                    "Loadable segments have address alignment constraints",
                     HEADER_DATA_COLOR_1, 4, is_little_endian,
                     0, NULL, NULL,
                     "%u", TRUE, NULL))

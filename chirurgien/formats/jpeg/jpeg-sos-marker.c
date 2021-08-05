@@ -16,10 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-
-#include <glib/gi18n.h>
-
 #include "jpeg-format.h"
 
 #define SOS_LENGTH_WITHOUT_COMPONENTS 6
@@ -48,12 +44,13 @@ jpeg_sos_marker (FormatsFile *file,
     if (!jpeg_data_length (file, &data_length))
         return FALSE;
 
-    format_utils_init_tab (&tab, _("Scan header"));
+    format_utils_init_tab (&tab, "Scan header");
 
     /* Number of components in scan */
-    if (!process_jpeg_field (file, &tab, _("Components in scan"), _("Number of components in scan"),
+    if (!process_jpeg_field (file, &tab, "Components in scan", "Number of components in scan",
                              NULL, MARKER_DATA_COLOR_1, 1,
-                             0, NULL, NULL, "%u", &components))
+                             0, NULL, NULL,
+                             "%u", &components))
         return FALSE;
 
     while (components)
@@ -63,10 +60,10 @@ jpeg_sos_marker (FormatsFile *file,
             return FALSE;
 
         format_utils_add_field (file, MARKER_DATA_COLOR_2, TRUE, 1,
-                              _("Scan component selector"), NULL);
+                                "Scan component selector", NULL);
 
         value = g_strdup_printf ("%hhu", one_byte);
-        format_utils_add_line_full_tab (&tab, _("Scan component selector"),
+        format_utils_add_line_full_tab (&tab, "Scan component selector",
                                         value, NULL, 10, 0);
         g_free (value);
 
@@ -75,16 +72,16 @@ jpeg_sos_marker (FormatsFile *file,
             return FALSE;
 
         format_utils_add_field (file, MARKER_DATA_COLOR_1, TRUE, 1,
-                              _("Component table selectors\n"
+                                "Component table selectors\n"
                                 "Lower four bits: AC entropy coding table selector\n"
-                                "Upper four bits: DC entropy coding table selector"), NULL);
+                                "Upper four bits: DC entropy coding table selector", NULL);
 
         value = g_strdup_printf ("%u", one_byte & 0x0F);
-        format_utils_add_line_tab (&tab, _("AC entropy coding table selector"), value, NULL);
+        format_utils_add_line_tab (&tab, "AC entropy coding table selector", value, NULL);
         g_free (value);
 
         value = g_strdup_printf ("%u", one_byte >> 4);
-        format_utils_add_line_tab (&tab, _("DC entropy coding table selector"), value, NULL);
+        format_utils_add_line_tab (&tab, "DC entropy coding table selector", value, NULL);
         g_free (value);
 
         components--;
@@ -96,10 +93,10 @@ jpeg_sos_marker (FormatsFile *file,
         return FALSE;
 
     format_utils_add_field (file, MARKER_DATA_COLOR_2, TRUE, 1,
-                          _("Start of spectral (or predictor) selection"), NULL);
+                            "Start of spectral (or predictor) selection", NULL);
 
     value = g_strdup_printf ("%hhu", one_byte);
-    format_utils_add_line_full_tab (&tab, _("Start of spectral (or predictor) selection"),
+    format_utils_add_line_full_tab (&tab, "Start of spectral (or predictor) selection",
                                     value, NULL,
                                     10, 0);
     g_free (value);
@@ -109,10 +106,10 @@ jpeg_sos_marker (FormatsFile *file,
         return FALSE;
 
     format_utils_add_field (file, MARKER_DATA_COLOR_1, TRUE, 1,
-                          _("End of spectral selection"), NULL);
+                           "End of spectral selection", NULL);
 
     value = g_strdup_printf ("%hhu", one_byte);
-    format_utils_add_line_tab (&tab, _("End of spectral selection"), value, NULL);
+    format_utils_add_line_tab (&tab, "End of spectral selection", value, NULL);
     g_free (value);
 
     /* Successive approximation bit positions */
@@ -120,17 +117,17 @@ jpeg_sos_marker (FormatsFile *file,
         return FALSE;
 
     format_utils_add_field (file, MARKER_DATA_COLOR_2, TRUE, 1,
-                          _("Successive approximation bit positions\n"
+                            "Successive approximation bit positions\n"
                             "DCT mode:\n"
                             "\tLower four bits: Point transform used (for the specified band)\n"
                             "\tUpper four bits: Point transform used in the preceding scan (for the specified band)\n"
                             "Lossless mode:\n"
                             "\tLower four bits: Point transform used\n"
-                            "\tUpper four bits: No meaning"), NULL);
+                            "\tUpper four bits: No meaning", NULL);
 
     if (data_used < data_length)
         format_utils_add_field (file, ERROR_COLOR_1, FALSE, data_length - data_used,
-                              _("Unrecognized data"), NULL);
+                                "Unrecognized data", NULL);
 
     /* Entropy-encoded image */
     entropy_coded_data_length = 0;
@@ -150,7 +147,7 @@ jpeg_sos_marker (FormatsFile *file,
                 else
                 {
                     format_utils_add_field (file, ERROR_COLOR_1, FALSE, G_MAXUINT,
-                                          _("Unexpected end of file"), NULL);
+                                            "Unexpected end of file", NULL);
                     return FALSE;
                 }
 
@@ -166,7 +163,7 @@ jpeg_sos_marker (FormatsFile *file,
         else
         {
             format_utils_add_field (file, MARKER_DATA_COLOR_1, TRUE, entropy_coded_data_length,
-                                  _("Entropy-encoded image"), NULL);
+                                    "Entropy-encoded image", NULL);
 
             entropy_coded_data_length = 0;
 
@@ -174,35 +171,35 @@ jpeg_sos_marker (FormatsFile *file,
             {
                 case 0xD0:
                     format_utils_add_field (file, MARKER_TYPE_COLOR, TRUE, 2,
-                                          _("Marker type: RST0"), "RST0");
+                                            "Marker type: RST0", "RST0");
                     continue;
                 case 0xD1:
                     format_utils_add_field (file, MARKER_TYPE_COLOR, TRUE, 2,
-                                          _("Marker type: RST1"), "RST1");
+                                            "Marker type: RST1", "RST1");
                     continue;
                 case 0xD2:
                     format_utils_add_field (file, MARKER_TYPE_COLOR, TRUE, 2,
-                                          _("Marker type: RST2"), "RST2");
+                                            "Marker type: RST2", "RST2");
                     continue;
                 case 0xD3:
                     format_utils_add_field (file, MARKER_TYPE_COLOR, TRUE, 2,
-                                          _("Marker type: RST3"), "RST3");
+                                            "Marker type: RST3", "RST3");
                     continue;
                 case 0xD4:
                     format_utils_add_field (file, MARKER_TYPE_COLOR, TRUE, 2,
-                                          _("Marker type: RST4"), "RST4");
+                                            "Marker type: RST4", "RST4");
                     continue;
                 case 0xD5:
                     format_utils_add_field (file, MARKER_TYPE_COLOR, TRUE, 2,
-                                          _("Marker type: RST5"), "RST5");
+                                            "Marker type: RST5", "RST5");
                     continue;
                 case 0xD6:
                     format_utils_add_field (file, MARKER_TYPE_COLOR, TRUE, 2,
-                                          _("Marker type: RST6"), "RST6");
+                                            "Marker type: RST6", "RST6");
                     continue;
                 case 0xD7:
                     format_utils_add_field (file, MARKER_TYPE_COLOR, TRUE, 2,
-                                          _("Marker type: RST7"), "RST7");
+                                            "Marker type: RST7", "RST7");
                     continue;
                 default:
                     run = FALSE;

@@ -16,10 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-
-#include <glib/gi18n.h>
-
 #include "jpeg-format.h"
 
 
@@ -43,26 +39,26 @@ jpeg_app2_marker (FormatsFile *file,
     if (FILE_HAS_DATA_N (file, 12) && !memcmp (identifier, icc_profile_identifier, 12))
     {
         format_utils_add_field (file, MARKER_DATA_COLOR_1, TRUE, 12,
-                              _("ICC profile identifier"), NULL);
+                                "ICC profile identifier", NULL);
 
         format_utils_add_field (file, MARKER_DATA_COLOR_2, TRUE, 1,
-                              _("ICC profile chunk number"), NULL);
+                                "ICC profile chunk number", NULL);
         format_utils_add_field (file, MARKER_DATA_COLOR_1, TRUE, 1,
-                              _("Total ICC profile chunks"), NULL);
+                                "Total ICC profile chunks", NULL);
 
         data_used += 14;
 
         if (data_length > data_used)
         {
             format_utils_add_field (file, MARKER_DATA_COLOR_2, TRUE, data_length - data_used,
-                                  _("Embedded ICC profile"), NULL);
+                                    "Embedded ICC profile", NULL);
             data_used = data_length;
         }
     }
 
     if (data_used < data_length)
         format_utils_add_field (file, ERROR_COLOR_1, FALSE, data_length - data_used,
-                              _("Unrecognized data"), NULL);
+                                "Unrecognized data", NULL);
 
     return TRUE;
 }

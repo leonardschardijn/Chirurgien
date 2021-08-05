@@ -18,7 +18,6 @@
 
 #include "chirurgien-formats.h"
 
-#include <glib/gi18n.h>
 #include "format-utils.h"
 
 #include "cpio/chirurgien-cpio.h"
@@ -49,6 +48,8 @@ chirurgien_formats_analyze (FormatsFile *file)
     const guchar tar_magic_number[] = { 0x75,0x73,0x74,0x61,0x72 };
     const guchar tiff_magic_number1[] = { 0x49,0x49,0x2A,0x00 };
     const guchar tiff_magic_number2[] = { 0x4D,0x4D,0x00,0x2A };
+
+    gboolean find_unused = FALSE;
 
     /* cpio */
     if (FILE_HAS_DATA_N (file, 2) &&
@@ -91,6 +92,7 @@ chirurgien_formats_analyze (FormatsFile *file)
             !memcmp (file->file_contents + pe_offset, pe_magic_number, 2))
         {
             chirurgien_pe (file, pe_offset);
+            find_unused = TRUE;
         }
     }
     /* ELF */
@@ -98,6 +100,7 @@ chirurgien_formats_analyze (FormatsFile *file)
         !memcmp (file->file_contents, elf_magic_number, 4))
     {
         chirurgien_elf (file);
+        find_unused = TRUE;
     }
     /* GIF */
     else if (FILE_HAS_DATA_N (file, 6) &&
@@ -130,12 +133,13 @@ chirurgien_formats_analyze (FormatsFile *file)
               !memcmp (file->file_contents, tiff_magic_number2, 4)))
     {
         chirurgien_tiff (file);
+        find_unused = TRUE;
     }
     else
     {
-        format_utils_set_title (file, _("Unrecognized file format"));
+        format_utils_set_title (file, "Unrecognized file format");
         return;
     }
 
-    format_utils_find_unused_bytes (file);
+    format_utils_sort_find_unused_bytes (file, find_unused);
 }

@@ -16,10 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-
-#include <glib/gi18n.h>
-
 #include "jpeg-format.h"
 
 
@@ -55,20 +51,20 @@ jpeg_dqt_marker (FormatsFile *file,
             return FALSE;
 
         format_utils_add_field (file, MARKER_DATA_COLOR_1, TRUE, 1,
-                              _("Quantization table information\n"
+                                "Quantization table information\n"
                                 "Lower four bits: Quantization table identifier\n"
-                                "Upper four bits: Quantization table precision"), NULL);
+                                "Upper four bits: Quantization table precision", NULL);
 
-        format_utils_start_section_tab (&tab, _("Quantization table"));
+        format_utils_start_section_tab (&tab, "Quantization table");
 
         /* Quantization table identifier */
         qt_identifier = qt_id_precision & 0x0F;
         if (qt_identifier < 4)
             value = g_strdup_printf ("%u", qt_identifier);
         else
-            value = g_strdup (_("<span foreground=\"red\">INVALID</span>"));
-        format_utils_add_line_tab (&tab, _("Quantization table identifier"), value,
-                                 _("Valid quantization table destination identifiers: 0-3"));
+            value = g_strdup ("<span foreground=\"red\">INVALID</span>");
+        format_utils_add_line_tab (&tab, "Quantization table identifier", value,
+                                   "Valid quantization table destination identifiers: 0-3");
         g_free (value);
 
         /* Quantization table precision */
@@ -76,29 +72,29 @@ jpeg_dqt_marker (FormatsFile *file,
         {
             case 0:
                 qt_length = 64;
-                value = _("8 bit values");
+                value = "8 bit values";
                 break;
             case 1:
                 qt_length = 128;
-                value = _("16 bit values");
+                value = "16 bit values";
                 break;
             default:
                 format_utils_add_field (file, ERROR_COLOR_1, FALSE, data_length,
-                                      _("Unrecognized data"), NULL);
-                value = _("<span foreground=\"red\">INVALID</span>");
+                                        "Unrecognized data", NULL);
+                value = "<span foreground=\"red\">INVALID</span>";
                 data_length = 0;
         }
 
-        format_utils_add_line_tab (&tab, _("Quantization table precision"), value,
-                                 _("Quantization table precision\n"
+        format_utils_add_line_tab (&tab, "Quantization table precision", value,
+                                   "Quantization table precision\n"
                                    "<tt>0<sub>16</sub></tt>\t8 bit values\n"
-                                   "<tt>1<sub>16</sub></tt>\t16 bit values"));
+                                   "<tt>1<sub>16</sub></tt>\t16 bit values");
 
         if (!data_length)
             break;
 
         format_utils_add_field (file, MARKER_DATA_COLOR_2, TRUE, qt_length,
-                      _("Quantization table values"), NULL);
+                                "Quantization table values", NULL);
 
         if (data_length > qt_length)
             data_length -= (qt_length + 1);

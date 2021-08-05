@@ -18,8 +18,6 @@
 
 #include "format-utils.h"
 
-#include <glib/gi18n.h>
-
 #define UNUSED_DATA_COLOR 8
 
 
@@ -232,7 +230,7 @@ format_utils_add_text_tab (DescriptionTab *tab,
     {
         gtk_text_buffer_get_start_iter (buffer, &start);
         gtk_text_buffer_insert_markup (buffer, &start,
-                     _("<span foreground=\"red\">[INVALID ENCODING]</span>"), -1);
+                     "<span foreground=\"red\">[INVALID ENCODING]</span>", -1);
     }
 
     expander = gtk_expander_new (field_name);
@@ -243,7 +241,7 @@ format_utils_add_text_tab (DescriptionTab *tab,
 
     if (print_text_size != text_size)
     {
-        truncated_message = g_strdup_printf (_("%s was truncated from its original size of %lu"),
+        truncated_message = g_strdup_printf ("%s was truncated from its original size of %lu",
                                              field_name, text_size);
         format_utils_add_line_no_section_tab (tab, truncated_message);
         g_free (truncated_message);
@@ -334,7 +332,8 @@ sort_file_fields (gconstpointer a,
 }
 
 void
-format_utils_find_unused_bytes (FormatsFile *file)
+format_utils_sort_find_unused_bytes (FormatsFile *file,
+                                     gboolean find_unused)
 {
     FileField *file_field, *unused_data;
     GSList *new_fields;
@@ -345,6 +344,9 @@ format_utils_find_unused_bytes (FormatsFile *file)
 
     file->file_fields = g_slist_sort (file->file_fields, sort_file_fields);
 
+    if (!find_unused)
+        return;
+
     for (GSList *i = file->file_fields; i != NULL; i = i->next)
     {
         file_field = i->data;
@@ -352,7 +354,7 @@ format_utils_find_unused_bytes (FormatsFile *file)
         {
             unused_data = g_slice_new (FileField);
 
-            unused_data->field_name = g_strdup (_("Unused data"));
+            unused_data->field_name = g_strdup ("Unused data");
             unused_data->field_offset = tagged_up_to;
             unused_data->field_length = file_field->field_offset - tagged_up_to;
             unused_data->color_index = UNUSED_DATA_COLOR;
@@ -373,7 +375,7 @@ format_utils_find_unused_bytes (FormatsFile *file)
     {
         unused_data = g_slice_new (FileField);
 
-        unused_data->field_name = g_strdup (_("Unused data"));
+        unused_data->field_name = g_strdup ("Unused data");
         unused_data->field_offset = tagged_up_to;
         unused_data->field_length = file->file_size - tagged_up_to;
         unused_data->color_index = UNUSED_DATA_COLOR;

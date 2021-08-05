@@ -16,10 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-
-#include <glib/gi18n.h>
-
 #include "jpeg-format.h"
 
 #define POSSIBLE_CODE_LENGTHS 16
@@ -60,32 +56,32 @@ jpeg_dht_marker (FormatsFile *file,
 
         table_size = 1;
         format_utils_add_field (file, HUFFMAN_ARITH_TABLE_COLOR, TRUE, 1,
-                              _("Huffman table information\n"
+                                "Huffman table information\n"
                                 "Lower four bits: Huffman table identifier\n"
-                                "Upper four bits: Table class"), NULL);
+                                "Upper four bits: Table class", NULL);
 
-        format_utils_start_section_tab (&tab, _("Huffman code table"));
+        format_utils_start_section_tab (&tab, "Huffman code table");
 
         value1 = g_strdup_printf ("%u", ht_info & 0x0F);
-        format_utils_add_line_tab (&tab, _("Huffman table identifier"), value1, NULL);
+        format_utils_add_line_tab (&tab, "Huffman table identifier", value1, NULL);
         g_free (value1);
 
         switch (ht_info >> 4)
         {
             case 0:
-                value1 = _("DC table (or lossless table)");
+                value1 = "DC table (or lossless table)";
                 break;
             case 1:
-                value1 = _("AC table");
+                value1 = "AC table";
                 break;
             default:
-                value1 = _("<span foreground=\"red\">INVALID</span>");
+                value1 = "<span foreground=\"red\">INVALID</span>";
         }
 
-        format_utils_add_line_tab (&tab, _("Table class"), value1,
-                                 _("Table class\n"
+        format_utils_add_line_tab (&tab, "Table class", value1,
+                                   "Table class\n"
                                    "<tt>0<sub>16</sub></tt>\tDC table (or lossless table)\n"
-                                   "<tt>1<sub>16</sub></tt>\tAC table"));
+                                   "<tt>1<sub>16</sub></tt>\tAC table");
 
         if (!format_utils_read (file, &code_counts, POSSIBLE_CODE_LENGTHS))
             return FALSE;
@@ -93,7 +89,7 @@ jpeg_dht_marker (FormatsFile *file,
         for (i = 0; i < POSSIBLE_CODE_LENGTHS;)
         {
             value2 = g_strdup_printf ("%hhu", code_counts[i++]);
-            value1 = g_strdup_printf (_("Codes of length %u"), i);
+            value1 = g_strdup_printf ("Codes of length %u", i);
 
             format_utils_add_line_tab (&tab, value1, value2, NULL);
 
@@ -102,7 +98,7 @@ jpeg_dht_marker (FormatsFile *file,
         }
 
         format_utils_add_field (file, MARKER_DATA_COLOR_1, TRUE, POSSIBLE_CODE_LENGTHS,
-                              _("Number of Huffman codes for 1-16 bit lengths"), NULL);
+                                "Number of Huffman codes for 1-16 bit lengths", NULL);
 
         table_size += POSSIBLE_CODE_LENGTHS;
 
@@ -113,10 +109,10 @@ jpeg_dht_marker (FormatsFile *file,
             {
                 if (color_toggle)
                     format_utils_add_field (file, MARKER_DATA_COLOR_2, TRUE, code_counts[i],
-                                          _("Huffman code values"), NULL);
+                                            "Huffman code values", NULL);
                 else
                     format_utils_add_field (file, MARKER_DATA_COLOR_1, TRUE, code_counts[i],
-                                          _("Huffman code values"), NULL);
+                                            "Huffman code values", NULL);
 
                 color_toggle = !color_toggle;
                 table_size += code_counts[i];

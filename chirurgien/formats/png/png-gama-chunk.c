@@ -16,10 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-
-#include <glib/gi18n.h>
-
 #include "png-format.h"
 
 #define GAMA_CHUNK_LENGTH 4
@@ -40,22 +36,25 @@ png_gama_chunk (FormatsFile *file,
     if (!chunk_counts[IHDR])
     {
         format_utils_add_field (file, ERROR_COLOR_1, FALSE, chunk_length,
-                              _("The first chunk must be the IHDR chunk"), NULL);
+                                "The first chunk must be the IHDR chunk", NULL);
         return TRUE;
     }
 
-    format_utils_init_tab (&tab, _("Image gamma"));
+    format_utils_init_tab (&tab, "Image gamma");
 
-    if (!process_png_field (file, &tab, _("Image gamma"), NULL,
-                       NULL, CHUNK_DATA_COLOR_1, 4, 0, NULL, NULL, "%u", NULL))
+    if (!process_png_field (file, &tab, "Image gamma", NULL,
+                            NULL,
+                            CHUNK_DATA_COLOR_1, 4,
+                            0, NULL, NULL,
+                            "%u", NULL))
         return FALSE;
 
     /* Fixed length chunk */
     if (chunk_length > GAMA_CHUNK_LENGTH)
         format_utils_add_field (file, ERROR_COLOR_1, FALSE, chunk_length - GAMA_CHUNK_LENGTH,
-                              _("Unrecognized data"), NULL);
+                                "Unrecognized data", NULL);
 
-    format_utils_add_line_no_section_tab (&tab, _("NOTE: Value represents the image gamma times 100000"));
+    format_utils_add_line_no_section_tab (&tab, "NOTE: Value represents the image gamma times 100000");
 
     format_utils_insert_tab (file, &tab, chunk_types[gAMA]);
 

@@ -16,10 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-
-#include <glib/gi18n.h>
-
 #include "png-format.h"
 
 #define CHRM_CHUNK_LENGTH 32
@@ -35,14 +31,14 @@ png_chrm_chunk (FormatsFile *file,
     gint color_toggle;
 
     const gchar * const chromaticities[] = {
-        _("White point x"),
-        _("White point y"),
-        _("Red x"),
-        _("Red y"),
-        _("Green x"),
-        _("Green y"),
-        _("Blue x"),
-        _("Blue y")
+        "White point x",
+        "White point y",
+        "Red x",
+        "Red y",
+        "Green x",
+        "Green y",
+        "Blue x",
+        "Blue y"
     };
 
     if (!chunk_length)
@@ -53,11 +49,11 @@ png_chrm_chunk (FormatsFile *file,
     if (!chunk_counts[IHDR])
     {
         format_utils_add_field (file, ERROR_COLOR_1, FALSE, chunk_length,
-                              _("The first chunk must be the IHDR chunk"), NULL);
+                                "The first chunk must be the IHDR chunk", NULL);
         return TRUE;
     }
 
-    format_utils_init_tab (&tab, _("Primary chromaticities and white point"));
+    format_utils_init_tab (&tab, "Primary chromaticities and white point");
 
     for (gint i = 0; i < 8; i++)
     {
@@ -67,16 +63,19 @@ png_chrm_chunk (FormatsFile *file,
             color_toggle = CHUNK_DATA_COLOR_1;
 
         if (!process_png_field (file, &tab, chromaticities[i], NULL,
-                           NULL, color_toggle, 4, 0, NULL, NULL, "%u", NULL))
+                                NULL,
+                                color_toggle, 4,
+                                0, NULL, NULL,
+                                "%u", NULL))
             return FALSE;
     }
 
     /* Fixed length chunk */
     if (chunk_length > CHRM_CHUNK_LENGTH)
         format_utils_add_field (file, ERROR_COLOR_1, FALSE, chunk_length - CHRM_CHUNK_LENGTH,
-                              _("Unrecognized data"), NULL);
+                                "Unrecognized data", NULL);
 
-    format_utils_add_line_no_section_tab (&tab, _("NOTE: Values represent the 1931 CIE x,y chromaticities times 100000"));
+    format_utils_add_line_no_section_tab (&tab, "NOTE: Values represent the 1931 CIE x,y chromaticities times 100000");
 
     format_utils_insert_tab (file, &tab, chunk_types[cHRM]);
 

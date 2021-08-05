@@ -16,11 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-
 #include "elf-format.h"
-
-#include <glib/gi18n.h>
 
 
 static gboolean     get_section_name          (FormatsFile *,
@@ -57,7 +53,7 @@ elf_section_header (FormatsFile *file,
     format_utils_init_tab (&tab, "Section header table");
 
     text_value = g_strdup_printf ("%u", section_header_entries);
-    format_utils_add_line_tab (&tab, _("Number of entries"), text_value, NULL);
+    format_utils_add_line_tab (&tab, "Number of entries", text_value, NULL);
     g_free (text_value);
 
     if (is_64bits)
@@ -148,7 +144,7 @@ elf_section_header (FormatsFile *file,
         /* Section memory address (sh_addr) */
         if (!process_elf_field (file, &tab,
                 "Section memory address", "Section memory address (sh_addr)",
-                _("Address of the section in the memory image of the process"),
+                "Address of the section in the memory image of the process",
                 HEADER_DATA_COLOR_1, field_length, is_little_endian,
                 0, NULL, NULL,
                 "%lX<sub>16</sub>", TRUE, NULL))
@@ -157,7 +153,7 @@ elf_section_header (FormatsFile *file,
         /* Section offset (sh_offset) */
         if (!process_elf_field (file, &tab,
                 "Section offset", "Section offset (sh_offset)",
-                _("Offset of the section in the file"),
+                "Offset of the section in the file",
                 HEADER_DATA_COLOR_2, field_length, is_little_endian,
                 0, NULL, NULL,
                 "%lX<sub>16</sub>", TRUE, &section_offset))
@@ -166,7 +162,7 @@ elf_section_header (FormatsFile *file,
         /* Section size (sh_size) */
         if (!process_elf_field (file, &tab,
                 "Section size", "Section size (sh_size)",
-                _("Size of the section in the file"),
+                "Size of the section in the file",
                 HEADER_DATA_COLOR_1, field_length, is_little_endian,
                 0, NULL, NULL,
                 "%lu", TRUE, &section_size))
@@ -175,7 +171,7 @@ elf_section_header (FormatsFile *file,
         /* Section link index (sh_link) */
         if (!process_elf_field (file, &tab,
                 "Section link index", "Section link index (sh_link)",
-                _("Some section types link to other sections"),
+                "Some section types link to other sections",
                 HEADER_DATA_COLOR_2, 4, is_little_endian,
                 0, NULL, NULL,
                 "Section index %u", TRUE, NULL))
@@ -190,7 +186,7 @@ elf_section_header (FormatsFile *file,
         /* Section address alignment (sh_addralign) */
         if (!process_elf_field (file, &tab,
                 "Section address alignment", "Section address alignment (sh_addralign)",
-                _("Some sections have address alignment constraints"),
+                "Some sections have address alignment constraints",
                 HEADER_DATA_COLOR_2, field_length, is_little_endian,
                 0, NULL, NULL,
                 "%lu", TRUE, NULL))
@@ -199,7 +195,7 @@ elf_section_header (FormatsFile *file,
         /* Table entry size (sh_entsize) */
         if (!process_elf_field (file, &tab,
                 "Table entry size", "Table entry size (sh_entsize)",
-                _("Some sections hold a table of fixed-size entries, this gives the size of the entries"),
+                "Some sections hold a table of fixed-size entries, this gives the size of the entries",
                 HEADER_DATA_COLOR_1, field_length, is_little_endian,
                 0, NULL, NULL,
                 "%lu", TRUE, NULL))
@@ -223,7 +219,7 @@ elf_section_header (FormatsFile *file,
         g_free (g_steal_pointer (&section_name));
     }
 
-    format_utils_insert_tab (file, &tab, _("Section header"));
+    format_utils_insert_tab (file, &tab, "Section header");
 }
 
 static gboolean
@@ -245,7 +241,7 @@ get_section_name (FormatsFile    *file,
         four_bytes = g_ntohl (four_bytes);
 
     format_utils_add_field (file, SECTION_NAME_COLOR, TRUE, 4,
-                          _("Section name offset (sh_name)"), NULL);
+                            "Section name offset (sh_name)", NULL);
 
     section_name_offset = string_table_pointer + four_bytes;
 

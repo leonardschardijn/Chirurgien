@@ -16,10 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-
-#include <glib/gi18n.h>
-
 #include "gif-format.h"
 
 
@@ -32,48 +28,48 @@ gif_image_descriptor_block (FormatsFile    *file,
 
     gchar *value;
 
-    format_utils_start_section_tab (tab, _("Image descriptor"));
+    format_utils_start_section_tab (tab, "Image descriptor");
 
     /* Image left position */
-    if (!process_gif_field (file, tab, _("Image left position"), NULL,
-                _("Image column number in the Logical Screen"), BLOCK_DATA_COLOR_1, 2, "%u", NULL))
+    if (!process_gif_field (file, tab, "Image left position", NULL,
+                "Image column number in the Logical Screen", BLOCK_DATA_COLOR_1, 2, "%u", NULL))
         return FALSE;
 
     /* Image top position */
-    if (!process_gif_field (file, tab, _("Image top position"), NULL,
-                _("Image row number in the Logical Screen"), BLOCK_DATA_COLOR_2, 2, "%u", NULL))
+    if (!process_gif_field (file, tab, "Image top position", NULL,
+                "Image row number in the Logical Screen", BLOCK_DATA_COLOR_2, 2, "%u", NULL))
         return FALSE;
 
     /* Image width */
-    if (!process_gif_field (file, tab, _("Image width"), NULL,
-                            _("Maximum value: 2<sup>16</sup> - 1 (unsigned 16-bit integer)"),
+    if (!process_gif_field (file, tab, "Image width", NULL,
+                            "Maximum value: 2<sup>16</sup> - 1 (unsigned 16-bit integer)",
                             BLOCK_DATA_COLOR_1, 2, "%u", NULL))
         return FALSE;
 
     /* Image height */
-    if (!process_gif_field (file, tab, _("Image height"), NULL,
-                            _("Maximum value: 2<sup>16</sup> - 1 (unsigned 16-bit integer)"),
+    if (!process_gif_field (file, tab, "Image height", NULL,
+                            "Maximum value: 2<sup>16</sup> - 1 (unsigned 16-bit integer)",
                             BLOCK_DATA_COLOR_2, 2, "%u", NULL))
         return FALSE;
 
     /* Packed fields */
     if (!process_gif_field (file, NULL, NULL,
-                            _("Image Descriptor packed fields\n"
-                              "Bit 0-2: Local Color Table size\n"
-                              "Bit 5: Sorted flag\n"
-                              "Bit 6: Interlace flag\n"
-                              "Bit 7: Local Color Table flag"),
+                            "Image Descriptor packed fields\n"
+                            "Bit 0-2: Local Color Table size\n"
+                            "Bit 5: Sorted flag\n"
+                            "Bit 6: Interlace flag\n"
+                            "Bit 7: Local Color Table flag",
                             NULL, BLOCK_DATA_COLOR_1, 1, NULL, &packed_fields))
         return FALSE;
 
     /* Interlace */
     if ((packed_fields >> 6) & 0x1)
-        value = _("Yes");
+        value = "Yes";
     else
-        value = _("No");
-    format_utils_add_line_tab (tab, _("Interlaced image"), value,
-                             _("Interlace flag (bit 6 of the packed fields)\n"
-                               "If the image is interlaced"));
+        value = "No";
+    format_utils_add_line_tab (tab, "Interlaced image", value,
+                               "Interlace flag (bit 6 of the packed fields)\n"
+                               "If the image is interlaced");
 
     /* Local Color Table */
     if (packed_fields >> 7)
@@ -84,40 +80,40 @@ gif_image_descriptor_block (FormatsFile    *file,
         {
             if (i % 2)
                 format_utils_add_field (file, BLOCK_DATA_COLOR_1, TRUE, 3,
-                                      _("Local Color Table entry (RGB triplet)"), NULL);
+                                        "Local Color Table entry (RGB triplet)", NULL);
             else
                 format_utils_add_field (file, BLOCK_DATA_COLOR_2, TRUE, 3,
-                                      _("Local Color Table entry (RGB triplet)"), NULL);
+                                        "Local Color Table entry (RGB triplet)", NULL);
         }
     }
 
     /* LZW minimum code size */
-    if (!process_gif_field (file, tab, _("LZW minimum code size"), NULL,
-                _("Initial number of bits for LZW codes"), BLOCK_DATA_COLOR_2, 1, "%u", NULL))
+    if (!process_gif_field (file, tab, "LZW minimum code size", NULL,
+                "Initial number of bits for LZW codes", BLOCK_DATA_COLOR_2, 1, "%u", NULL))
         return FALSE;
 
     /* Print Local Color Table fields */
     if (packed_fields >> 7)
     {
-        format_utils_start_section_tab (tab, _("Local color table"));
+        format_utils_start_section_tab (tab, "Local color table");
 
         if ((packed_fields >> 5) & 0x1)
-            value = _("Yes");
+            value = "Yes";
         else
-            value = _("No");
-        format_utils_add_line_tab (tab, _("Sorted"), value,
-                         _("Sorted flag (bit 5 of the packed fields)\n"
-                           "If the Local Color Table is sorted, in order of decreasing importance"));
+            value = "No";
+        format_utils_add_line_tab (tab, "Sorted", value,
+                           "Sorted flag (bit 5 of the packed fields)\n"
+                           "If the Local Color Table is sorted, in order of decreasing importance");
 
         value = g_strdup_printf ("%u", local_color_table_size);
-        format_utils_add_line_tab (tab, _("Local color table entries"), value,
-                         _("Number of entries in the Local Color Table\n"
+        format_utils_add_line_tab (tab, "Local color table entries", value,
+                           "Number of entries in the Local Color Table\n"
                            "Calculated using the Local Color Table size (bits 0-2 of the packed fields):\n"
-                           "2<sup>size + 1</sup>"));
+                           "2<sup>size + 1</sup>");
         g_free (value);
     }
 
-    if (!process_data_subblocks (file, _("Image Descriptor data block (LZW compressed image)"),
+    if (!process_data_subblocks (file, "Image Descriptor data block (LZW compressed image)",
                                  NULL, DATA_SUBBLOCK_START_COLOR, BLOCK_DATA_COLOR_1, TRUE))
         return FALSE;
 

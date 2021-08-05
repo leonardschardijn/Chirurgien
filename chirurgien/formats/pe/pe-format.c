@@ -16,11 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-
 #include "pe-format.h"
-
-#include <glib/gi18n.h>
 
 #include "chirurgien-pe.h"
 
@@ -90,7 +86,7 @@ chirurgien_pe (FormatsFile *file,
     /* NumberOfSections */
     if (!process_pe_field (file, NULL,
             "NumberOfSections", NULL,
-            _("The number of sections"),
+            "The number of sections",
             HEADER_DATA_COLOR_2, 2,
             0, NULL, NULL,
             "%u", &sections))
@@ -99,14 +95,14 @@ chirurgien_pe (FormatsFile *file,
     /* TimeDateStamp  */
     if (!process_pe_field_simple (file, NULL,
             "TimeDateStamp",
-            _("File creation date (seconds since January 1, 1970)"),
+            "File creation date (seconds since January 1, 1970)",
             HEADER_DATA_COLOR_1, 4, "%u"))
         return;
 
     /* PointerToSymbolTable */
     if (!process_pe_field (file, NULL,
             "PointerToSymbolTable", NULL,
-            _("File offset to the COFF symbol table"),
+            "File offset to the COFF symbol table",
             HEADER_DATA_COLOR_2, 4,
             0, NULL, NULL,
            "%X<sub>16</sub>", &sym_table_offset))
@@ -115,7 +111,7 @@ chirurgien_pe (FormatsFile *file,
     /* NumberOfSymbols */
     if (!process_pe_field (file, NULL,
             "NumberOfSymbols", NULL,
-            _("Number of entries in the symbol table"),
+            "Number of entries in the symbol table",
             HEADER_DATA_COLOR_1, 4,
             0, NULL, NULL,
             "%u", &table_length))
@@ -124,7 +120,7 @@ chirurgien_pe (FormatsFile *file,
     /* SizeOfOptionalHeader */
     if (!process_pe_field (file, NULL,
             "SizeOfOptionalHeader", NULL,
-            _("Size of the optional header (required for executable files)"),
+            "Size of the optional header (required for executable files)",
             HEADER_DATA_COLOR_2, 2,
             0, NULL, NULL,
             "%u", &optional_header_size))
@@ -179,7 +175,7 @@ chirurgien_pe (FormatsFile *file,
 
     if (optional_header_size)
     {
-        format_utils_start_section (file, _("Optional header standard fields"));
+        format_utils_start_section (file, "Optional header standard fields");
 
         /* Magic */
         guint32 magic_values[] = { 0x107, 0x10B,0x20B };
@@ -203,49 +199,49 @@ chirurgien_pe (FormatsFile *file,
         /* MajorLinkerVersion */
         if (!process_pe_field_simple (file, NULL,
                 "MajorLinkerVersion",
-                _("The linker major version number"),
+                "The linker major version number",
                 HEADER_DATA_COLOR_1, 1, "%u"))
             return;
 
         /* MinorLinkerVersion */
         if (!process_pe_field_simple (file, NULL,
                 "MinorLinkerVersion",
-                _("The linker minor version number"),
+                "The linker minor version number",
                 HEADER_DATA_COLOR_2, 1, "%u"))
             return;
 
         /* SizeOfCode */
         if (!process_pe_field_simple (file, NULL,
                 "SizeOfCode",
-                _("The size of the code (text) section, or the sum of all code sections if there are multiple sections"),
+                "The size of the code (text) section, or the sum of all code sections if there are multiple sections",
                 HEADER_DATA_COLOR_1, 4, "%u"))
             return;
 
         /* SizeOfInitializedData */
         if (!process_pe_field_simple (file, NULL,
                 "SizeOfInitializedData",
-                _("The size of the initialized data section, or the sum of all such sections if there are multiple data sections"),
+                "The size of the initialized data section, or the sum of all such sections if there are multiple data sections",
                 HEADER_DATA_COLOR_2, 4, "%u"))
             return;
 
         /* SizeOfUninitializedData */
         if (!process_pe_field_simple (file, NULL,
                 "SizeOfUninitializedData",
-                _("The size of the uninitialized data section (BSS), or the sum of all such sections if there are multiple BSS sections"),
+                "The size of the uninitialized data section (BSS), or the sum of all such sections if there are multiple BSS sections",
                 HEADER_DATA_COLOR_1, 4, "%u"))
             return;
 
         /* AddressOfEntryPoint */
         if (!process_pe_field_simple (file, NULL,
                 "AddressOfEntryPoint",
-                _("The address of the entry point relative to the image base when the executable file is loaded into memory"),
+                "The address of the entry point relative to the image base when the executable file is loaded into memory",
                 HEADER_DATA_COLOR_2, 4, "%X<sub>16</sub>"))
             return;
 
         /* BaseOfCode */
         if (!process_pe_field_simple (file, NULL,
                 "BaseOfCode",
-                _("The address that is relative to the image base of the beginning-of-code section when it is loaded into memory"),
+                "The address that is relative to the image base of the beginning-of-code section when it is loaded into memory",
                 HEADER_DATA_COLOR_1, 4, "%X<sub>16</sub>"))
             return;
 
@@ -254,7 +250,7 @@ chirurgien_pe (FormatsFile *file,
         {
             if (!process_pe_field_simple (file, NULL,
                 "BaseOfData",
-                _("The address that is relative to the image base of the beginning-of-data section when it is loaded into memory"),
+                "The address that is relative to the image base of the beginning-of-data section when it is loaded into memory",
                 HEADER_DATA_COLOR_1, 4, "%X<sub>16</sub>"))
             return;
         }
@@ -269,63 +265,63 @@ chirurgien_pe (FormatsFile *file,
         /* ImageBase */
         if (!process_pe_field_simple (file, NULL,
                 "ImageBase",
-                _("The preferred address of the first byte of image when loaded into memory; must be a multiple of 64KiB"),
+                "The preferred address of the first byte of image when loaded into memory; must be a multiple of 64KiB",
                 HEADER_DATA_COLOR_2, field_length, "%lX<sub>16</sub>"))
             return;
 
         /* SectionAlignment */
         if (!process_pe_field_simple (file, NULL,
                 "SectionAlignment",
-                _("The alignment (in bytes) of sections when they are loaded into memory"),
+                "The alignment (in bytes) of sections when they are loaded into memory",
                 HEADER_DATA_COLOR_1, 4, "%u"))
             return;
 
         /* FileAlignment */
         if (!process_pe_field_simple (file, NULL,
                 "FileAlignment",
-                _("The alignment factor (in bytes) that is used to align the raw data of sections in the image file"),
+                "The alignment factor (in bytes) that is used to align the raw data of sections in the image file",
                 HEADER_DATA_COLOR_2, 4,"%u"))
             return;
 
         /* MajorOperatingSystemVersion */
         if (!process_pe_field_simple (file, NULL,
                 "MajorOperatingSystemVersion",
-                _("The major version number of the required operating system"),
+                "The major version number of the required operating system",
                 HEADER_DATA_COLOR_1, 2, "%u"))
             return;
 
         /* MinorOperatingSystemVersion  */
         if (!process_pe_field_simple (file, NULL,
                 "MinorOperatingSystemVersion",
-                _("The minor version number of the required operating system"),
+                "The minor version number of the required operating system",
                 HEADER_DATA_COLOR_2, 2, "%u"))
             return;
 
         /* MajorImageVersion */
         if (!process_pe_field_simple (file, NULL,
                 "MajorImageVersion",
-                _("The major version number of the image"),
+                "The major version number of the image",
                 HEADER_DATA_COLOR_1, 2, "%u"))
             return;
 
         /* MinorImageVersion */
         if (!process_pe_field_simple (file, NULL,
                 "MinorImageVersion",
-                _("The minor version number of the image"),
+                "The minor version number of the image",
                 HEADER_DATA_COLOR_2, 2, "%u"))
             return;
 
         /* MajorSubsystemVersion */
         if (!process_pe_field_simple (file, NULL,
                 "MajorSubsystemVersion",
-                _("The major version number of the subsystem"),
+                "The major version number of the subsystem",
                 HEADER_DATA_COLOR_1, 2, "%u"))
             return;
 
         /* MinorSubsystemVersion */
         if (!process_pe_field_simple (file, NULL,
                 "MinorSubsystemVersion",
-                _("The minor version number of the subsystem"),
+                "The minor version number of the subsystem",
                 HEADER_DATA_COLOR_2, 2, "%u"))
             return;
 
@@ -339,14 +335,14 @@ chirurgien_pe (FormatsFile *file,
         /* SizeOfImage */
         if (!process_pe_field_simple (file, NULL,
                 "SizeOfImage",
-                _("The size (in bytes) of the image, including all headers, as the image is loaded in memory"),
+                "The size (in bytes) of the image, including all headers, as the image is loaded in memory",
                 HEADER_DATA_COLOR_2, 4, "%u"))
             return;
 
         /* SizeOfHeaders */
         if (!process_pe_field_simple (file, NULL,
                 "SizeOfHeaders",
-                _("The combined size of an MS-DOS stub, PE header, and section headers rounded up to a multiple of FileAlignment"),
+                "The combined size of an MS-DOS stub, PE header, and section headers rounded up to a multiple of FileAlignment",
                 HEADER_DATA_COLOR_1, 4, "%u"))
             return;
 
@@ -452,28 +448,28 @@ chirurgien_pe (FormatsFile *file,
         /* SizeOfStackReserve */
         if (!process_pe_field_simple (file, NULL,
                 "SizeOfStackReserve",
-                _("The size of the stack to reserve"),
+                "The size of the stack to reserve",
                 HEADER_DATA_COLOR_1, field_length, "%lu"))
             return;
 
         /* SizeOfStackCommit */
         if (!process_pe_field_simple (file, NULL,
                 "SizeOfStackCommit",
-                _("The size of the stack to commit"),
+                "The size of the stack to commit",
                 HEADER_DATA_COLOR_2, field_length, "%lu"))
             return;
 
         /* SizeOfHeapReserve */
         if (!process_pe_field_simple (file, NULL,
                 "SizeOfHeapReserve",
-                _("The size of the local heap space to reserve"),
+                "The size of the local heap space to reserve",
                 HEADER_DATA_COLOR_1, field_length, "%lu"))
             return;
 
         /* SizeOfHeapCommit */
         if (!process_pe_field_simple (file, NULL,
                 "SizeOfHeapCommit",
-                _("The size of the local heap space to commit"),
+                "The size of the local heap space to commit",
                 HEADER_DATA_COLOR_2, field_length, "%lu"))
             return;
 
@@ -487,7 +483,7 @@ chirurgien_pe (FormatsFile *file,
         /* NumberOfRvaAndSizes */
         if (!process_pe_field (file, NULL,
                 "NumberOfRvaAndSizes", NULL,
-                _("The number of data-directory entries in the remainder of the optional header"),
+                "The number of data-directory entries in the remainder of the optional header",
                 HEADER_DATA_COLOR_2, 4,
                 0, NULL, NULL,
                 "%u", &data_directory_entries))

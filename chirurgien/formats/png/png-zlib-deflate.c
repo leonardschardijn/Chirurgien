@@ -16,10 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-
-#include <glib/gi18n.h>
-
 #include "png-format.h"
 
 #define MEBIBYTE 1048576
@@ -75,7 +71,7 @@ png_zlib_deflate (FormatsFile    *file,
         compression_method_value = "DEFLATE";
 
         if (info_or_flags > 7)
-            slidingwindow_size = g_strdup (_("<span foreground=\"red\">INVALID</span>"));
+            slidingwindow_size = g_strdup ("<span foreground=\"red\">INVALID</span>");
         else
             slidingwindow_size = g_strdup_printf ("%u", 1 << (info_or_flags + 8));
 
@@ -92,16 +88,16 @@ png_zlib_deflate (FormatsFile    *file,
         switch (info_or_flags)
         {
             case 0:
-                compression_level_value = _("Compressor used fastest algorithm");
+                compression_level_value = "Compressor used fastest algorithm";
                 break;
             case 1:
-                compression_level_value = _("Compressor used fast algorithm");
+                compression_level_value = "Compressor used fast algorithm";
                 break;
             case 2:
-                compression_level_value = _("Compressor used default algorithm");
+                compression_level_value = "Compressor used default algorithm";
                 break;
             case 3:
-                compression_level_value = _("Compressor used maximum compression, slowest algorithm");
+                compression_level_value = "Compressor used maximum compression, slowest algorithm";
         }
 
         if (!zlib_length)
@@ -167,19 +163,19 @@ png_zlib_deflate (FormatsFile    *file,
 
         if (*decompression_success)
         {
-            decompression_result = _("<span foreground=\"green\">SUCCESS</span>");
+            decompression_result = "<span foreground=\"green\">SUCCESS</span>";
 
             if ((zlib_length - *real_zlib_length) >= 4)
                 *checksum_found = TRUE;
         }
         else
         {
-            decompression_result = _("<span foreground=\"red\">FAILED</span>");
+            decompression_result = "<span foreground=\"red\">FAILED</span>";
         }
     }
     else
     {
-        compression_method_value = _("<span foreground=\"red\">INVALID</span>");
+        compression_method_value = "<span foreground=\"red\">INVALID</span>";
     }
 
     END:
@@ -191,84 +187,84 @@ png_zlib_deflate (FormatsFile    *file,
     if (!tab)
     {
         if (compression_method_value)
-            format_utils_add_line (file, _("Compression method"), compression_method_value,
-                                 _("Compression method (CM): Lower four bits of CMF\n"
+            format_utils_add_line (file, "Compression method", compression_method_value,
+                                   "Compression method (CM): Lower four bits of CMF\n"
                                    "Compression method\n"
-                                   "<tt>8<sub>16</sub></tt>\tDEFLATE"));
+                                   "<tt>8<sub>16</sub></tt>\tDEFLATE");
         if (slidingwindow_size)
-            format_utils_add_line (file, _("LZ77 sliding window size"), slidingwindow_size,
-                         _("Compression info (CINFO): Upper four bits of CMF, only valid when CM = 8\n"
+            format_utils_add_line (file, "LZ77 sliding window size", slidingwindow_size,
+                           "Compression info (CINFO): Upper four bits of CMF, only valid when CM = 8\n"
                            "Used to calculate the sliding window size as:\n"
-                           "2<sup>CINFO + 8</sup> if CINFO &lt; 8"));
+                           "2<sup>CINFO + 8</sup> if CINFO &lt; 8");
         if (compression_level_value)
-            format_utils_add_line_full (file, _("Compression level"), compression_level_value,
-                                      _("Compression level: upper two bits of FLG\n"
+            format_utils_add_line_full (file, "Compression level", compression_level_value,
+                                        "Compression level: upper two bits of FLG\n"
                                         "Compression levels\n"
                                         "<tt>0</tt>\tCompressor used fastest algorithm\n"
                                         "<tt>1</tt>\tCompressor used fast algorithm\n"
                                         "<tt>2</tt>\tCompressor used default algorithm\n"
-                                        "<tt>3</tt>\tCompressor used maximum compression, slowest algorithm"),
+                                        "<tt>3</tt>\tCompressor used maximum compression, slowest algorithm",
                                         10, 0);
         if (decompression_result)
-            format_utils_add_line_full (file, _("Decompression"), decompression_result,
+            format_utils_add_line_full (file, "Decompression", decompression_result,
                                         NULL, 10, 10);
 
         if (*decompression_success)
         {
-            value = g_strdup_printf (_("%u B (%.2f MiB)"), (guint) inflate_size, (gfloat) inflate_size / MEBIBYTE);
-            format_utils_add_line (file, _("Inflate size"), value,
-                                 _("Size of the raw data"));
+            value = g_strdup_printf ("%u B (%.2f MiB)", (guint) inflate_size, (gfloat) inflate_size / MEBIBYTE);
+            format_utils_add_line (file, "Inflate size", value,
+                                   "Size of the raw data");
             g_free (value);
 
-            value = g_strdup_printf (_("%u B (%.2f MiB)"), *real_zlib_length, (gfloat) *real_zlib_length / MEBIBYTE);
-            format_utils_add_line (file, _("Deflate size"), value,
-                                 _("Size of the compressed data"));
+            value = g_strdup_printf ("%u B (%.2f MiB)", *real_zlib_length, (gfloat) *real_zlib_length / MEBIBYTE);
+            format_utils_add_line (file, "Deflate size", value,
+                                   "Size of the compressed data");
             g_free (value);
 
             value = g_strdup_printf ("%.2f", (gfloat) inflate_size / *real_zlib_length);
-            format_utils_add_line (file, _("Compression ratio"), value, NULL);
+            format_utils_add_line (file, "Compression ratio", value, NULL);
             g_free (value);
         }
     }
     else
     {
         if (compression_method_value)
-            format_utils_add_line_tab (tab, _("Compression method"), compression_method_value,
-                                     _("Compression method (CM): Lower four bits of CMF\n"
+            format_utils_add_line_tab (tab, "Compression method", compression_method_value,
+                                       "Compression method (CM): Lower four bits of CMF\n"
                                        "Compression method\n"
-                                       "<tt>8<sub>16</sub></tt>\tDEFLATE"));
+                                       "<tt>8<sub>16</sub></tt>\tDEFLATE");
         if (slidingwindow_size)
-            format_utils_add_line_tab (tab, _("LZ77 sliding window size"), slidingwindow_size,
-                         _("Compression info (CINFO): Upper four bits of CMF, only valid when CM = 8\n"
+            format_utils_add_line_tab (tab, "LZ77 sliding window size", slidingwindow_size,
+                           "Compression info (CINFO): Upper four bits of CMF, only valid when CM = 8\n"
                            "Used to calculate the sliding window size as:\n"
-                           "2<sup>CINFO + 8</sup> if CINFO &lt; 8"));
+                           "2<sup>CINFO + 8</sup> if CINFO &lt; 8");
         if (compression_level_value)
-            format_utils_add_line_full_tab (tab, _("Compression level"), compression_level_value,
-                                      _("Compression level: upper two bits of FLG\n"
+            format_utils_add_line_full_tab (tab, "Compression level", compression_level_value,
+                                        "Compression level: upper two bits of FLG\n"
                                         "Compression levels\n"
                                         "<tt>0</tt>\tCompressor used fastest algorithm\n"
                                         "<tt>1</tt>\tCompressor used fast algorithm\n"
                                         "<tt>2</tt>\tCompressor used default algorithm\n"
-                                        "<tt>3</tt>\tCompressor used maximum compression, slowest algorithm"),
+                                        "<tt>3</tt>\tCompressor used maximum compression, slowest algorithm",
                                         10, 0);
         if (decompression_result)
-            format_utils_add_line_full_tab (tab, _("Decompression"), decompression_result,
+            format_utils_add_line_full_tab (tab, "Decompression", decompression_result,
                                             NULL, 10, 10);
 
         if (*decompression_success)
         {
-            value = g_strdup_printf (_("%u B (%.2f MiB)"), (guint) inflate_size, (gfloat) inflate_size / MEBIBYTE);
-            format_utils_add_line_tab (tab, _("Inflate size"), value,
-                                 _("Size of the raw data"));
+            value = g_strdup_printf ("%u B (%.2f MiB)", (guint) inflate_size, (gfloat) inflate_size / MEBIBYTE);
+            format_utils_add_line_tab (tab, "Inflate size", value,
+                                       "Size of the raw data");
             g_free (value);
 
-            value = g_strdup_printf (_("%u B (%.2f MiB)"), *real_zlib_length, (gfloat) *real_zlib_length / MEBIBYTE);
-            format_utils_add_line_tab (tab, _("Deflate size"), value,
-                                 _("Size of the compressed data"));
+            value = g_strdup_printf ("%u B (%.2f MiB)", *real_zlib_length, (gfloat) *real_zlib_length / MEBIBYTE);
+            format_utils_add_line_tab (tab, "Deflate size", value,
+                                       "Size of the compressed data");
             g_free (value);
 
             value = g_strdup_printf ("%.2f", (gfloat) inflate_size / *real_zlib_length);
-            format_utils_add_line_tab (tab, _("Compression ratio"), value, NULL);
+            format_utils_add_line_tab (tab, "Compression ratio", value, NULL);
             g_free (value);
         }
     }

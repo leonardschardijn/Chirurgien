@@ -16,10 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-
-#include <glib/gi18n.h>
-
 #include "png-format.h"
 
 
@@ -44,32 +40,44 @@ png_trns_chunk (FormatsFile *file,
     if (!chunk_counts[IHDR])
     {
         format_utils_add_field (file, ERROR_COLOR_1, FALSE, chunk_length,
-                              _("The first chunk must be the IHDR chunk"), NULL);
+                                "The first chunk must be the IHDR chunk", NULL);
         return TRUE;
     }
 
-    format_utils_init_tab (&tab, _("Transparency"));
+    format_utils_init_tab (&tab, "Transparency");
 
     if (colortype == 0)
     {
-        if (!process_png_field (file, &tab, _("Grayscale alpha channel"), NULL,
-                           NULL, CHUNK_DATA_COLOR_1, 2, 0, NULL, NULL, _("%u bits"), NULL))
+        if (!process_png_field (file, &tab, "Grayscale alpha channel", NULL,
+                                NULL,
+                                CHUNK_DATA_COLOR_1, 2,
+                                0, NULL, NULL,
+                                "%u bits", NULL))
             return FALSE;
 
         chunk_used += 2;
     }
     else if (colortype == 2)
     {
-        if (!process_png_field (file, &tab, _("Red alpha channel"), NULL,
-                           NULL, CHUNK_DATA_COLOR_1, 2, 0, NULL, NULL, _("%u bits"), NULL))
+        if (!process_png_field (file, &tab, "Red alpha channel", NULL,
+                                NULL,
+                                CHUNK_DATA_COLOR_1, 2,
+                                0, NULL, NULL,
+                                "%u bits", NULL))
             return FALSE;
 
-        if (!process_png_field (file, &tab, _("Green alpha channel"), NULL,
-                           NULL, CHUNK_DATA_COLOR_2, 2, 0, NULL, NULL, _("%u bits"), NULL))
+        if (!process_png_field (file, &tab, "Green alpha channel", NULL,
+                                NULL,
+                                CHUNK_DATA_COLOR_2, 2,
+                                0, NULL, NULL,
+                                "%u bits", NULL))
             return FALSE;
 
-        if (!process_png_field (file, &tab, _("Blue alpha channel"), NULL,
-                           NULL, CHUNK_DATA_COLOR_1, 2, 0, NULL, NULL, _("%u bits"), NULL))
+        if (!process_png_field (file, &tab, "Blue alpha channel", NULL,
+                                NULL,
+                                CHUNK_DATA_COLOR_1, 2,
+                                0, NULL, NULL,
+                                "%u bits", NULL))
             return FALSE;
 
         chunk_used += 6;
@@ -79,7 +87,7 @@ png_trns_chunk (FormatsFile *file,
         if (palette_entries < chunk_length)
         {
             format_utils_add_field (file, ERROR_COLOR_1, FALSE, chunk_length,
-                                  _("The tRNS chunk has more alpha values than palette entries"), NULL);
+                                    "The tRNS chunk has more alpha values than palette entries", NULL);
             return TRUE;
         }
 
@@ -87,22 +95,22 @@ png_trns_chunk (FormatsFile *file,
         {
             if (i % 2)
                 format_utils_add_field (file, CHUNK_DATA_COLOR_2, TRUE, 1,
-                                      _("Palette entry alpha"), NULL);
+                                        "Palette entry alpha", NULL);
             else
                 format_utils_add_field (file, CHUNK_DATA_COLOR_1, TRUE, 1,
-                                      _("Palette entry alpha"), NULL);
+                                        "Palette entry alpha", NULL);
         }
 
         value = g_strdup_printf ("%u", palette_entries);
-        format_utils_add_line_tab (&tab, _("Palette entries"), value, NULL);
+        format_utils_add_line_tab (&tab, "Palette entries", value, NULL);
         g_free (value);
 
         value = g_strdup_printf ("%u", chunk_length);
-        format_utils_add_line_tab (&tab, _("Alpha entries"), value, NULL);
+        format_utils_add_line_tab (&tab, "Alpha entries", value, NULL);
         g_free (value);
 
         value = g_strdup_printf ("%u", chunk_length - palette_entries);
-        format_utils_add_line_tab (&tab, _("Palette entries without alpha"), value, NULL);
+        format_utils_add_line_tab (&tab, "Palette entries without alpha", value, NULL);
         g_free (value);
 
         chunk_used += chunk_length;
@@ -110,7 +118,7 @@ png_trns_chunk (FormatsFile *file,
     else
     {
         format_utils_add_field (file, ERROR_COLOR_1, FALSE, chunk_length,
-                              _("tRNS chunks are only valid in grayscale, RGB and indexed-color images"), NULL);
+                                "tRNS chunks are only valid in grayscale, RGB and indexed-color images", NULL);
         return TRUE;
     }
 
@@ -118,7 +126,7 @@ png_trns_chunk (FormatsFile *file,
     {
         chunk_length -= chunk_used;
         format_utils_add_field (file, ERROR_COLOR_1, FALSE, chunk_length,
-                              _("Unrecognized data"), NULL);
+                                "Unrecognized data", NULL);
     }
 
     format_utils_insert_tab (file, &tab, chunk_types[tRNS]);

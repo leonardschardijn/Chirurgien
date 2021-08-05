@@ -16,10 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-
-#include <glib/gi18n.h>
-
 #include "png-format.h"
 
 #define TIME_CHUNK_LENGTH 7
@@ -40,11 +36,11 @@ png_time_chunk (FormatsFile *file,
     guint8 date[5];
 
     const gchar * const fields[] = {
-        _("Month"),
-        _("Day"),
-        _("Hour"),
-        _("Minute"),
-        _("Second")
+        "Month",
+        "Day",
+        "Hour",
+        "Minute",
+        "Second"
     };
 
     if (!chunk_length)
@@ -55,14 +51,17 @@ png_time_chunk (FormatsFile *file,
     if (!chunk_counts[IHDR])
     {
         format_utils_add_field (file, ERROR_COLOR_1, FALSE, chunk_length,
-                              _("The first chunk must be the IHDR chunk"), NULL);
+                                "The first chunk must be the IHDR chunk", NULL);
         return TRUE;
     }
 
-    format_utils_init_tab (&tab, _("Last-modification time"));
+    format_utils_init_tab (&tab, "Last-modification time");
 
-    if (!process_png_field (file, &tab, _("Year"), NULL,
-                            NULL, CHUNK_DATA_COLOR_1, 2, 0, NULL, NULL, "%u", &year))
+    if (!process_png_field (file, &tab, "Year", NULL,
+                            NULL,
+                            CHUNK_DATA_COLOR_1, 2,
+                            0, NULL, NULL,
+                            "%u", &year))
         return FALSE;
 
     for (gint i = 0; i < 5; i++)
@@ -73,21 +72,24 @@ png_time_chunk (FormatsFile *file,
             color_toggle = CHUNK_DATA_COLOR_2;
 
         if (!process_png_field (file, &tab, fields[i], NULL,
-                        NULL, color_toggle, 1, 0, NULL, NULL, "%u", &date[i]))
+                                NULL,
+                                color_toggle, 1,
+                                0, NULL, NULL,
+                                "%u", &date[i]))
             return FALSE;
     }
 
     full_date = g_strdup_printf ("%.4u-%.2u-%.2u %.2u:%.2u:%.2u",
                                  year, date[0], date[1],
                                  date[2], date[3], date[4]);
-    format_utils_add_line_full_tab (&tab, _("Date"), full_date,
+    format_utils_add_line_full_tab (&tab, "Date", full_date,
                                     NULL, 10, 0);
     g_free (full_date);
 
     /* Fixed length chunk */
     if (chunk_length > TIME_CHUNK_LENGTH)
         format_utils_add_field (file, ERROR_COLOR_1, FALSE, chunk_length - TIME_CHUNK_LENGTH,
-                              _("Unrecognized data"), NULL);
+                                "Unrecognized data", NULL);
 
     format_utils_insert_tab (file, &tab, chunk_types[tIME]);
 

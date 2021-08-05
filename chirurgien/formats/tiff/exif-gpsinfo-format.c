@@ -16,11 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-
 #include "exif-gpsinfo-format.h"
-
-#include <glib/gi18n.h>
 
 #include "chirurgien-exif.h"
 
@@ -78,7 +74,7 @@ chirurgien_gpsinfo (FormatsFile    *file,
     {
         format_utils_read (file, &ifd_entries, 2);
         format_utils_add_field (file, IFD_COLOR, TRUE, 2,
-                              _("Number of directory entries (GPSInfo)"), "GPSInfo IFD");
+                                "Number of directory entries (GPSInfo)", "GPSInfo IFD");
     }
     else
     {
@@ -95,7 +91,7 @@ chirurgien_gpsinfo (FormatsFile    *file,
         if (ifd_entries == 1)
         {
             if (FILE_HAS_DATA_N (file, 4))
-                format_utils_add_field (file, IFD_COLOR, TRUE, 4, _("IFD end (GPSInfo)"), NULL);
+                format_utils_add_field (file, IFD_COLOR, TRUE, 4, "IFD end (GPSInfo)", NULL);
 
             break;
         }
@@ -132,46 +128,46 @@ chirurgien_gpsinfo (FormatsFile    *file,
         {
             guint8 values[] = { 0x2, 0x3, 0x0, 0x0 };
             const gchar *value_description[] = {
-                _("v2.3"),
-                _("<span foreground=\"red\">INVALID</span>")
+                "v2.3",
+                "<span foreground=\"red\">INVALID</span>"
             };
-            process_byte_undefined_tag (file, gpsinfo_tab, _("Tag: GPSVersionID"), "GPSVersionID",
-                                        _("GPSVersionID\n"
-                                          "<tt>02 03 00 00<sub>16</sub></tt>\tv2.3"),
+            process_byte_undefined_tag (file, gpsinfo_tab, "Tag: GPSVersionID", "GPSVersionID",
+                                        "GPSVersionID\n"
+                                        "<tt>02 03 00 00<sub>16</sub></tt>\tv2.3",
                                         field_type, BYTE, count, 4, value_offset, is_little_endian,
                                         sizeof (values) >> 2, values, value_description);
         }
         else if (tiff_tag == tiff_tags[GPSLatitudeRef])
         {
-            process_ascii_tag (file, gpsinfo_ascii_tab, _("Tag: GPSLatitudeRef"), "GPSLatitudeRef", field_type,
+            process_ascii_tag (file, gpsinfo_ascii_tab, "Tag: GPSLatitudeRef", "GPSLatitudeRef", field_type,
                                count, 2, value_offset, is_little_endian);
         }
         else if (tiff_tag == tiff_tags[GPSLatitude])
         {
             const gchar *value_names[] = {
-                _("GPSLatitude degrees"),
-                _("GPSLatitude minutes"),
-                _("GPSLatitude seconds")
+                "GPSLatitude degrees",
+                "GPSLatitude minutes",
+                "GPSLatitude seconds"
             };
-            process_rational_tag (file, gpsinfo_tab, _("Tag: GPSLatitude"), "GPSLatitude",
-                                  _("Indicates the latitude"),
+            process_rational_tag (file, gpsinfo_tab, "Tag: GPSLatitude", "GPSLatitude",
+                                  "Indicates the latitude",
                                   value_names, field_type, RATIONAL, count, 3, value_offset,
                                   is_little_endian, NULL);
         }
         else if (tiff_tag == tiff_tags[GPSLongitudeRef])
         {
-            process_ascii_tag (file, gpsinfo_ascii_tab, _("Tag: GPSLongitudeRef"), "GPSLongitudeRef", field_type,
+            process_ascii_tag (file, gpsinfo_ascii_tab, "Tag: GPSLongitudeRef", "GPSLongitudeRef", field_type,
                                count, 2, value_offset, is_little_endian);
         }
         else if (tiff_tag == tiff_tags[GPSLongitude])
         {
             const gchar *value_names[] = {
-                _("GPSLongitude degrees"),
-                _("GPSLongitude minutes"),
-                _("GPSLongitude seconds")
+                "GPSLongitude degrees",
+                "GPSLongitude minutes",
+                "GPSLongitude seconds"
             };
-            process_rational_tag (file, gpsinfo_tab, _("Tag: GPSLongitude"), "GPSLongitude",
-                                  _("Indicates the longitude"),
+            process_rational_tag (file, gpsinfo_tab, "Tag: GPSLongitude", "GPSLongitude",
+                                  "Indicates the longitude",
                                   value_names, field_type, RATIONAL, count, 3, value_offset,
                                   is_little_endian, NULL);
         }
@@ -179,204 +175,204 @@ chirurgien_gpsinfo (FormatsFile    *file,
         {
             guint8 values[] = { 0x0, 0x1 };
             const gchar *value_description[] = {
-                _("Sea level"),
-                _("Sea level reference (negative value)"),
-                _("<span foreground=\"red\">INVALID</span>")
+                "Sea level",
+                "Sea level reference (negative value)",
+                "<span foreground=\"red\">INVALID</span>"
             };
-            process_byte_undefined_tag (file, gpsinfo_tab, _("Tag: GPSAltitudeRef"), "GPSAltitudeRef",
-                                        _("GPSAltitudeRef\n"
-                                          "<tt>00<sub>16</sub></tt>\tSea level\n"
-                                          "<tt>01<sub>16</sub></tt>\tSea level reference (negative value)"),
+            process_byte_undefined_tag (file, gpsinfo_tab, "Tag: GPSAltitudeRef", "GPSAltitudeRef",
+                                        "GPSAltitudeRef\n"
+                                        "<tt>00<sub>16</sub></tt>\tSea level\n"
+                                        "<tt>01<sub>16</sub></tt>\tSea level reference (negative value)",
                                         field_type, BYTE, count, 1, value_offset, is_little_endian,
                                         sizeof (values), values, value_description);
         }
         else if (tiff_tag == tiff_tags[GPSAltitude])
         {
-            process_rational_tag (file, gpsinfo_tab, _("Tag: GPSAltitude"), "GPSAltitude",
-                                  _("Indicates the altitude based on the reference in GPSAltitudeRef"),
+            process_rational_tag (file, gpsinfo_tab, "Tag: GPSAltitude", "GPSAltitude",
+                                  "Indicates the altitude based on the reference in GPSAltitudeRef",
                                   NULL, field_type, RATIONAL, count, 1, value_offset,
                                   is_little_endian, NULL);
         }
         else if (tiff_tag == tiff_tags[GPSTimeStamp])
         {
             const gchar *value_names[] = {
-                _("Hour"),
-                _("Minutes"),
-                _("Seconds")
+                "Hour",
+                "Minutes",
+                "Seconds"
             };
-            process_rational_tag (file, gpsinfo_tab, _("Tag: GPSTimeStamp"), "GPSTimeStamp",
-                                  _("Indicates the time as UTC (Coordinated Universal Time)"),
+            process_rational_tag (file, gpsinfo_tab, "Tag: GPSTimeStamp", "GPSTimeStamp",
+                                  "Indicates the time as UTC (Coordinated Universal Time)",
                                   value_names, field_type, RATIONAL, count, 3, value_offset,
                                   is_little_endian, NULL);
         }
         else if (tiff_tag == tiff_tags[GPSSatellites])
         {
-            process_ascii_tag (file, gpsinfo_ascii_tab, _("Tag: GPSSatellites"), "GPSSatellites", field_type,
+            process_ascii_tag (file, gpsinfo_ascii_tab, "Tag: GPSSatellites", "GPSSatellites", field_type,
                                count, 0, value_offset, is_little_endian);
         }
         else if (tiff_tag == tiff_tags[GPSStatus])
         {
-            process_ascii_tag (file, gpsinfo_ascii_tab, _("Tag: GPSStatus"), "GPSStatus", field_type,
+            process_ascii_tag (file, gpsinfo_ascii_tab, "Tag: GPSStatus", "GPSStatus", field_type,
                                count, 2, value_offset, is_little_endian);
         }
         else if (tiff_tag == tiff_tags[GPSMeasureMode])
         {
-            process_ascii_tag (file, gpsinfo_ascii_tab, _("Tag: GPSMeasureMode"), "GPSMeasureMode", field_type,
+            process_ascii_tag (file, gpsinfo_ascii_tab, "Tag: GPSMeasureMode", "GPSMeasureMode", field_type,
                                count, 2, value_offset, is_little_endian);
         }
         else if (tiff_tag == tiff_tags[GPSDOP])
         {
-            process_rational_tag (file, gpsinfo_tab, _("Tag: GPSDOP"), "GPSDOP",
-                                  _("Indicates the GPS DOP (data degree of precision)"),
+            process_rational_tag (file, gpsinfo_tab, "Tag: GPSDOP", "GPSDOP",
+                                  "Indicates the GPS DOP (data degree of precision)",
                                   NULL, field_type, RATIONAL, count, 1, value_offset,
                                   is_little_endian, NULL);
         }
         else if (tiff_tag == tiff_tags[GPSSpeedRef])
         {
-            process_ascii_tag (file, gpsinfo_ascii_tab, _("Tag: GPSSpeedRef"), "GPSSpeedRef", field_type,
+            process_ascii_tag (file, gpsinfo_ascii_tab, "Tag: GPSSpeedRef", "GPSSpeedRef", field_type,
                                count, 2, value_offset, is_little_endian);
         }
         else if (tiff_tag == tiff_tags[GPSSpeed])
         {
-            process_rational_tag (file, gpsinfo_tab, _("Tag: GPSSpeed"), "GPSSpeed",
-                                  _("Indicates the speed of GPS receiver movement"),
+            process_rational_tag (file, gpsinfo_tab, "Tag: GPSSpeed", "GPSSpeed",
+                                  "Indicates the speed of GPS receiver movement",
                                   NULL, field_type, RATIONAL, count, 1, value_offset,
                                   is_little_endian, NULL);
         }
         else if (tiff_tag == tiff_tags[GPSTrackRef])
         {
-            process_ascii_tag (file, gpsinfo_ascii_tab, _("Tag: GPSTrackRef"), "GPSTrackRef", field_type,
+            process_ascii_tag (file, gpsinfo_ascii_tab, "Tag: GPSTrackRef", "GPSTrackRef", field_type,
                                count, 2, value_offset, is_little_endian);
         }
         else if (tiff_tag == tiff_tags[GPSTrack])
         {
-            process_rational_tag (file, gpsinfo_tab, _("Tag: GPSTrack"), "GPSTrack",
-                                  _("Indicates the direction of GPS receiver movement"),
+            process_rational_tag (file, gpsinfo_tab, "Tag: GPSTrack", "GPSTrack",
+                                  "Indicates the direction of GPS receiver movement",
                                   NULL, field_type, RATIONAL, count, 1, value_offset,
                                   is_little_endian, NULL);
         }
         else if (tiff_tag == tiff_tags[GPSImgDirectionRef])
         {
-            process_ascii_tag (file, gpsinfo_ascii_tab, _("Tag: GPSImgDirectionRef"), "GPSImgDirectionRef", field_type,
+            process_ascii_tag (file, gpsinfo_ascii_tab, "Tag: GPSImgDirectionRef", "GPSImgDirectionRef", field_type,
                                count, 2, value_offset, is_little_endian);
         }
         else if (tiff_tag == tiff_tags[GPSImgDirection])
         {
-            process_rational_tag (file, gpsinfo_tab, _("Tag: GPSImgDirection"), "GPSImgDirection",
-                                  _("Indicates the reference for giving the direction of the image when it is captured"),
+            process_rational_tag (file, gpsinfo_tab, "Tag: GPSImgDirection", "GPSImgDirection",
+                                  "Indicates the reference for giving the direction of the image when it is captured",
                                   NULL, field_type, RATIONAL, count, 1, value_offset,
                                   is_little_endian, NULL);
         }
         else if (tiff_tag == tiff_tags[GPSMapDatum])
         {
-            process_ascii_tag (file, gpsinfo_ascii_tab, _("Tag: GPSMapDatum"), "GPSMapDatum", field_type,
+            process_ascii_tag (file, gpsinfo_ascii_tab, "Tag: GPSMapDatum", "GPSMapDatum", field_type,
                                count, 0, value_offset, is_little_endian);
         }
         else if (tiff_tag == tiff_tags[GPSDestLatitudeRef])
         {
-            process_ascii_tag (file, gpsinfo_ascii_tab, _("Tag: GPSDestLatitudeRef"), "GPSDestLatitudeRef", field_type,
+            process_ascii_tag (file, gpsinfo_ascii_tab, "Tag: GPSDestLatitudeRef", "GPSDestLatitudeRef", field_type,
                                count, 2, value_offset, is_little_endian);
         }
         else if (tiff_tag == tiff_tags[GPSDestLatitude])
         {
             const gchar *value_names[] = {
-                _("GPSDestLatitude degrees"),
-                _("GPSDestLatitude minutes"),
-                _("GPSDestLatitude seconds")
+                "GPSDestLatitude degrees",
+                "GPSDestLatitude minutes",
+                "GPSDestLatitude seconds"
             };
-            process_rational_tag (file, gpsinfo_tab, _("Tag: GPSDestLatitude"), "GPSDestLatitude",
-                                  _("Indicates the latitude of the destination point"),
+            process_rational_tag (file, gpsinfo_tab, "Tag: GPSDestLatitude", "GPSDestLatitude",
+                                  "Indicates the latitude of the destination point",
                                   value_names, field_type, RATIONAL, count, 3, value_offset,
                                   is_little_endian, NULL);
         }
         else if (tiff_tag == tiff_tags[GPSDestLongitudeRef])
         {
-            process_ascii_tag (file, gpsinfo_ascii_tab, _("Tag: GPSDestLongitudeRef"), "GPSDestLongitudeRef", field_type,
+            process_ascii_tag (file, gpsinfo_ascii_tab, "Tag: GPSDestLongitudeRef", "GPSDestLongitudeRef", field_type,
                                count, 2, value_offset, is_little_endian);
         }
         else if (tiff_tag == tiff_tags[GPSDestLongitude])
         {
             const gchar *value_names[] = {
-                _("GPSDestLongitude degrees"),
-                _("GPSDestLongitude minutes"),
-                _("GPSDestLongitude seconds")
+                "GPSDestLongitude degrees",
+                "GPSDestLongitude minutes",
+                "GPSDestLongitude seconds"
             };
-            process_rational_tag (file, gpsinfo_tab, _("Tag: GPSDestLongitude"), "GPSDestLongitude",
-                                  _("Indicates the longitude of the destination point"),
+            process_rational_tag (file, gpsinfo_tab, "Tag: GPSDestLongitude", "GPSDestLongitude",
+                                  "Indicates the longitude of the destination point",
                                   value_names, field_type, RATIONAL, count, 3, value_offset,
                                   is_little_endian, NULL);
         }
         else if (tiff_tag == tiff_tags[GPSDestBearingRef])
         {
-            process_ascii_tag (file, gpsinfo_ascii_tab, _("Tag: GPSDestBearingRef"), "GPSDestBearingRef", field_type,
+            process_ascii_tag (file, gpsinfo_ascii_tab, "Tag: GPSDestBearingRef", "GPSDestBearingRef", field_type,
                                count, 2, value_offset, is_little_endian);
         }
         else if (tiff_tag == tiff_tags[GPSDestBearing])
         {
-            process_rational_tag (file, gpsinfo_tab, _("Tag: GPSDestBearing"), "GPSDestBearing",
-                                  _("Indicates the bearing to the destination point"),
+            process_rational_tag (file, gpsinfo_tab, "Tag: GPSDestBearing", "GPSDestBearing",
+                                  "Indicates the bearing to the destination point",
                                   NULL, field_type, RATIONAL, count, 1, value_offset,
                                   is_little_endian, NULL);
         }
         else if (tiff_tag == tiff_tags[GPSDestDistanceRef])
         {
-            process_ascii_tag (file, gpsinfo_ascii_tab, _("Tag: GPSDestDistanceRef"), "GPSDestDistanceRef", field_type,
+            process_ascii_tag (file, gpsinfo_ascii_tab, "Tag: GPSDestDistanceRef", "GPSDestDistanceRef", field_type,
                                count, 2, value_offset, is_little_endian);
         }
         else if (tiff_tag == tiff_tags[GPSDestDistance])
         {
-            process_rational_tag (file, gpsinfo_tab, _("Tag: GPSDestDistance"), "GPSDestDistance",
-                                  _("Indicates the distance to the destination point"),
+            process_rational_tag (file, gpsinfo_tab, "Tag: GPSDestDistance", "GPSDestDistance",
+                                  "Indicates the distance to the destination point",
                                   NULL, field_type, RATIONAL, count, 1, value_offset,
                                   is_little_endian, NULL);
         }
         else if (tiff_tag == tiff_tags[GPSProcessingMethod])
         {
-            process_byte_undefined_tag (file, gpsinfo_ascii_tab, _("Tag: GPSProcessingMethod"), "GPSProcessingMethod",
+            process_byte_undefined_tag (file, gpsinfo_ascii_tab, "Tag: GPSProcessingMethod", "GPSProcessingMethod",
                                         NULL, field_type, UNDEFINED, count, 0, value_offset, is_little_endian,
                                         0, NULL, NULL);
         }
         else if (tiff_tag == tiff_tags[GPSAreaInformation])
         {
-            process_byte_undefined_tag (file, gpsinfo_ascii_tab, _("Tag: GPSAreaInformation"), "GPSAreaInformation",
+            process_byte_undefined_tag (file, gpsinfo_ascii_tab, "Tag: GPSAreaInformation", "GPSAreaInformation",
                                         NULL, field_type, UNDEFINED, count, 0, value_offset, is_little_endian,
                                         0, NULL, NULL);
         }
         else if (tiff_tag == tiff_tags[GPSDateStamp])
         {
-            process_ascii_tag (file, gpsinfo_ascii_tab, _("Tag: GPSDateStamp"), "GPSDateStamp", field_type,
+            process_ascii_tag (file, gpsinfo_ascii_tab, "Tag: GPSDateStamp", "GPSDateStamp", field_type,
                                count, 11, value_offset, is_little_endian);
         }
         else if (tiff_tag == tiff_tags[GPSDifferential])
         {
             guint16 values[] = { 0x0, 0x1 };
             const gchar *value_description[] = {
-                _("Unknown"),
-                _("Macro"),
-                _("Close view"),
-                _("Distant view"),
-                _("<span foreground=\"red\">INVALID</span>")
+                "Unknown",
+                "Macro",
+                "Close view",
+                "Distant view",
+                "<span foreground=\"red\">INVALID</span>"
             };
-            process_short_tag (file, gpsinfo_tab, _("Tag: GPSDifferential"), "GPSDifferential",
-                   _("GPSDifferential\n"
-                     "<tt>00 00<sub>16</sub></tt>\tMeasurement without differential correction\n"
-                     "<tt>00 01<sub>16</sub></tt>\tDifferential correction applied"),
+            process_short_tag (file, gpsinfo_tab, "Tag: GPSDifferential", "GPSDifferential",
+                   "GPSDifferential\n"
+                   "<tt>00 00<sub>16</sub></tt>\tMeasurement without differential correction\n"
+                   "<tt>00 01<sub>16</sub></tt>\tDifferential correction applied",
                    field_type, SHORT, count, 1, value_offset, is_little_endian,
                    G_N_ELEMENTS (values), values, value_description, NULL);
         }
         else if (tiff_tag == tiff_tags[GPSHPositioningError])
         {
-            process_rational_tag (file, gpsinfo_tab, _("Tag: GPSHPositioningError"), "GPSHPositioningError",
-                                  _("Indicates horizontal positioning errors, in meters"),
+            process_rational_tag (file, gpsinfo_tab, "Tag: GPSHPositioningError", "GPSHPositioningError",
+                                  "Indicates horizontal positioning errors, in meters",
                                   NULL, field_type, RATIONAL, count, 1, value_offset,
                                   is_little_endian, NULL);
         }
         else
         {
-            format_utils_add_field (file, ERROR_COLOR_1, FALSE, 2, _("Tag: Unknown"), NULL);
-            format_utils_add_field (file, ERROR_COLOR_2, FALSE, 2, _("Field type"), NULL);
-            format_utils_add_field (file, ERROR_COLOR_1, FALSE, 4, _("Count"), NULL);
-            format_utils_add_field (file, ERROR_COLOR_2, FALSE, 4, _("Tag value or offset"), NULL);
+            format_utils_add_field (file, ERROR_COLOR_1, FALSE, 2, "Tag: Unknown", NULL);
+            format_utils_add_field (file, ERROR_COLOR_2, FALSE, 2, "Field type", NULL);
+            format_utils_add_field (file, ERROR_COLOR_1, FALSE, 4, "Count", NULL);
+            format_utils_add_field (file, ERROR_COLOR_2, FALSE, 4, "Tag value or offset", NULL);
 
             if (unknown_tag_count > 10 && ifd_entries > 100)
                 return FALSE;

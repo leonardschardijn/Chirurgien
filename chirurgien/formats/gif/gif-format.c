@@ -16,11 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-
 #include "gif-format.h"
-
-#include <glib/gi18n.h>
 
 #include "chirurgien-gif.h"
 
@@ -29,14 +25,14 @@ void
 chirurgien_gif (FormatsFile *file)
 {
     const gchar *blocks[BLOCKS] = {
-        _("Header"),
-        _("Logical Screen Descriptor"),
-        _("Image Descriptor"),
-        _("Graphic Control Extension"),
-        _("Plain Text Extension"),
-        _("Application Extension"),
-        _("Comment Extension"),
-        _("Trailer")
+        "Header",
+        "Logical Screen Descriptor",
+        "Image Descriptor",
+        "Graphic Control Extension",
+        "Plain Text Extension",
+        "Application Extension",
+        "Comment Extension",
+        "Trailer"
     };
 
     gint block_counts[BLOCKS];
@@ -49,15 +45,15 @@ chirurgien_gif (FormatsFile *file)
 
     format_utils_set_title (file, "Graphics Interchange Format");
 
-    format_utils_add_field (file, HEADER_BLOCK_COLOR, TRUE, 6, _("GIF header block"), _("Header"));
+    format_utils_add_field (file, HEADER_BLOCK_COLOR, TRUE, 6, "GIF header block", "Header");
 
-    format_utils_start_section (file, _("Image details"));
+    format_utils_start_section (file, "Image details");
     block_counts[Header]++;
 
     if (!gif_logical_screen_descriptor_block (file))
     {
         format_utils_add_field (file, ERROR_COLOR_1, FALSE, G_MAXUINT,
-                              _("Unrecognized data"), NULL);
+                                "Unrecognized data", NULL);
         return;
     }
     block_counts[LogicalScreenDescriptor]++;
@@ -71,7 +67,7 @@ chirurgien_gif (FormatsFile *file)
         if (block_counts[Trailer])
         {
             format_utils_add_field (file, ERROR_COLOR_1, FALSE, G_MAXUINT,
-                      _("Unrecognized data, file ends at Trailer block"), NULL);
+                      "Unrecognized data, file ends at Trailer block", NULL);
             break;
         }
 
@@ -80,7 +76,7 @@ chirurgien_gif (FormatsFile *file)
         if (block_label[0] == 0x2C) // Image descriptor
         {
             format_utils_add_field (file, BLOCK_LABEL_COLOR, TRUE, 1,
-                                  _("Image Descriptor block label"), _("ID"));
+                                    "Image Descriptor block label", "ID");
             block_counts[ImageDescriptor]++;
 
             if (!gif_image_descriptor_block (file, &graphics_tab))
@@ -89,7 +85,7 @@ chirurgien_gif (FormatsFile *file)
         else if (block_label[0] == 0x3B) // Trailer
         {
             format_utils_add_field (file, BLOCK_LABEL_COLOR, TRUE, 1,
-                                  _("Trailer block label"), _("Trailer"));
+                                    "Trailer block label", "Trailer");
             block_counts[Trailer]++;
         }
         else if (block_label[0] == 0x21) // Extension block
@@ -97,14 +93,14 @@ chirurgien_gif (FormatsFile *file)
             if (!format_utils_read (file, block_label, 2))
             {
                 format_utils_add_field (file, ERROR_COLOR_1, FALSE, 1,
-                                      _("Unknown block label"), NULL);
+                                        "Unknown block label", NULL);
                 break;
             }
 
             if (block_label[1] == 0xFF) // Application Extension
             {
                 format_utils_add_field (file, BLOCK_LABEL_COLOR, TRUE, 2,
-                                      _("Application Extension block label"), _("AE"));
+                                        "Application Extension block label", "AE");
                 block_counts[ApplicationExtension]++;
 
                 if (!gif_application_ext_block (file))
@@ -113,7 +109,7 @@ chirurgien_gif (FormatsFile *file)
             else if (block_label[1] == 0xFE) // Comment Extension
             {
                 format_utils_add_field (file, BLOCK_LABEL_COLOR, TRUE, 2,
-                                      _("Comment Extension block label"), _("CE"));
+                                        "Comment Extension block label", "CE");
                 block_counts[CommentExtension]++;
 
                 if (!gif_comment_ext_block (file))
@@ -122,7 +118,7 @@ chirurgien_gif (FormatsFile *file)
             else if (block_label[1] == 0xF9) // Graphic Control Extension
             {
                 format_utils_add_field (file, BLOCK_LABEL_COLOR, TRUE, 2,
-                                      _("Graphic Control Extension block label"), _("GCE"));
+                                        "Graphic Control Extension block label", "GCE");
                 block_counts[GraphicalControlExtension]++;
 
                 if (!gif_graphic_control_ext_block (file, &graphics_tab))
@@ -131,7 +127,7 @@ chirurgien_gif (FormatsFile *file)
             else if (block_label[1] == 0x01) // Plain Text Extension
             {
                 format_utils_add_field (file, BLOCK_LABEL_COLOR, TRUE, 2,
-                                      _("Plain Text Extension block label"), _("PTE"));
+                                        "Plain Text Extension block label", "PTE");
                 block_counts[PlainTextExtension]++;
 
                 if (!gif_plain_text_ext_block (file, &graphics_tab))
@@ -140,9 +136,9 @@ chirurgien_gif (FormatsFile *file)
             else
             {
                 format_utils_add_field (file, ERROR_COLOR_1, FALSE, 2,
-                                      _("Unrecognized block label"), _("???"));
+                                        "Unrecognized block label", "???");
 
-                if (!process_data_subblocks (file, _("Unrecognized data block"), NULL,
+                if (!process_data_subblocks (file, "Unrecognized data block", NULL,
                                              ERROR_COLOR_2, ERROR_COLOR_1, FALSE))
                     break;
             }
@@ -150,9 +146,9 @@ chirurgien_gif (FormatsFile *file)
         else
         {
             format_utils_add_field (file, ERROR_COLOR_1, FALSE, 1,
-                                  _("Unknown block label"), _("???"));
+                                    "Unknown block label", "???");
 
-            if (!process_data_subblocks (file, _("Unrecognized data block"), NULL,
+            if (!process_data_subblocks (file, "Unrecognized data block", NULL,
                                          ERROR_COLOR_2, ERROR_COLOR_1, FALSE))
                 break;
         }
@@ -160,13 +156,13 @@ chirurgien_gif (FormatsFile *file)
 
     /* If there is still data available after the loop, tag it as unrecognized */
     format_utils_add_field (file, ERROR_COLOR_1, FALSE, G_MAXUINT,
-                          _("Unrecognized data"), NULL);
+                            "Unrecognized data", NULL);
 
-    format_utils_insert_tab (file, &graphics_tab, _("Graphics"));
+    format_utils_insert_tab (file, &graphics_tab, "Graphics");
 
     if (block_counts[Header])
     {
-        format_utils_start_section (file, _("Block count"));
+        format_utils_start_section (file, "Block count");
 
         for (gint i = Header; i <= Trailer; i++)
         {
@@ -238,11 +234,11 @@ process_data_subblocks (FormatsFile *file,
 
         if (block_size)
         {
-            format_utils_add_field (file, size_color_index, background, 1, _("Data block size"), NULL);
+            format_utils_add_field (file, size_color_index, background, 1, "Data block size", NULL);
         }
         else
         {
-            format_utils_add_field (file, size_color_index, background, 1, _("Data block terminator"), NULL);
+            format_utils_add_field (file, size_color_index, background, 1, "Data block terminator", NULL);
             break;
         }
 

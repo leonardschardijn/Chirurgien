@@ -16,10 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-
-#include <glib/gi18n.h>
-
 #include "gif-format.h"
 
 
@@ -32,14 +28,14 @@ gif_comment_ext_block (FormatsFile *file)
 
     format_utils_init_tab (&tab, NULL);
 
-    if (!process_data_subblocks (file, _("Comment Extension data block"), &comment,
+    if (!process_data_subblocks (file, "Comment Extension data block", &comment,
                                  DATA_SUBBLOCK_START_COLOR, BLOCK_DATA_COLOR_1, TRUE))
         return FALSE;
 
-    format_utils_add_text_tab (&tab, _("Comment"),
+    format_utils_add_text_tab (&tab, "Comment",
                               (const gchar *) comment->data, comment->len);
 
-    format_utils_insert_tab (file, &tab, _("Comment ext."));
+    format_utils_insert_tab (file, &tab, "Comment ext.");
 
     g_byte_array_free (comment, TRUE);
 

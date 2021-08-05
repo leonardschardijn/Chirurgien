@@ -16,11 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-
 #include "elf-format.h"
-
-#include <glib/gi18n.h>
 
 #include "chirurgien-elf.h"
 
@@ -147,7 +143,7 @@ chirurgien_elf (FormatsFile *file)
     /* ABI version */
     if (!process_elf_field (file, NULL,
             "ABI version", NULL,
-            _("Identifies the ABI version, if incompatibilities exist"),
+            "Identifies the ABI version, if incompatibilities exist",
             HEADER_DATA_COLOR_1, 1, FALSE,
             0, NULL, NULL,
             "%u", TRUE, NULL))
@@ -242,7 +238,7 @@ chirurgien_elf (FormatsFile *file)
     /* Entry point */
     if (!process_elf_field (file, NULL,
             "Entry point", NULL,
-            _("Virtual address of the entry point"),
+            "Virtual address of the entry point",
             HEADER_DATA_COLOR_2, field_length, is_little_endian,
             0, NULL, NULL,
             "%lX<sub>16</sub>" , FALSE, NULL))
@@ -251,7 +247,7 @@ chirurgien_elf (FormatsFile *file)
     /* Program header table offset */
     if (!process_elf_field (file, NULL,
             "Program header table offset", NULL,
-            _("Offset of the program header table"),
+            "Offset of the program header table",
             HEADER_DATA_COLOR_1, field_length, is_little_endian,
             0, NULL, NULL,
             "%lX<sub>16</sub>", FALSE, &program_header_offset))
@@ -260,7 +256,7 @@ chirurgien_elf (FormatsFile *file)
     /* Section header table offset */
     if (!process_elf_field (file, NULL,
             "Section header table offset", NULL,
-            _("Offset of the section header table"),
+            "Offset of the section header table",
             HEADER_DATA_COLOR_2, field_length, is_little_endian,
             0, NULL, NULL,
             "%lX<sub>16</sub>", FALSE, &section_header_offset))
@@ -275,7 +271,7 @@ chirurgien_elf (FormatsFile *file)
     /* ELF header size */
     if (!process_elf_field (file, NULL,
             "ELF header size", NULL,
-            _("Size of the ELF header, in bytes"),
+            "Size of the ELF header, in bytes",
             HEADER_DATA_COLOR_2, 2, is_little_endian,
             0, NULL, NULL,
             "%u", FALSE, NULL))
@@ -284,7 +280,7 @@ chirurgien_elf (FormatsFile *file)
     /* Program header table entry size */
     if (!process_elf_field (file, NULL,
             "Program header table entry size", NULL,
-            _("Size of the entries in the program header table, in bytes"),
+            "Size of the entries in the program header table, in bytes",
             HEADER_DATA_COLOR_1, 2, is_little_endian,
             0, NULL, NULL,
             "%u", FALSE, NULL))
@@ -302,7 +298,7 @@ chirurgien_elf (FormatsFile *file)
     /* Section header table entry size */
     if (!process_elf_field (file, NULL,
             "Section header table entry size", NULL,
-            _("Size of the entries in the section header table, in bytes"),
+            "Size of the entries in the section header table, in bytes",
             HEADER_DATA_COLOR_1, 2, is_little_endian,
             0, NULL, NULL,
             "%u", FALSE, &section_header_entry_size))
@@ -320,7 +316,7 @@ chirurgien_elf (FormatsFile *file)
     /* Section names index */
     if (!process_elf_field (file, NULL,
             "Section names index", NULL,
-            _("Section header index of the section with the section names"),
+            "Section header index of the section with the section names",
             HEADER_DATA_COLOR_1, 2, is_little_endian,
             0, NULL, NULL,
             "Section index %u", FALSE, &section_names_index))

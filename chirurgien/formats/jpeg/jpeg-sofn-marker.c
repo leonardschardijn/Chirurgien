@@ -16,10 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-
-#include <glib/gi18n.h>
-
 #include "jpeg-format.h"
 
 #define SOF_LENGTH_WITHOUT_COMPONENTS 8
@@ -49,17 +45,17 @@ jpeg_sofn_marker (FormatsFile *file,
         {
             if (data_length > 1)
                 format_utils_add_field (file, ERROR_COLOR_1, FALSE, data_length - 2,
-                                      _("SOF segment already defined"), NULL);
+                                        "SOF segment already defined", NULL);
             return TRUE;
         }
     }
 
     marker_counts[sof_marker]++;
 
-    format_utils_start_section (file, _("Image details"));
+    format_utils_start_section (file, "Image details");
 
-    format_utils_add_line (file, _("Compression method"), compression_method,
-                         _("Compression method\n"
+    format_utils_add_line (file, "Compression method", compression_method,
+                           "Compression method\n"
                            "SOF0: Baseline DCT\n"
                            "SOF1: Extended sequential DCT - Huffman coding\n"
                            "SOF2: Progressive DCT - Huffman coding\n"
@@ -72,41 +68,45 @@ jpeg_sofn_marker (FormatsFile *file,
                            "SOF11: Lossless (sequential) - Arithmetic coding\n"
                            "SOF13: Differential sequential DCT - Arithmetic coding\n"
                            "SOF14: Differential progressive DCT - Arithmetic coding\n"
-                           "SOF15: Differential lossless (sequential) - Arithmetic coding"));
+                           "SOF15: Differential lossless (sequential) - Arithmetic coding");
 
     /* Sample precision */
-    if (!process_jpeg_field (file, NULL, _("Sample precision"), NULL,
-                             _("Number of bits in the samples of the components"),
+    if (!process_jpeg_field (file, NULL, "Sample precision", NULL,
+                             "Number of bits in the samples of the components",
                              MARKER_DATA_COLOR_1, 1,
-                             0, NULL, NULL, _("%u bits"), NULL))
+                             0, NULL, NULL,
+                             "%u bits", NULL))
         return FALSE;
 
     /* Image height */
-    if (!process_jpeg_field (file, NULL, _("Image height"), NULL,
-                             _("Minimum value: 0 (DNL marker defines height)\n"
-                               "Maximum value: 2<sup>16</sup> - 1 (unsigned 16-bit integer)"),
+    if (!process_jpeg_field (file, NULL, "Image height", NULL,
+                             "Minimum value: 0 (DNL marker defines height)\n"
+                             "Maximum value: 2<sup>16</sup> - 1 (unsigned 16-bit integer)",
                              MARKER_DATA_COLOR_2, 2,
-                             0, NULL, NULL, "%u", NULL))
+                             0, NULL, NULL,
+                             "%u", NULL))
         return FALSE;
 
     /* Image width */
-    if (!process_jpeg_field (file, NULL, _("Image width"), NULL,
-                             _("Minimum value: 1\n"
-                               "Maximum value: 2<sup>16</sup> - 1 (unsigned 16-bit integer)"),
+    if (!process_jpeg_field (file, NULL, "Image width", NULL,
+                             "Minimum value: 1\n"
+                             "Maximum value: 2<sup>16</sup> - 1 (unsigned 16-bit integer)",
                              MARKER_DATA_COLOR_1, 2,
-                             0, NULL, NULL, "%u", NULL))
+                             0, NULL, NULL,
+                             "%u", NULL))
         return FALSE;
 
     /* Number of components */
-    if (!process_jpeg_field (file, NULL, _("Number of components"), NULL,
-                             _("Scan components in the image\n"
-                               "Progressive DCT: 1-4 components\n"
-                               "All other cases: 1-255 components"),
+    if (!process_jpeg_field (file, NULL, "Number of components", NULL,
+                             "Scan components in the image\n"
+                             "Progressive DCT: 1-4 components\n"
+                             "All other cases: 1-255 components",
                              MARKER_DATA_COLOR_2, 1,
-                             0, NULL, NULL, "%u", &components))
+                             0, NULL, NULL,
+                             "%u", &components))
         return FALSE;
 
-    format_utils_start_section (file, _("Image components"));
+    format_utils_start_section (file, "Image components");
 
     while (components)
     {
@@ -115,10 +115,10 @@ jpeg_sofn_marker (FormatsFile *file,
             return FALSE;
 
         format_utils_add_field (file, COMPONENT_COLOR, TRUE, 1,
-                              _("Component identifier"), NULL);
+                                "Component identifier", NULL);
 
         value = g_strdup_printf ("%hhu", one_byte);
-        format_utils_add_line (file, _("Component identifier"),
+        format_utils_add_line (file, "Component identifier",
                                value, NULL);
         g_free (value);
 
@@ -127,30 +127,30 @@ jpeg_sofn_marker (FormatsFile *file,
             return FALSE;
 
         format_utils_add_field (file, MARKER_DATA_COLOR_1, TRUE, 1,
-                              _("Sampling factor\n"
+                                "Sampling factor\n"
                                 "Lower four bits: Vertical sampling factor\n"
-                                "Upper four bits: Horizontal sampling factor"), NULL);
+                                "Upper four bits: Horizontal sampling factor", NULL);
 
         sampling_factor = one_byte & 0x0F;
         if (sampling_factor && sampling_factor < 4)
             value = g_strdup_printf ("%hhu", sampling_factor);
         else
-            value = g_strdup (_("<span foreground=\"red\">INVALID</span>"));
+            value = g_strdup ("<span foreground=\"red\">INVALID</span>");
 
-        format_utils_add_line (file, _("Vertical sampling factor"), value,
-                             _("Relationship between the component vertical dimension and maximum image dimension Y\n"
-                               "Valid values: 1-4"));
+        format_utils_add_line (file, "Vertical sampling factor", value,
+                               "Relationship between the component vertical dimension and maximum image dimension Y\n"
+                               "Valid values: 1-4");
         g_free (value);
 
         sampling_factor = one_byte >> 4;
         if (sampling_factor && sampling_factor < 4)
             value = g_strdup_printf ("%hhu", sampling_factor);
         else
-            value = g_strdup (_("<span foreground=\"red\">INVALID</span>"));
+            value = g_strdup ("<span foreground=\"red\">INVALID</span>");
 
-        format_utils_add_line (file, _("Horizontal sampling factor"), value,
-                             _("Relationship between the component horizontal dimension and maximum image dimension X\n"
-                               "Valid values: 1-4"));
+        format_utils_add_line (file, "Horizontal sampling factor", value,
+                               "Relationship between the component horizontal dimension and maximum image dimension X\n"
+                               "Valid values: 1-4");
         g_free (value);
 
         /* Quantization table selector */
@@ -158,17 +158,17 @@ jpeg_sofn_marker (FormatsFile *file,
             return FALSE;
 
         format_utils_add_field (file, MARKER_DATA_COLOR_2, TRUE, 1,
-                              _("Quantization table selector"), NULL);
+                                "Quantization table selector", NULL);
 
         if (one_byte < 4)
             value = g_strdup_printf ("%hhu", one_byte);
         else
-            value = g_strdup (_("<span foreground=\"red\">INVALID</span>"));
+            value = g_strdup ("<span foreground=\"red\">INVALID</span>");
 
         if (components == 1)
-            format_utils_add_line (file, _("Quantization table selector"), value, NULL);
+            format_utils_add_line (file, "Quantization table selector", value, NULL);
         else
-            format_utils_add_line_full (file, _("Quantization table selector"), value, NULL, 0, 10);
+            format_utils_add_line_full (file, "Quantization table selector", value, NULL, 0, 10);
         g_free (value);
 
         components--;
@@ -177,7 +177,7 @@ jpeg_sofn_marker (FormatsFile *file,
 
     if (data_used < data_length)
         format_utils_add_field (file, ERROR_COLOR_1, FALSE, data_length - data_used,
-                              _("Unrecognized data"), NULL);
+                                "Unrecognized data", NULL);
 
     return TRUE;
 }

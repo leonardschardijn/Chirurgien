@@ -16,10 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-
-#include <glib/gi18n.h>
-
 #include "png-format.h"
 
 
@@ -48,14 +44,14 @@ png_text_chunk (FormatsFile *file,
     if (!chunk_counts[IHDR])
     {
         format_utils_add_field (file, ERROR_COLOR_1, FALSE, chunk_length,
-                              _("The first chunk must be the IHDR chunk"), NULL);
+                                "The first chunk must be the IHDR chunk", NULL);
         return TRUE;
     }
 
     if (!FILE_HAS_DATA_N (file, chunk_length))
     {
         format_utils_add_field (file, ERROR_COLOR_1, FALSE, G_MAXUINT,
-                              _("Chunk length exceeds available data"), NULL);
+                                "Chunk length exceeds available data", NULL);
         return FALSE;
     }
 
@@ -86,29 +82,29 @@ png_text_chunk (FormatsFile *file,
 
     keyword = g_convert (text_chunk, keyword_length, "UTF-8", "ISO-8859-1",
                          NULL, &utf8_length, NULL);
-    format_utils_add_text_tab (&tab, _("Keyword"), keyword, utf8_length);
+    format_utils_add_text_tab (&tab, "Keyword", keyword, utf8_length);
     format_utils_add_field (file, CHUNK_DATA_COLOR_1, TRUE, keyword_length,
-                          _("Keyword"), NULL);
+                            "Keyword", NULL);
 
     if (!keyword_length)
-        format_utils_add_line_no_section_tab (&tab, _("NOTE: No keyword defined, keywords should be at least 1 byte long"));
+        format_utils_add_line_no_section_tab (&tab, "NOTE: No keyword defined, keywords should be at least 1 byte long");
     else if (keyword_length >= 80)
-        format_utils_add_line_no_section_tab (&tab, _("NOTE: The keyword exceeds its 79 bytes long limit"));
+        format_utils_add_line_no_section_tab (&tab, "NOTE: The keyword exceeds its 79 bytes long limit");
 
     if (null_found)
         format_utils_add_field (file, CHUNK_DATA_COLOR_2, TRUE, 1,
-                              _("Null separator"), NULL);
+                                "Null separator", NULL);
 
     if (text_length)
     {
         text = g_convert (text_chunk + keyword_length + 1, text_length, "UTF-8", "ISO-8859-1",
                           NULL, &utf8_length, NULL);
-        format_utils_add_text_tab (&tab, _("Text string"), text, utf8_length);
+        format_utils_add_text_tab (&tab, "Text string", text, utf8_length);
         format_utils_add_field (file, CHUNK_DATA_COLOR_1, TRUE, text_length,
-                              _("Text string"), NULL);
+                                "Text string", NULL);
     }
 
-    format_utils_add_line_no_section_tab (&tab, _("NOTE: tEXt chunks are encoded using ISO-8859-1"));
+    format_utils_add_line_no_section_tab (&tab, "NOTE: tEXt chunks are encoded using ISO-8859-1");
 
     format_utils_insert_tab (file, &tab, chunk_types[tEXt]);
 

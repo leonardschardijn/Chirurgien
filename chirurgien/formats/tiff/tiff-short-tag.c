@@ -16,12 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-
-#include <glib/gi18n.h>
-
 #include "tiff-format.h"
-#include "exif-format.h"
 
 
 static guint
@@ -77,18 +72,18 @@ process_short_tag_fields (FormatsFile  *file,
 
     if (field_type == expected_field_type)
     {
-        format_utils_add_field (file, FIELD_TYPE_COLOR, TRUE, 2, _("Field type: SHORT"), NULL);
+        format_utils_add_field (file, FIELD_TYPE_COLOR, TRUE, 2, "Field type: SHORT", NULL);
     }
     else
     {
-        format_utils_add_field (file, ERROR_COLOR_1, FALSE, 2, _("Invalid field type"), NULL);
+        format_utils_add_field (file, ERROR_COLOR_1, FALSE, 2, "Invalid field type", NULL);
         valid_tag = FALSE;
     }
 
     if (count != expected_count)
-        format_utils_add_field (file, ERROR_COLOR_1, FALSE, 4, _("Invalid count"), NULL);
+        format_utils_add_field (file, ERROR_COLOR_1, FALSE, 4, "Invalid count", NULL);
     else
-        format_utils_add_field (file, COUNT_COLOR, TRUE, 4, _("Count"), NULL);
+        format_utils_add_field (file, COUNT_COLOR, TRUE, 4, "Count", NULL);
 
     if (!is_little_endian && expected_count == 1)
     {
@@ -102,9 +97,9 @@ process_short_tag_fields (FormatsFile  *file,
     }
 
     if (expected_count > 2)
-        format_utils_add_field (file, VALUE_OFFSET_COLOR_1, TRUE, 4, _("Tag offset"), NULL);
+        format_utils_add_field (file, VALUE_OFFSET_COLOR_1, TRUE, 4, "Tag offset", NULL);
     else
-        format_utils_add_field (file, VALUE_OFFSET_COLOR_1, TRUE, 4, _("Tag value"), NULL);
+        format_utils_add_field (file, VALUE_OFFSET_COLOR_1, TRUE, 4, "Tag value", NULL);
 
     return valid_tag;
 }
@@ -128,19 +123,19 @@ special_short_tag (const gchar  *tag_name,
         {
             case 1:
                 string_value = g_string_append (string_value,
-                                                       _("Chroma image ImageWidth = Luma image ImageWidth"));
+                                                "Chroma image ImageWidth = Luma image ImageWidth");
             break;
             case 2:
                 string_value = g_string_append (string_value,
-                                                       _("Chroma image ImageWidth = 1/2 Luma image ImageWidth"));
+                                                "Chroma image ImageWidth = 1/2 Luma image ImageWidth");
             break;
             case 4:
                 string_value = g_string_append (string_value,
-                                                       _("Chroma image ImageWidth = 1/4 Luma image ImageWidth"));
+                                                "Chroma image ImageWidth = 1/4 Luma image ImageWidth");
             break;
             default:
                 string_value = g_string_append (string_value,
-                                                       _("<span foreground=\"red\">INVALID</span>"));
+                                                "<span foreground=\"red\">INVALID</span>");
         }
 
         g_string_append (string_value, "\nYCbCrSubsampleVert: ");
@@ -148,19 +143,19 @@ special_short_tag (const gchar  *tag_name,
         {
             case 1:
                 string_value = g_string_append (string_value,
-                                                      _("Chroma image ImageLength = Luma image ImageLength"));
+                                                "Chroma image ImageLength = Luma image ImageLength");
             break;
             case 2:
                 string_value = g_string_append (string_value,
-                                                      _("Chroma image ImageLength = 1/2 Luma image ImageLength"));
+                                                "Chroma image ImageLength = 1/2 Luma image ImageLength");
             break;
             case 4:
                 string_value = g_string_append (string_value,
-                                                      _("Chroma image ImageLength = 1/4 Luma image ImageLength"));
+                                                "Chroma image ImageLength = 1/4 Luma image ImageLength");
             break;
             default:
                 string_value = g_string_append (string_value,
-                                                      _("<span foreground=\"red\">INVALID</span>"));
+                                                "<span foreground=\"red\">INVALID</span>");
         }
 
         *value = g_string_free (string_value, FALSE);
@@ -171,51 +166,51 @@ special_short_tag (const gchar  *tag_name,
         string_value = g_string_new (NULL);
 
         if (!(value_offset & 0x1))
-            g_string_append_printf (string_value, "%s\n", _("Flash did not fire"));
+            g_string_append_printf (string_value, "%s\n", "Flash did not fire");
         else
-            g_string_append_printf (string_value, "%s\n", _("Flash fired"));
+            g_string_append_printf (string_value, "%s\n", "Flash fired");
 
         switch ((value_offset >> 1) & 0x3)
         {
             case 0:
-                g_string_append_printf (string_value, "%s\n", _("No strobe return detection function"));
+                g_string_append_printf (string_value, "%s\n", "No strobe return detection function");
             break;
             case 1:
-                g_string_append_printf (string_value, "%s\n", _("<span foreground=\"red\">INVALID</span>"));
+                g_string_append_printf (string_value, "%s\n", "<span foreground=\"red\">INVALID</span>");
             break;
             case 2:
-                g_string_append_printf (string_value, "%s\n", _("Strobe return light not detected"));
+                g_string_append_printf (string_value, "%s\n", "Strobe return light not detected");
             break;
             case 3:
-                g_string_append_printf (string_value, "%s\n", _("Strobe return light detected"));
+                g_string_append_printf (string_value, "%s\n", "Strobe return light detected");
             break;
         }
 
         switch ((value_offset >> 3) & 0x3)
         {
             case 0:
-                g_string_append_printf (string_value, "%s\n", _("Unknown"));
+                g_string_append_printf (string_value, "%s\n", "Unknown");
             break;
             case 1:
-                g_string_append_printf (string_value, "%s\n", _("Compulsory flash firing"));
+                g_string_append_printf (string_value, "%s\n", "Compulsory flash firing");
             break;
             case 2:
-                g_string_append_printf (string_value, "%s\n", _("Compulsory flash suppression"));
+                g_string_append_printf (string_value, "%s\n", "Compulsory flash suppression");
             break;
             case 3:
-                g_string_append_printf (string_value, "%s\n", _("Auto mode"));
+                g_string_append_printf (string_value, "%s\n", "Auto mode");
             break;
         }
 
         if (!((value_offset >> 5) & 0x1))
-            g_string_append_printf (string_value, "%s\n", _("Flash function present"));
+            g_string_append_printf (string_value, "%s\n", "Flash function present");
         else
-            g_string_append_printf (string_value, "%s\n", _("No flash function"));
+            g_string_append_printf (string_value, "%s\n", "No flash function");
 
         if (!((value_offset >> 6) & 0x1))
-            g_string_append_printf (string_value, "%s", _("No red-eye reduction mode or unknown"));
+            g_string_append_printf (string_value, "%s", "No red-eye reduction mode or unknown");
         else
-            g_string_append_printf (string_value, "%s", _("Red-eye reduction supported"));
+            g_string_append_printf (string_value, "%s", "Red-eye reduction supported");
 
         *value = g_string_free (string_value, FALSE);
         return TRUE;
@@ -257,7 +252,7 @@ process_short_tag (FormatsFile    *file,
     if (!process_short_tag_fields (file, field_type, expected_field_type, count, expected_count,
                                    &value_offset, is_little_endian))
     {
-        value = _("<span foreground=\"red\">INVALID</span>");
+        value = "<span foreground=\"red\">INVALID</span>";
     }
     else
     {

@@ -16,10 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-
-#include <glib/gi18n.h>
-
 #include "png-format.h"
 
 
@@ -57,14 +53,14 @@ png_ztxt_chunk (FormatsFile *file,
     if (!chunk_counts[IHDR])
     {
         format_utils_add_field (file, ERROR_COLOR_1, FALSE, chunk_length,
-                              _("The first chunk must be the IHDR chunk"), NULL);
+                                "The first chunk must be the IHDR chunk", NULL);
         return TRUE;
     }
 
     if (!FILE_HAS_DATA_N (file, chunk_length))
     {
         format_utils_add_field (file, ERROR_COLOR_1, FALSE, G_MAXUINT,
-                              _("Chunk length exceeds available data"), NULL);
+                                "Chunk length exceeds available data", NULL);
         return FALSE;
     }
 
@@ -98,44 +94,44 @@ png_ztxt_chunk (FormatsFile *file,
 
     keyword = g_convert (ztxt_chunk, keyword_length, "UTF-8", "ISO-8859-1",
                          NULL, &utf8_length, NULL);
-    format_utils_add_text_tab (&tab, _("Keyword"), keyword, utf8_length);
+    format_utils_add_text_tab (&tab, "Keyword", keyword, utf8_length);
 
     if (!keyword_length)
-        format_utils_add_line_no_section_tab (&tab, _("NOTE: No keyword defined, keywords should be at least 1 byte long"));
+        format_utils_add_line_no_section_tab (&tab, "NOTE: No keyword defined, keywords should be at least 1 byte long");
     else if (keyword_length >= 80)
-        format_utils_add_line_no_section_tab (&tab, _("NOTE: The keyword exceeds its 79 bytes long limit"));
+        format_utils_add_line_no_section_tab (&tab, "NOTE: The keyword exceeds its 79 bytes long limit");
 
     format_utils_add_field (file, CHUNK_DATA_COLOR_1, TRUE, keyword_length,
-                          _("Keyword"), NULL);
+                            "Keyword", NULL);
     chunk_length -= keyword_length;
 
     if (null_found)
     {
         format_utils_add_field (file, CHUNK_DATA_COLOR_2, TRUE, 1,
-                              _("Null separator"), NULL);
+                                "Null separator", NULL);
         chunk_length--;
     }
 
     if (compression_method != -1)
     {
         format_utils_add_field (file, CHUNK_DATA_COLOR_1, TRUE, 1,
-                              _("Compression method"), NULL);
+                                "Compression method", NULL);
         chunk_length--;
 
-        format_utils_start_section_tab (&tab, _("Compression"));
+        format_utils_start_section_tab (&tab, "Compression");
 
         if (!compression_method)
-            compression_method_value = _("zlib-format DEFLATE");
+            compression_method_value = "zlib-format DEFLATE";
         else
-            compression_method_value = _("<span foreground=\"red\">INVALID</span>");
+            compression_method_value = "<span foreground=\"red\">INVALID</span>";
 
-        format_utils_add_line_tab (&tab, _("Compression method"), compression_method_value,
-                                 _("Text string compression method\n"
-                                   "<tt>00<sub>16</sub></tt>\tzlib-format DEFLATE"));
+        format_utils_add_line_tab (&tab, "Compression method", compression_method_value,
+                                   "Text string compression method\n"
+                                   "<tt>00<sub>16</sub></tt>\tzlib-format DEFLATE");
 
         if (!compression_method && compressed_text)
         {
-            format_utils_start_section_tab (&tab, _("ZLIB compression"));
+            format_utils_start_section_tab (&tab, "ZLIB compression");
 
             png_zlib_deflate (file,
                               &tab,
@@ -152,33 +148,33 @@ png_ztxt_chunk (FormatsFile *file,
             if (compression_method_found)
             {
                 format_utils_add_field (file, CHUNK_DATA_COLOR_2, TRUE, 1,
-                                      _("ZLIB compression method and flags (CMF)\n"
+                                        "ZLIB compression method and flags (CMF)\n"
                                         "Lower four bits: compression method (CM)\n"
-                                        "Upper four bits: compression info (CINFO)"), NULL);
+                                        "Upper four bits: compression info (CINFO)", NULL);
                 chunk_length--;
 
                 if (flags_found)
                 {
                     format_utils_add_field (file, CHUNK_DATA_COLOR_1, TRUE, 1,
-                                          _("ZLIB flags (FLG)"), NULL);
+                                            "ZLIB flags (FLG)", NULL);
                     chunk_length--;
 
                     if (decompression_success)
                     {
                         format_utils_add_field (file, CHUNK_DATA_COLOR_2, TRUE, deflate_size,
-                                              _("ZLIB compressed text string"), NULL);
+                                                "ZLIB compressed text string", NULL);
                         chunk_length -= deflate_size;
 
                         if (checksum_found)
                         {
                             format_utils_add_field (file, CHUNK_DATA_COLOR_1, TRUE, 4,
-                                                  _("ZLIB Adler32 checksum"), NULL);
+                                                    "ZLIB Adler32 checksum", NULL);
                             chunk_length -= 4;
                         }
 
                         text = g_convert (inflate_text, inflate_size, "UTF-8", "ISO-8859-1",
                                           NULL, &utf8_length, NULL);
-                        format_utils_add_text_tab (&tab, _("Text string"), text, utf8_length);
+                        format_utils_add_text_tab (&tab, "Text string", text, utf8_length);
                     }
                 }
             }
@@ -186,10 +182,10 @@ png_ztxt_chunk (FormatsFile *file,
 
         /* If there is data left, tag it as unrecognized */
         format_utils_add_field (file, ERROR_COLOR_1, FALSE, chunk_length,
-                              _("Unrecognized data"), NULL);
+                                "Unrecognized data", NULL);
     }
 
-    format_utils_add_line_no_section_tab (&tab, _("NOTE: zTXt chunks are encoded using ISO-8859-1"));
+    format_utils_add_line_no_section_tab (&tab, "NOTE: zTXt chunks are encoded using ISO-8859-1");
 
     format_utils_insert_tab (file, &tab, chunk_types[zTXt]);
 

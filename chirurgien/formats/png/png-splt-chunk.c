@@ -16,10 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-
-#include <glib/gi18n.h>
-
 #include "png-format.h"
 
 
@@ -50,14 +46,14 @@ png_splt_chunk (FormatsFile *file,
     if (!chunk_counts[IHDR])
     {
         format_utils_add_field (file, ERROR_COLOR_1, FALSE, chunk_length,
-                              _("The first chunk must be the IHDR chunk"), NULL);
+                                "The first chunk must be the IHDR chunk", NULL);
         return TRUE;
     }
 
     if (!FILE_HAS_DATA_N (file, chunk_length))
     {
         format_utils_add_field (file, ERROR_COLOR_1, FALSE, G_MAXUINT,
-                              _("Chunk length exceeds available data"), NULL);
+                                "Chunk length exceeds available data", NULL);
         return FALSE;
     }
 
@@ -88,41 +84,41 @@ png_splt_chunk (FormatsFile *file,
 
     palette_name = g_convert (splt_chunk, palette_name_length, "UTF-8", "ISO-8859-1",
                          NULL, &utf8_length, NULL);
-    format_utils_add_text_tab (&tab, _("Palette name"), palette_name, utf8_length);
+    format_utils_add_text_tab (&tab, "Palette name", palette_name, utf8_length);
 
     if (!palette_name_length)
-        format_utils_add_line_no_section_tab (&tab, _("NOTE: No palette name defined, palette names should be at least 1 byte long"));
+        format_utils_add_line_no_section_tab (&tab, "NOTE: No palette name defined, palette names should be at least 1 byte long");
     else if (palette_name_length >= 80)
-        format_utils_add_line_no_section_tab (&tab, _("NOTE: The palette name exceeds its 79 bytes long limit"));
+        format_utils_add_line_no_section_tab (&tab, "NOTE: The palette name exceeds its 79 bytes long limit");
 
     format_utils_add_field (file, CHUNK_DATA_COLOR_1, TRUE, palette_name_length,
-                          _("Palette name"), NULL);
+                            "Palette name", NULL);
     chunk_length -= palette_name_length;
 
     if (null_found)
     {
         format_utils_add_field (file, CHUNK_DATA_COLOR_2, TRUE, 1,
-                              _("Null separator"), NULL);
+                                "Null separator", NULL);
         chunk_length--;
     }
 
     if (sample_depth != -1)
     {
         format_utils_add_field (file, CHUNK_DATA_COLOR_1, TRUE, 1,
-                              _("Sample depth"), NULL);
+                                "Sample depth", NULL);
         chunk_length--;
 
-        format_utils_start_section_tab (&tab, _("Palette details"));
+        format_utils_start_section_tab (&tab, "Palette details");
 
         if (sample_depth == 8 || sample_depth == 16)
-            value = g_strdup_printf (_("%u bits"), sample_depth);
+            value = g_strdup_printf ("%u bits", sample_depth);
         else
-            value = g_strdup (_("<span foreground=\"red\">INVALID</span>"));
+            value = g_strdup ("<span foreground=\"red\">INVALID</span>");
 
-        format_utils_add_line_tab (&tab, _("Sample depth"), value,
-                                 _("Sample depth\n"
+        format_utils_add_line_tab (&tab, "Sample depth", value,
+                                   "Sample depth\n"
                                    "<tt>08<sub>16</sub></tt>\t8 bits\n"
-                                   "<tt>10<sub>16</sub></tt>\t16 bits"));
+                                   "<tt>10<sub>16</sub></tt>\t16 bits");
         g_free (value);
 
         if (sample_depth == 8)
@@ -130,7 +126,7 @@ png_splt_chunk (FormatsFile *file,
             if (chunk_length % 6)
             {
                 format_utils_add_field (file, ERROR_COLOR_1, FALSE, chunk_length,
-                                      _("Invalid palette entry length"), NULL);
+                                        "Invalid palette entry length", NULL);
                 return TRUE;
             }
             else
@@ -142,20 +138,20 @@ png_splt_chunk (FormatsFile *file,
                     if (i % 2)
                     {
                         format_utils_add_field (file, CHUNK_DATA_COLOR_1, TRUE, 3,
-                                              _("Palette entry"), NULL);
+                                                "Palette entry", NULL);
                         format_utils_add_field (file, CHUNK_DATA_COLOR_2, TRUE, 1,
-                                              _("Palette entry aplha"), NULL);
+                                                "Palette entry aplha", NULL);
                         format_utils_add_field (file, CHUNK_DATA_COLOR_1, TRUE, 2,
-                                              _("Palette entry frequency"), NULL);
+                                                "Palette entry frequency", NULL);
                     }
                     else
                     {
                         format_utils_add_field (file, CHUNK_DATA_COLOR_2, TRUE, 3,
-                                              _("Palette entry"), NULL);
+                                                "Palette entry", NULL);
                         format_utils_add_field (file, CHUNK_DATA_COLOR_1, TRUE, 1,
-                                              _("Palette entry aplha"), NULL);
+                                                "Palette entry aplha", NULL);
                         format_utils_add_field (file, CHUNK_DATA_COLOR_2, TRUE, 2,
-                                              _("Palette entry frequency"), NULL);
+                                                "Palette entry frequency", NULL);
                     }
                 }
             }
@@ -165,7 +161,7 @@ png_splt_chunk (FormatsFile *file,
             if (chunk_length % 10)
             {
                 format_utils_add_field (file, ERROR_COLOR_1, FALSE, chunk_length,
-                                      _("Invalid palette entry length"), NULL);
+                                        "Invalid palette entry length", NULL);
                 return TRUE;
             }
             else
@@ -177,20 +173,20 @@ png_splt_chunk (FormatsFile *file,
                     if (i % 2)
                     {
                         format_utils_add_field (file, CHUNK_DATA_COLOR_1, TRUE, 6,
-                                              _("Palette entry"), NULL);
+                                                "Palette entry", NULL);
                         format_utils_add_field (file, CHUNK_DATA_COLOR_2, TRUE, 2,
-                                              _("Palette entry aplha"), NULL);
+                                                "Palette entry aplha", NULL);
                         format_utils_add_field (file, CHUNK_DATA_COLOR_1, TRUE, 2,
-                                              _("Palette entry frequency"), NULL);
+                                                "Palette entry frequency", NULL);
                     }
                     else
                     {
                         format_utils_add_field (file, CHUNK_DATA_COLOR_2, TRUE, 6,
-                                              _("Palette entry"), NULL);
+                                                "Palette entry", NULL);
                         format_utils_add_field (file, CHUNK_DATA_COLOR_1, TRUE, 2,
-                                              _("Palette entry aplha"), NULL);
+                                                "Palette entry aplha", NULL);
                         format_utils_add_field (file, CHUNK_DATA_COLOR_2, TRUE, 2,
-                                              _("Palette entry frequency"), NULL);
+                                                "Palette entry frequency", NULL);
 
                     }
                 }
@@ -199,7 +195,7 @@ png_splt_chunk (FormatsFile *file,
         else
         {
             format_utils_add_field (file, ERROR_COLOR_1, FALSE, chunk_length,
-                                  _("Invalid sample depth"), NULL);
+                                    "Invalid sample depth", NULL);
             return TRUE;
         }
     }
@@ -207,11 +203,11 @@ png_splt_chunk (FormatsFile *file,
     if (palette_entries)
     {
         value = g_strdup_printf ("%u", palette_entries);
-        format_utils_add_line_tab (&tab, _("Palette entries"), value, NULL);
+        format_utils_add_line_tab (&tab, "Palette entries", value, NULL);
         g_free (value);
     }
 
-    format_utils_add_line_no_section_tab (&tab, _("NOTE: Palette names are encoded using ISO-8859-1"));
+    format_utils_add_line_no_section_tab (&tab, "NOTE: Palette names are encoded using ISO-8859-1");
 
     format_utils_insert_tab (file, &tab, chunk_types[sPLT]);
 

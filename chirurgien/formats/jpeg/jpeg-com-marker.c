@@ -16,10 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-
-#include <glib/gi18n.h>
-
 #include "jpeg-format.h"
 
 
@@ -46,7 +42,7 @@ jpeg_com_marker (FormatsFile *file,
     if (!FILE_HAS_DATA_N (file, data_length))
     {
         format_utils_add_field (file, ERROR_COLOR_1, FALSE, G_MAXUINT,
-                              _("Segment length exceeds available data"), NULL);
+                                "Segment length exceeds available data", NULL);
         return FALSE;
     }
 
@@ -54,12 +50,12 @@ jpeg_com_marker (FormatsFile *file,
 
     comment = (const gchar *) GET_CONTENT_POINTER (file);
 
-    format_utils_add_text_tab (&tab, _("Comment"), comment, data_length);
+    format_utils_add_text_tab (&tab, "Comment", comment, data_length);
     format_utils_add_field (file, MARKER_DATA_COLOR_1, TRUE, data_length,
-                          _("Comment"), NULL);
+                            "Comment", NULL);
 
     if (!g_utf8_validate (comment, data_length, NULL))
-        format_utils_add_line_no_section_tab (&tab, _("Failed to interpret comment, it is not valid UTF-8"));
+        format_utils_add_line_no_section_tab (&tab, "Failed to interpret comment, it is not valid UTF-8");
 
     format_utils_insert_tab (file, &tab, marker_names[COM]);
 
