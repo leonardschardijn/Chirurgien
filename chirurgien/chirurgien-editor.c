@@ -697,3 +697,9 @@ chirurgien_editor_get_contents (ChirurgienEditor *editor)
 {
     return editor->contents;
 }
+
+gsize
+chirurgien_editor_get_contents_size (ChirurgienEditor *editor)
+{
+    return editor->contents_size;
+}

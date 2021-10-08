@@ -25,6 +25,9 @@
 G_BEGIN_DECLS
 
 /* Application actions */
+void       chirurgien_actions_disable_csd        (GSimpleAction *,
+                                                  GVariant *,
+                                                  gpointer);
 void       chirurgien_actions_preferences        (GSimpleAction *,
                                                   GVariant *,
                                                   gpointer);

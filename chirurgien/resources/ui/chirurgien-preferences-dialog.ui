@@ -10,26 +10,69 @@
         <child>
           <object class="GtkNotebook">
             <child>
-              <object class="GtkBox">
-                <property name="orientation">GTK_ORIENTATION_VERTICAL</property>
+              <object class="GtkGrid">
                 <property name="margin-start">10</property>
                 <property name="margin-end">10</property>
                 <property name="margin-top">10</property>
                 <property name="margin-bottom">10</property>
-                <property name="spacing">10</property>
+                <property name="row-spacing">10</property>
                 <child>
                   <object class="GtkCheckButton" id="navigation">
                     <property name="label" translatable="yes">Hide navigation buttons</property>
+                    <layout>
+                      <property name="row">0</property>
+                      <property name="column">0</property>
+                      <property name="row-span">1</property>
+                      <property name="column-span">2</property>
+                    </layout>
                   </object>
                 </child>
                 <child>
                   <object class="GtkCheckButton" id="description">
                     <property name="label" translatable="yes">Hide description panel</property>
+                    <layout>
+                      <property name="row">1</property>
+                      <property name="column">0</property>
+                      <property name="row-span">1</property>
+                      <property name="column-span">2</property>
+                    </layout>
                   </object>
                 </child>
                 <child>
                   <object class="GtkCheckButton" id="auto_analysis">
                     <property name="label" translatable="yes">Automatic reanalysis after edition</property>
+                    <layout>
+                      <property name="row">2</property>
+                      <property name="column">0</property>
+                      <property name="row-span">1</property>
+                      <property name="column-span">2</property>
+                    </layout>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkCheckButton" id="extra_buttons">
+                    <property name="label" translatable="yes">Show deletion and insertion buttons</property>
+                    <layout>
+                      <property name="row">3</property>
+                      <property name="column">0</property>
+                      <property name="row-span">1</property>
+                      <property name="column-span">1</property>
+                    </layout>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkImage">
+                    <property name="icon-name">emblem-important-symbolic</property>
+                    <property name="tooltip-text" translatable="yes">Deletions and insertions are not affected by the 'Automatic reanalysis' setting
+A reanalysis is always triggered automatically</property>
+                    <property name="hexpand">t</property>
+                    <property name="halign">GTK_ALIGN_END</property>
+                    <layout>
+                      <property name="row">3</property>
+                      <property name="column">1</property>
+                      <property name="row-span">1</property>
+                      <property name="column-span">1</property>
+                    </layout>
                   </object>
                 </child>
               </object>

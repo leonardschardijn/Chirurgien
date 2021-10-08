@@ -6,7 +6,7 @@ Features:
 
 * File format highlighting
 * File description panel
-* Field edition and extraction
+* Field edition, extraction, deletion and insertion
 
 
 ## Dependencies

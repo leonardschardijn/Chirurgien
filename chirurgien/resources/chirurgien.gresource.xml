@@ -3,6 +3,7 @@
   <gresource prefix="/io/github/leonardschardijn/chirurgien">
     <!-- Menus -->
     <file preprocess="xml-stripblanks">menus/hamburger-menu.ui</file>
+    <file preprocess="xml-stripblanks">menus/wmd-menu.ui</file>
 
     <!-- UI definitions -->
     <file preprocess="xml-stripblanks">ui/chirurgien-view.ui</file>

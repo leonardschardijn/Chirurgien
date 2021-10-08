@@ -28,9 +28,10 @@ G_DECLARE_FINAL_TYPE (ChirurgienEditor, chirurgien_editor, CHIRURGIEN, EDITOR, G
 
 GtkWidget *       chirurgien_editor_new             (void);
 
-void              chirurgien_editor_set_contents    (ChirurgienEditor *,
-                                                     const guchar *,
-                                                     gsize);
-const guchar *    chirurgien_editor_get_contents    (ChirurgienEditor *);
+void              chirurgien_editor_set_contents         (ChirurgienEditor *,
+                                                          const guchar *,
+                                                          gsize);
+const guchar *    chirurgien_editor_get_contents         (ChirurgienEditor *);
+gsize             chirurgien_editor_get_contents_size    (ChirurgienEditor *);
 
 G_END_DECLS

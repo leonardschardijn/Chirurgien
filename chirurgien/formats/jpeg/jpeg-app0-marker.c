@@ -88,7 +88,7 @@ jpeg_app0_marker (FormatsFile *file,
         format_utils_add_field (file, MARKER_DATA_COLOR_2, TRUE, 1,
                                 "JFIF major version", NULL);
         format_utils_add_field (file, MARKER_DATA_COLOR_1, TRUE, 1,
-                                "JFIF major version", NULL);
+                                "JFIF minor version", NULL);
 
         value = g_strdup_printf ("%u.%.2u", version[0], version[1]);
         format_utils_add_line (file, "JFIF version", value,

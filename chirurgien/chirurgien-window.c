@@ -44,8 +44,13 @@ struct _ChirurgienWindow
     GtkApplicationWindow   parent_instance;
 
     GQueue                 recent_files;
-    GMenu                 *recent_menu;
     gboolean               recent_rebuild_needed;
+
+    /* Different references need to be maintained to update the recent files list
+     * depending on the type of window in use. In any case, it is a weak reference
+     * Client-side decorations: GtkMenuButton
+     * Window Manager decorations: GMenuModel */
+    gpointer               recent_menu;
 
     GSettings             *preferences_settings;
     GSettings             *state_settings;
@@ -136,13 +141,14 @@ escape_underscores (const gchar *label)
 static void
 build_recent_menu (ChirurgienWindow *window)
 {
-    GList *list_item;
+    GMenu *recent_menu;
     GMenuItem *recent_item;
+    GList *list_item;
     gchar *item_name;
 
     gint menu_entries;
 
-    g_menu_remove_all (window->recent_menu);
+    recent_menu = g_menu_new ();
 
     for (list_item = window->recent_files.head, menu_entries = 0;
          list_item != NULL;
@@ -153,7 +159,7 @@ build_recent_menu (ChirurgienWindow *window)
         g_menu_item_set_action_and_target (recent_item, "win.recent",
                                            "s", gtk_recent_info_get_uri (list_item->data));
 
-        g_menu_append_item (window->recent_menu, recent_item);
+        g_menu_append_item (recent_menu, recent_item);
 
         g_free (item_name);
         g_object_unref (recent_item);
@@ -162,9 +168,21 @@ build_recent_menu (ChirurgienWindow *window)
     if (!menu_entries)
     {
         recent_item = g_menu_item_new (_("No recent entries"), NULL);
-        g_menu_append_item (window->recent_menu, recent_item);
+        g_menu_append_item (recent_menu, recent_item);
         g_object_unref (recent_item);
     }
+
+    if (g_settings_get_boolean (window->preferences_settings, "disable-csd"))
+    {
+        g_menu_remove_all (window->recent_menu);
+        g_menu_append_submenu (window->recent_menu, _("Recent files"), G_MENU_MODEL (recent_menu));
+    }
+    else
+    {
+        gtk_menu_button_set_menu_model (window->recent_menu, G_MENU_MODEL (recent_menu));
+    }
+
+    g_object_unref (recent_menu);
 }
 
 static gint
@@ -261,75 +279,100 @@ create_window (ChirurgienWindow *window)
 {
     GtkBuilder *builder;
     GMenuModel *menu;
+    GAction *action;
 
-    GtkWidget *headerbar, *box, *widget;
+    /* Window Manager decorations */
+    if (g_settings_get_boolean (window->preferences_settings, "disable-csd"))
+    {
+        action = g_action_map_lookup_action (G_ACTION_MAP (g_application_get_default ()), "disable-csd");
+        g_simple_action_set_state (G_SIMPLE_ACTION (action), g_variant_new_boolean (TRUE));
 
-    headerbar = gtk_header_bar_new ();
+        builder = gtk_builder_new_from_resource ("/io/github/leonardschardijn/chirurgien/menus/wmd-menu.ui");
 
-    /* Hamburger menu */
-    widget = gtk_menu_button_new ();
-    gtk_menu_button_set_icon_name (GTK_MENU_BUTTON (widget), "open-menu-symbolic");
-    builder = gtk_builder_new_from_resource ("/io/github/leonardschardijn/chirurgien/menus/hamburger-menu.ui");
-    menu = G_MENU_MODEL (gtk_builder_get_object (builder, "hamburger-menu"));
-    gtk_menu_button_set_menu_model (GTK_MENU_BUTTON (widget), menu);
+        gtk_application_set_menubar (GTK_APPLICATION (g_application_get_default ()),
+                                     G_MENU_MODEL (gtk_builder_get_object (builder, "wmd-menu")));
+        window->recent_menu = G_MENU_MODEL (gtk_builder_get_object (builder, "recent-menu"));
 
-    gtk_header_bar_pack_end (GTK_HEADER_BAR (headerbar), widget);
+        g_object_unref (builder);
 
-    g_object_unref (builder);
+        build_recent_files (window);
+    }
+    /* Client-side decorations */
+    else
+    {
+        GtkWidget *headerbar, *box, *widget;
 
-    /* Open/Recent files buttons */
-    box = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
-    gtk_widget_add_css_class (box, "linked");
+        gtk_application_set_menubar (GTK_APPLICATION (g_application_get_default ()), NULL);
 
-    widget = gtk_button_new_with_label (_("Open"));
-    gtk_widget_set_tooltip_text (widget, _("Open a file"));
-    gtk_actionable_set_action_name (GTK_ACTIONABLE (widget), "win.open");
-    gtk_box_append (GTK_BOX (box), widget);
+        action = g_action_map_lookup_action (G_ACTION_MAP (g_application_get_default ()), "disable-csd");
+        g_simple_action_set_state (G_SIMPLE_ACTION (action), g_variant_new_boolean (FALSE));
 
-    widget = gtk_menu_button_new ();
-    gtk_widget_set_tooltip_text (widget, _("Open a recently used file"));
-    build_recent_files (window);
-    gtk_menu_button_set_menu_model (GTK_MENU_BUTTON (widget), G_MENU_MODEL (window->recent_menu));
-    gtk_box_append (GTK_BOX (box), widget);
+        headerbar = gtk_header_bar_new ();
 
-    gtk_header_bar_pack_start (GTK_HEADER_BAR (headerbar), box);
+        /* Hamburger menu */
+        widget = gtk_menu_button_new ();
+        gtk_menu_button_set_icon_name (GTK_MENU_BUTTON (widget), "open-menu-symbolic");
+        builder = gtk_builder_new_from_resource ("/io/github/leonardschardijn/chirurgien/menus/hamburger-menu.ui");
+        menu = G_MENU_MODEL (gtk_builder_get_object (builder, "hamburger-menu"));
+        gtk_menu_button_set_menu_model (GTK_MENU_BUTTON (widget), menu);
 
-    /* Save/Save as buttons */
-    box = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
-    gtk_widget_add_css_class (box, "linked");
+        gtk_header_bar_pack_end (GTK_HEADER_BAR (headerbar), widget);
 
-    widget = gtk_button_new_with_label (_("Save"));
-    gtk_widget_set_tooltip_text (widget, _("Save the current file"));
-    gtk_actionable_set_action_name (GTK_ACTIONABLE (widget), "win.save");
-    gtk_box_append (GTK_BOX (box), widget);
+        g_object_unref (builder);
 
-    widget = gtk_menu_button_new ();
-    menu = G_MENU_MODEL (g_menu_new ());
-    g_menu_insert (G_MENU (menu), 0, _("Save as..."), "win.save-as");
-    gtk_menu_button_set_menu_model (GTK_MENU_BUTTON (widget), menu);
-    gtk_box_append (GTK_BOX (box), widget);
+        /* Open/Recent files buttons */
+        box = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
+        gtk_widget_add_css_class (box, "linked");
 
-    g_object_unref (menu);
+        widget = gtk_button_new_with_label (_("Open"));
+        gtk_widget_set_tooltip_text (widget, _("Open a file"));
+        gtk_actionable_set_action_name (GTK_ACTIONABLE (widget), "win.open");
+        gtk_box_append (GTK_BOX (box), widget);
 
-    gtk_header_bar_pack_end (GTK_HEADER_BAR (headerbar), box);
+        window->recent_menu = gtk_menu_button_new ();
+        gtk_widget_set_tooltip_text (window->recent_menu, _("Open a recently used file"));
+        build_recent_files (window);
+        gtk_box_append (GTK_BOX (box), window->recent_menu);
 
-    /* Undo/Redo buttons */
-    box = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
-    gtk_widget_add_css_class (box, "linked");
+        gtk_header_bar_pack_start (GTK_HEADER_BAR (headerbar), box);
 
-    widget = gtk_button_new_from_icon_name ("edit-undo-symbolic");
-    gtk_widget_set_tooltip_text (widget, _("Undo previous modification"));
-    gtk_actionable_set_action_name (GTK_ACTIONABLE (widget), "win.undo");
-    gtk_box_append (GTK_BOX (box), widget);
+        /* Save/Save as buttons */
+        box = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
+        gtk_widget_add_css_class (box, "linked");
 
-    widget = gtk_button_new_from_icon_name ("edit-redo-symbolic");
-    gtk_widget_set_tooltip_text (widget, _("Redo previous modification"));
-    gtk_actionable_set_action_name (GTK_ACTIONABLE (widget), "win.redo");
-    gtk_box_append (GTK_BOX (box), widget);
+        widget = gtk_button_new_with_label (_("Save"));
+        gtk_widget_set_tooltip_text (widget, _("Save the current file"));
+        gtk_actionable_set_action_name (GTK_ACTIONABLE (widget), "win.save");
+        gtk_box_append (GTK_BOX (box), widget);
 
-    gtk_header_bar_pack_end (GTK_HEADER_BAR (headerbar), box);
+        widget = gtk_menu_button_new ();
+        menu = G_MENU_MODEL (g_menu_new ());
+        g_menu_insert (G_MENU (menu), 0, _("Save as…"), "win.save-as");
+        gtk_menu_button_set_menu_model (GTK_MENU_BUTTON (widget), menu);
+        gtk_box_append (GTK_BOX (box), widget);
 
-    gtk_window_set_titlebar (GTK_WINDOW (window), headerbar);
+        g_object_unref (menu);
+
+        gtk_header_bar_pack_end (GTK_HEADER_BAR (headerbar), box);
+
+        /* Undo/Redo buttons */
+        box = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
+        gtk_widget_add_css_class (box, "linked");
+
+        widget = gtk_button_new_from_icon_name ("edit-undo-symbolic");
+        gtk_widget_set_tooltip_text (widget, _("Undo previous modification"));
+        gtk_actionable_set_action_name (GTK_ACTIONABLE (widget), "win.undo");
+        gtk_box_append (GTK_BOX (box), widget);
+
+        widget = gtk_button_new_from_icon_name ("edit-redo-symbolic");
+        gtk_widget_set_tooltip_text (widget, _("Redo previous modification"));
+        gtk_actionable_set_action_name (GTK_ACTIONABLE (widget), "win.redo");
+        gtk_box_append (GTK_BOX (box), widget);
+
+        gtk_header_bar_pack_end (GTK_HEADER_BAR (headerbar), box);
+
+        gtk_window_set_titlebar (GTK_WINDOW (window), headerbar);
+    }
 }
 
 static void
@@ -525,7 +568,6 @@ chirurgien_window_dispose (GObject *object)
 
     g_clear_object (&window->preferences_settings);
     g_clear_object (&window->state_settings);
-    g_clear_object (&window->recent_menu);
 
     G_OBJECT_CLASS (chirurgien_window_parent_class)->dispose (object);
 }
@@ -550,8 +592,6 @@ chirurgien_window_init (ChirurgienWindow *window)
     window->preferences_settings = g_settings_new ("io.github.leonardschardijn.chirurgien.preferences");
     window->state_settings = g_settings_new ("io.github.leonardschardijn.chirurgien.state");
     g_settings_delay (window->state_settings);
-
-    window->recent_menu = g_menu_new ();
 
     create_window (window);
     toggle_view_actions (window, FALSE);
@@ -620,6 +660,11 @@ chirurgien_window_new (GtkApplication *app)
                             NULL);
 
     g_settings_bind (window->state_settings, "maximized", window, "maximized", G_SETTINGS_BIND_DEFAULT);
+
+    if (g_settings_get_boolean (window->preferences_settings, "disable-csd"))
+        gtk_application_window_set_show_menubar (GTK_APPLICATION_WINDOW (window), TRUE);
+    else
+        gtk_application_window_set_show_menubar (GTK_APPLICATION_WINDOW (window), FALSE);
 
     return window;
 }

@@ -31,6 +31,7 @@ G_DEFINE_TYPE (ChirurgienApplication, chirurgien_application, GTK_TYPE_APPLICATI
 
 static GActionEntry app_entries[] =
 {
+    { "disable-csd", NULL, NULL, "false", chirurgien_actions_disable_csd },
     { "preferences", chirurgien_actions_preferences, NULL, NULL, NULL },
     { "formats", chirurgien_actions_formats, NULL, NULL, NULL },
     { "shortcuts", chirurgien_actions_shortcuts, NULL, NULL, NULL },

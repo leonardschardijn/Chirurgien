@@ -28,6 +28,7 @@ struct _ChirurgienPreferencesDialog
     GtkCheckButton    *navigation;
     GtkCheckButton    *description;
     GtkCheckButton    *auto_analysis;
+    GtkCheckButton    *extra_buttons;
 
     GtkColorButton    *color0;
     GtkColorButton    *color1;
@@ -79,6 +80,9 @@ set_preferences (ChirurgienPreferencesDialog *dialog)
     gtk_check_button_set_active (dialog->auto_analysis,
                                  g_settings_get_boolean (dialog->preferences_settings,
                                                          "auto-analysis"));
+    gtk_check_button_set_active (dialog->extra_buttons,
+                                 g_settings_get_boolean (dialog->preferences_settings,
+                                                         "show-extra-buttons"));
 
     gtk_font_chooser_set_font (GTK_FONT_CHOOSER (dialog->font_button),
                                g_settings_get_string (dialog->preferences_settings,
@@ -92,6 +96,9 @@ set_preferences (ChirurgienPreferencesDialog *dialog)
                      G_SETTINGS_BIND_SET);
     g_settings_bind (dialog->preferences_settings, "auto-analysis",
                      dialog->auto_analysis, "active",
+                     G_SETTINGS_BIND_SET);
+    g_settings_bind (dialog->preferences_settings, "show-extra-buttons",
+                     dialog->extra_buttons, "active",
                      G_SETTINGS_BIND_SET);
 
     g_settings_bind (dialog->preferences_settings, "font",
@@ -190,6 +197,7 @@ chirurgien_preferences_dialog_class_init(ChirurgienPreferencesDialogClass *klass
     gtk_widget_class_bind_template_child (widget_class, ChirurgienPreferencesDialog, navigation);
     gtk_widget_class_bind_template_child (widget_class, ChirurgienPreferencesDialog, description);
     gtk_widget_class_bind_template_child (widget_class, ChirurgienPreferencesDialog, auto_analysis);
+    gtk_widget_class_bind_template_child (widget_class, ChirurgienPreferencesDialog, extra_buttons);
     gtk_widget_class_bind_template_child (widget_class, ChirurgienPreferencesDialog, color0);
     gtk_widget_class_bind_template_child (widget_class, ChirurgienPreferencesDialog, color1);
     gtk_widget_class_bind_template_child (widget_class, ChirurgienPreferencesDialog, color2);

@@ -30,15 +30,25 @@
 #include "chirurgien-actions.h"
 
 
+typedef enum {
+    FieldEdition,
+    FieldDeletion,
+    FieldInsertion
+} ModificationType;
+
 typedef struct {
+    /* Modification type, conditions interpretation
+     * of the rest of the field */
+    ModificationType      type;
+
     /* File offset of the modification */
-    gsize modification_offset;
+    gsize                 offset;
 
     /* Length of the modified data */
-    gsize modification_length;
+    gsize                 length;
 
     /* The modified data */
-    guchar *modification;
+    guchar               *data;
 
 } FileModification;
 
@@ -112,9 +122,7 @@ struct _ChirurgienView
 
     /* The file being viewed */
     gchar                *file_path;
-    guchar               *file_contents;
-    gsize                 file_size;
-    gsize                 formatted_file_size;
+    GByteArray           *file_contents;
 
     /* The navigation icon above the navigation buttons */
     GtkWidget            *navigation_icon;
@@ -130,6 +138,9 @@ struct _ChirurgienView
 
     /* Button to reanalyze after editing without automatic reanalysis */
     GtkRevealer          *reanalyze_notice;
+
+    /* Type of insertion: 0 = before, 1 = after */
+    gint                  insertion_type;
 
     GSettings            *preferences_settings;
 };
@@ -160,7 +171,7 @@ resize_view (G_GNUC_UNUSED GtkDrawingArea *area,
 {
     ChirurgienView *view;
     gint line_length, visible_lines, total_lines;
-    gsize buffer_size;
+    gsize buffer_size, print_file_size;
 
     view = user_data;
 
@@ -212,9 +223,10 @@ resize_view (G_GNUC_UNUSED GtkDrawingArea *area,
     {
         view->buffer_size = buffer_size;
 
-        total_lines = view->formatted_file_size / line_length;
+        print_file_size = view->file_contents->len * 3;
+        total_lines = print_file_size / line_length;
 
-        if(view->formatted_file_size % line_length)
+        if (print_file_size % line_length)
             total_lines++;
 
         gtk_adjustment_configure (view->adjustment,
@@ -388,19 +400,19 @@ draw_view (GtkDrawingArea *drawing_area,
     if (view->active_view == CHIRURGIEN_HEX_VIEW)
     {
         chirurgien_utils_hex_print (view->view_buffer,
-                                    view->file_contents,
+                                    view->file_contents->data,
                                     view->scroll_offset,
                                     view->buffer_size,
-                                    view->file_size,
+                                    view->file_contents->len,
                                     view->line_length);
     }
     else if (view->active_view == CHIRURGIEN_TEXT_VIEW)
     {
         chirurgien_utils_text_print (view->view_buffer,
-                                     view->file_contents,
+                                     view->file_contents->data,
                                      view->scroll_offset,
                                      view->buffer_size,
-                                     view->file_size,
+                                     view->file_contents->len,
                                      view->line_length);
     }
 
@@ -529,7 +541,8 @@ handle_motion_event (G_GNUC_UNUSED GtkEventControllerMotion *controller,
 }
 
 static void
-file_modified (ChirurgienView *view)
+file_modified (ChirurgienView *view,
+               gboolean        force_reanalysis)
 {
     view->modified = TRUE;
 
@@ -538,7 +551,16 @@ file_modified (ChirurgienView *view)
     else
         chirurgien_view_tab_set_unsaved (view->view_tab, TRUE);
 
-    if (g_settings_get_boolean (view->preferences_settings, "auto-analysis"))
+    if (force_reanalysis)
+    {
+        /* Forced reanalysis is triggered by deletions and insertions,
+         * these changes require the scroll to be adjusted */
+        gtk_widget_queue_resize (view->file_view);
+        view->buffer_size = 0;
+
+        chirurgien_view_redo_analysis (view);
+    }
+    else if (g_settings_get_boolean (view->preferences_settings, "auto-analysis"))
     {
         chirurgien_view_redo_analysis (view);
     }
@@ -558,11 +580,184 @@ edit_field_response (GtkDialog *dialog,
                      gpointer   user_data)
 {
     ChirurgienView *view;
-    ChirurgienEditor *editor;
     FileModification *modification, *old_modification;
 
     const guchar *file_contents;
     const guchar *new_contents;
+
+    if (response_id == GTK_RESPONSE_ACCEPT)
+    {
+        view = user_data;
+
+        file_contents = view->file_contents->data +
+                        view->selected_field->field_offset;
+        new_contents = chirurgien_editor_get_contents (CHIRURGIEN_EDITOR
+                                                      (gtk_widget_get_first_child
+                                                      (gtk_dialog_get_content_area (dialog))));
+
+        if (memcmp (file_contents,
+                    new_contents,
+                    view->selected_field->field_length))
+        {
+            modification = g_slice_new (FileModification);
+
+            modification->type = FieldEdition;
+            modification->offset = view->selected_field->field_offset;
+            modification->length = view->selected_field->field_length;
+            modification->data = g_malloc (modification->length);
+
+            file_contents = view->file_contents->data + modification->offset;
+
+            for (gsize i = 0; i < modification->length; i++)
+                modification->data[i] = new_contents[i] ^ file_contents[i];
+
+            /* Delete now outdated modifications */
+            while ((old_modification = g_queue_pop_nth (&view->modifications,
+                                                        view->modification_index + 1)))
+            {
+                g_free (old_modification->data);
+                g_slice_free (FileModification, old_modification);
+            }
+
+            /* Add the modification */
+            g_queue_push_tail (&view->modifications, modification);
+
+            /* Let the redo operation apply the change */
+            chirurgien_actions_redo (NULL, NULL, gtk_widget_get_ancestor (GTK_WIDGET (view),
+                                                                          CHIRURGIEN_TYPE_WINDOW));
+        }
+    }
+
+    gtk_window_destroy (GTK_WINDOW (dialog));
+}
+
+static void
+edit_field (GtkButton *button,
+            gpointer   user_data)
+{
+    ChirurgienView *view;
+    GtkWidget *editor, *edition_dialog, *content_area;
+
+    g_autofree gchar *short_field_name = NULL;
+
+    view = user_data;
+
+    gtk_popover_popdown (GTK_POPOVER (gtk_widget_get_ancestor (GTK_WIDGET (button),
+                                      GTK_TYPE_POPOVER)));
+
+    editor = chirurgien_editor_new ();
+    chirurgien_editor_set_contents (CHIRURGIEN_EDITOR (editor),
+                                    view->file_contents->data + view->selected_field->field_offset,
+                                    view->selected_field->field_length);
+
+    for (gsize i = 0; !short_field_name; i++)
+        if (view->selected_field->field_name[i] == '\n' ||
+            view->selected_field->field_name[i] == '\0')
+            short_field_name = g_strndup (view->selected_field->field_name, i);
+
+    edition_dialog = gtk_dialog_new_with_buttons (short_field_name,
+                         GTK_WINDOW (gtk_widget_get_ancestor (GTK_WIDGET (view), CHIRURGIEN_TYPE_WINDOW)),
+                         GTK_DIALOG_MODAL | GTK_DIALOG_USE_HEADER_BAR,
+                         _("Cancel"),
+                         GTK_RESPONSE_CANCEL,
+                         _("Accept"),
+                         GTK_RESPONSE_ACCEPT,
+                         NULL);
+
+    gtk_dialog_set_default_response (GTK_DIALOG (edition_dialog), GTK_RESPONSE_ACCEPT);
+
+    content_area = gtk_dialog_get_content_area (GTK_DIALOG (edition_dialog));
+    gtk_box_append (GTK_BOX (content_area), editor);
+
+    gtk_window_set_default_size (GTK_WINDOW (edition_dialog), 600, 240);
+
+    g_signal_connect (edition_dialog, "response", G_CALLBACK (edit_field_response), view);
+
+    gtk_window_present (GTK_WINDOW (edition_dialog));
+}
+
+static void
+extract_field (G_GNUC_UNUSED GtkButton *button,
+               gpointer user_data)
+{
+    ChirurgienWindow *window;
+    ChirurgienView *view, *extract_view;
+
+    g_autofree gchar *short_field_name = NULL;
+    g_autofree gchar *basename;
+
+    view = user_data;
+    window = CHIRURGIEN_WINDOW (gtk_widget_get_ancestor (GTK_WIDGET (view),
+                                                         CHIRURGIEN_TYPE_WINDOW));
+
+    extract_view = chirurgien_view_new (window);
+    g_byte_array_append (extract_view->file_contents,
+                         view->file_contents->data + view->selected_field->field_offset,
+                         view->selected_field->field_length);
+
+    for (gsize i = 0; !short_field_name; i++)
+        if (view->selected_field->field_name[i] == '\n' ||
+            view->selected_field->field_name[i] == '\0')
+            short_field_name = g_strndup (view->selected_field->field_name, i);
+
+    basename = g_path_get_basename (view->file_path);
+
+    extract_view->file_path = g_strdup_printf ("%s [%s]", basename, short_field_name);
+    chirurgien_view_tab_set_label (extract_view->view_tab,
+                                   extract_view->file_path,
+                                   extract_view->file_path);
+    extract_view->has_file = FALSE;
+
+    chirurgien_actions_show_view (window, extract_view);
+}
+
+static void
+delete_field (GtkButton *button,
+              gpointer   user_data)
+{
+    ChirurgienView *view;
+    FileModification *modification, *old_modification;
+
+    view = user_data;
+
+    gtk_popover_popdown (GTK_POPOVER (gtk_widget_get_ancestor (GTK_WIDGET (button),
+                                      GTK_TYPE_POPOVER)));
+
+    modification = g_slice_new (FileModification);
+
+    modification->type = FieldDeletion;
+    modification->offset = view->selected_field->field_offset;
+    modification->length = view->selected_field->field_length;
+    modification->data = g_malloc (modification->length);
+
+    memcpy (modification->data,
+            view->file_contents->data + modification->offset,
+            modification->length);
+
+    /* Delete now outdated modifications */
+    while ((old_modification = g_queue_pop_nth (&view->modifications,
+                                                view->modification_index + 1)))
+    {
+        g_free (old_modification->data);
+        g_slice_free (FileModification, old_modification);
+    }
+
+    /* Add the modification */
+    g_queue_push_tail (&view->modifications, modification);
+
+    /* Let the redo operation apply the change */
+    chirurgien_actions_redo (NULL, NULL, gtk_widget_get_ancestor (GTK_WIDGET (view),
+                                                                  CHIRURGIEN_TYPE_WINDOW));
+}
+
+static void
+insert_edit_response (GtkDialog *dialog,
+                      int        response_id,
+                      gpointer   user_data)
+{
+    ChirurgienView *view;
+    ChirurgienEditor *editor;
+    FileModification *modification, *old_modification;
 
     view = user_data;
     editor = CHIRURGIEN_EDITOR (gtk_widget_get_first_child
@@ -572,21 +767,24 @@ edit_field_response (GtkDialog *dialog,
     {
         modification = g_slice_new (FileModification);
 
-        modification->modification_offset = view->selected_field->field_offset;
-        modification->modification_length = view->selected_field->field_length;
-        modification->modification = g_malloc (modification->modification_length);
+        modification->type = FieldInsertion;
+        if (!view->insertion_type)
+            modification->offset = view->selected_field->field_offset;
+        else
+            modification->offset = view->selected_field->field_offset +
+                                   view->selected_field->field_length;
+        modification->length = chirurgien_editor_get_contents_size (editor);
+        modification->data = g_malloc (modification->length);
 
-        file_contents = view->file_contents + modification->modification_offset;
-        new_contents = chirurgien_editor_get_contents (editor);
-
-        for (gsize i = 0; i < modification->modification_length; i++)
-            modification->modification[i] = new_contents[i] ^ file_contents[i];
+        memcpy (modification->data,
+                chirurgien_editor_get_contents (editor),
+                modification->length);
 
         /* Delete now outdated modifications */
         while ((old_modification = g_queue_pop_nth (&view->modifications,
                                                     view->modification_index + 1)))
         {
-            g_free (old_modification->modification);
+            g_free (old_modification->data);
             g_slice_free (FileModification, old_modification);
         }
 
@@ -602,75 +800,85 @@ edit_field_response (GtkDialog *dialog,
 }
 
 static void
-edit_field (GtkButton *button)
+insert_size_response (GtkDialog *dialog,
+                      int        response_id,
+                      gpointer   user_data)
 {
-    ChirurgienView *view;
-    GtkWidget *popover;
+    GtkWidget *editor, *content_area, *spin_button;
 
-    GtkWidget *editor, *edition_dialog, *content_area;
+    guint insertion_size;
+    g_autofree guchar *insertion_data = NULL;
 
-    view = CHIRURGIEN_VIEW (gtk_widget_get_ancestor (GTK_WIDGET (button),
-                                                     CHIRURGIEN_TYPE_VIEW));
-    popover = gtk_widget_get_ancestor (GTK_WIDGET (button),
-                                       GTK_TYPE_POPOVER);
+    if (response_id == GTK_RESPONSE_ACCEPT)
+    {
+        content_area = gtk_dialog_get_content_area (dialog);
+        spin_button = gtk_widget_get_first_child (content_area);
 
-    gtk_popover_popdown (GTK_POPOVER (popover));
+        insertion_size = gtk_spin_button_get_value (GTK_SPIN_BUTTON (spin_button));
+        insertion_data = g_malloc (insertion_size);
+        memset (insertion_data, 0, insertion_size);
 
-    editor = chirurgien_editor_new ();
-    chirurgien_editor_set_contents (CHIRURGIEN_EDITOR (editor),
-                                    view->file_contents + view->selected_field->field_offset,
-                                    view->selected_field->field_length);
+        editor = chirurgien_editor_new ();
+        chirurgien_editor_set_contents (CHIRURGIEN_EDITOR (editor),
+                                        insertion_data,
+                                        insertion_size);
 
-    edition_dialog = gtk_dialog_new_with_buttons (view->selected_field->field_name,
-                         GTK_WINDOW (gtk_widget_get_ancestor (GTK_WIDGET (view), CHIRURGIEN_TYPE_WINDOW)),
-                         GTK_DIALOG_MODAL | GTK_DIALOG_USE_HEADER_BAR,
-                         _("Cancel"),
-                         GTK_RESPONSE_CANCEL,
-                         _("Accept"),
-                         GTK_RESPONSE_ACCEPT,
-                         NULL);
-    content_area = gtk_dialog_get_content_area (GTK_DIALOG (edition_dialog));
-    gtk_box_append (GTK_BOX (content_area), editor);
+        gtk_box_remove (GTK_BOX (content_area), spin_button);
+        gtk_box_append (GTK_BOX (content_area), editor);
 
-    gtk_window_set_default_size (GTK_WINDOW (edition_dialog), 600, 240);
+        gtk_window_set_title (GTK_WINDOW (dialog), _("Field insertion"));
 
-    g_signal_connect (edition_dialog, "response", G_CALLBACK (edit_field_response), view);
-
-    gtk_window_present (GTK_WINDOW (edition_dialog));
+        g_signal_handlers_disconnect_by_func (dialog, insert_size_response, user_data);
+        g_signal_connect (dialog, "response", G_CALLBACK (insert_edit_response), user_data);
+    }
+    else
+    {
+        gtk_window_destroy (GTK_WINDOW (dialog));
+    }
 }
 
 static void
-extract_field (GtkButton *button)
+insert_field (GtkButton *button,
+              gpointer   user_data)
 {
-    ChirurgienWindow *window;
-    ChirurgienView *view, *extract_view;
-
-    g_autofree gchar *basename;
+    ChirurgienView *view;
+    GtkWidget *spin_button, *dialog;
 
     view = CHIRURGIEN_VIEW (gtk_widget_get_ancestor (GTK_WIDGET (button),
-                                                     CHIRURGIEN_TYPE_VIEW));
-    window = CHIRURGIEN_WINDOW (gtk_widget_get_ancestor (GTK_WIDGET (view),
-                                                         CHIRURGIEN_TYPE_WINDOW));
+                            CHIRURGIEN_TYPE_VIEW));
+    view->insertion_type = GPOINTER_TO_INT (user_data);
 
-    extract_view = chirurgien_view_new (window);
-    extract_view->file_size = view->selected_field->field_length;
-    extract_view->formatted_file_size = extract_view->file_size * 3;
-    extract_view->file_contents = g_malloc (extract_view->file_size);
+    spin_button = gtk_spin_button_new_with_range (1,
+                                                  1048576, /* 1MiB */
+                                                  1);
 
-    memcpy (extract_view->file_contents,
-            view->file_contents + view->selected_field->field_offset,
-            extract_view->file_size);
+    gtk_widget_set_margin_start (spin_button, 10);
+    gtk_widget_set_margin_end (spin_button, 10);
+    gtk_widget_set_margin_top (spin_button, 10);
+    gtk_widget_set_margin_bottom (spin_button, 10);
+    gtk_widget_set_hexpand (spin_button, TRUE);
+    gtk_widget_set_halign (spin_button, GTK_ALIGN_CENTER);
 
-    basename = g_path_get_basename (view->file_path);
+    dialog = gtk_dialog_new_with_buttons (_("Bytes to insert (max. 1MiB)"),
+                     GTK_WINDOW (gtk_widget_get_ancestor (GTK_WIDGET (button), CHIRURGIEN_TYPE_WINDOW)),
+                     GTK_DIALOG_MODAL | GTK_DIALOG_USE_HEADER_BAR,
+                     _("Cancel"),
+                     GTK_RESPONSE_CANCEL,
+                     _("Accept"),
+                     GTK_RESPONSE_ACCEPT,
+                     NULL);
 
-    extract_view->file_path = g_strdup_printf ("%s [%s]", basename,
-                                               view->selected_field->field_name);
-    chirurgien_view_tab_set_label (extract_view->view_tab,
-                                   extract_view->file_path,
-                                   extract_view->file_path);
-    extract_view->has_file = FALSE;
+    gtk_dialog_set_default_response (GTK_DIALOG (dialog), GTK_RESPONSE_ACCEPT);
 
-    chirurgien_actions_show_view (window, extract_view);
+    gtk_box_append (GTK_BOX (gtk_dialog_get_content_area (GTK_DIALOG (dialog))),
+                             spin_button);
+
+    g_signal_connect (dialog, "response", G_CALLBACK (insert_size_response), view);
+
+    gtk_window_present (GTK_WINDOW (dialog));
+
+    gtk_popover_popdown (GTK_POPOVER (gtk_widget_get_ancestor (GTK_WIDGET (button),
+                                      GTK_TYPE_POPOVER)));
 }
 
 static void
@@ -678,7 +886,7 @@ create_field_popover (GtkPopover *popover,
                       FileField  *file_field)
 {
     ChirurgienView *view;
-    GtkWidget *grid, *widget, *button;
+    GtkWidget *grid, *widget1, *widget2, *widget3;
 
     view = CHIRURGIEN_VIEW (gtk_widget_get_ancestor (GTK_WIDGET (popover),
                                                      CHIRURGIEN_TYPE_VIEW));
@@ -692,27 +900,54 @@ create_field_popover (GtkPopover *popover,
     gtk_widget_set_margin_bottom (grid, 5);
     gtk_widget_set_margin_top (grid, 5);
 
-    widget = gtk_label_new (file_field->field_name);
+    widget1 = gtk_label_new (file_field->field_name);
 
-    gtk_grid_attach (GTK_GRID (grid), widget, 0, 0, 2, 1);
+    gtk_grid_attach (GTK_GRID (grid), widget1, 0, 0, 6, 1);
 
-    widget = gtk_button_new_from_icon_name ("system-search-symbolic");
-    gtk_widget_set_tooltip_text (widget, _("Extract field to separate tab"));
-    gtk_widget_add_css_class (widget, "circular");
+    widget1 = gtk_button_new_from_icon_name ("document-edit-symbolic");
+    gtk_widget_set_tooltip_text (widget1, _("Edit field"));
+    gtk_widget_add_css_class (widget1, "circular");
+    gtk_widget_set_halign (widget1, GTK_ALIGN_END);
 
-    g_signal_connect (widget, "clicked", G_CALLBACK (extract_field), NULL);
+    g_signal_connect (widget1, "clicked", G_CALLBACK (edit_field), view);
 
-    button = gtk_button_new_from_icon_name ("document-edit-symbolic");
-    gtk_widget_set_tooltip_text (button, _("Edit field"));
-    gtk_widget_add_css_class (button, "circular");
-    gtk_widget_set_halign (button, GTK_ALIGN_END);
+    widget2 = gtk_button_new_from_icon_name ("system-search-symbolic");
+    gtk_widget_set_tooltip_text (widget2, _("Extract field to separate tab"));
+    gtk_widget_add_css_class (widget2, "circular");
+    gtk_widget_set_halign (widget2, GTK_ALIGN_START);
 
-    g_signal_connect (button, "clicked", G_CALLBACK (edit_field), NULL);
+    g_signal_connect (widget2, "clicked", G_CALLBACK (extract_field), view);
 
-    gtk_widget_set_halign (widget, GTK_ALIGN_START);
+    gtk_grid_attach (GTK_GRID (grid), widget1, 0, 1, 3, 1);
+    gtk_grid_attach_next_to (GTK_GRID (grid), widget2, widget1, GTK_POS_RIGHT, 3, 1);
 
-    gtk_grid_attach (GTK_GRID (grid), button, 0, 1, 1, 1);
-    gtk_grid_attach_next_to (GTK_GRID (grid), widget, button, GTK_POS_RIGHT, 1, 1);
+    if (g_settings_get_boolean (view->preferences_settings, "show-extra-buttons"))
+    {
+        widget1 = gtk_button_new_from_icon_name ("pan-start-symbolic");
+        gtk_widget_set_tooltip_text (widget1, _("Insert before"));
+        gtk_widget_add_css_class (widget1, "circular");
+        gtk_widget_set_halign (widget1, GTK_ALIGN_END);
+
+        g_signal_connect (widget1, "clicked", G_CALLBACK (insert_field), GINT_TO_POINTER (0));
+
+        widget2 = gtk_button_new_from_icon_name ("edit-delete-symbolic");
+        gtk_widget_set_tooltip_text (widget2, _("Delete field"));
+        gtk_widget_add_css_class (widget2, "circular");
+        gtk_widget_set_halign (widget2, GTK_ALIGN_FILL);
+
+        g_signal_connect (widget2, "clicked", G_CALLBACK (delete_field), view);
+
+        widget3 = gtk_button_new_from_icon_name ("pan-end-symbolic");
+        gtk_widget_set_tooltip_text (widget3, _("Insert after"));
+        gtk_widget_add_css_class (widget3, "circular");
+        gtk_widget_set_halign (widget3, GTK_ALIGN_START);
+
+        g_signal_connect (widget3, "clicked", G_CALLBACK (insert_field), GINT_TO_POINTER (1));
+
+        gtk_grid_attach (GTK_GRID (grid), widget1, 0, 2, 2, 1);
+        gtk_grid_attach_next_to (GTK_GRID (grid), widget2, widget1, GTK_POS_RIGHT, 2, 1);
+        gtk_grid_attach_next_to (GTK_GRID (grid), widget3, widget2, GTK_POS_RIGHT, 2, 1);
+    }
 
     view->selected_field = file_field;
 
@@ -936,7 +1171,7 @@ chirurgien_view_dispose (GObject *object)
     for (GList *i = view->modifications.head; i != NULL; i = i->next)
     {
         modification = i->data;
-        g_free (modification->modification);
+        g_free (modification->data);
         g_slice_free (FileModification, modification);
     }
     g_queue_clear (&view->modifications);
@@ -948,7 +1183,7 @@ chirurgien_view_dispose (GObject *object)
 
     g_free (g_steal_pointer (&view->view_buffer));
 
-    g_free (g_steal_pointer (&view->file_contents));
+    g_byte_array_unref (g_steal_pointer (&view->file_contents));
     g_free (g_steal_pointer (&view->file_path));
 
     G_OBJECT_CLASS (chirurgien_view_parent_class)->dispose (object);
@@ -1021,6 +1256,8 @@ chirurgien_view_init (ChirurgienView *view)
 
     chirurgien_view_tab_set_view (view->view_tab, view);
 
+    view->file_contents = g_byte_array_new ();
+
     g_queue_init (&view->modifications);
     view->modification_index = G_MAXUINT;
 
@@ -1073,22 +1310,23 @@ chirurgien_view_set_file (ChirurgienView *view,
     g_autoptr (GFileInfo) file_info;
 
     g_autofree gchar *basename;
+    guint file_size;
 
     file_input = g_file_read (file, NULL, NULL);
     file_info = g_file_query_info (file, G_FILE_ATTRIBUTE_STANDARD_SIZE","G_FILE_ATTRIBUTE_ACCESS_CAN_WRITE,
                                    G_FILE_QUERY_INFO_NONE, NULL, NULL);
 
-    view->file_size = g_file_info_get_size (file_info);
+    file_size = g_file_info_get_size (file_info);
 
     /* Limit file size to 50 MiB */
-    if (view->file_size > 52428800)
-        view->file_size = 52428800;
+    if (file_size > 52428800)
+        file_size = 52428800;
 
-    view->formatted_file_size = view->file_size * 3;
+    g_byte_array_set_size (view->file_contents, file_size);
 
-    view->file_contents = g_malloc (view->file_size);
-
-    g_input_stream_read_all (G_INPUT_STREAM (file_input), view->file_contents, view->file_size,
+    g_input_stream_read_all (G_INPUT_STREAM (file_input),
+                             view->file_contents->data,
+                             view->file_contents->len,
                              NULL, NULL, NULL);
 
     if (g_file_info_get_attribute_boolean (file_info, G_FILE_ATTRIBUTE_ACCESS_CAN_WRITE))
@@ -1114,8 +1352,8 @@ chirurgien_view_do_analysis (ChirurgienView *view)
 {
     FormatsFile file;
 
-    file.file_contents = view->file_contents;
-    file.file_size = view->file_size;
+    file.file_contents = view->file_contents->data;
+    file.file_size = view->file_contents->len;
     file.file_contents_index = 0;
     file.file_fields = NULL;
     file.description = view->description;
@@ -1176,8 +1414,10 @@ gboolean
 chirurgien_view_save (ChirurgienView *view,
                       GFile          *file)
 {
-    if (g_file_replace_contents (file, (const gchar *) view->file_contents, view->file_size, NULL,
-                                 FALSE, G_FILE_CREATE_NONE, NULL, NULL, NULL))
+    if (g_file_replace_contents (file,
+                                (const gchar *) view->file_contents->data,
+                                 view->file_contents->len,
+                                 NULL, FALSE, G_FILE_CREATE_NONE, NULL, NULL, NULL))
     {
         g_free (view->file_path);
         view->file_path = g_file_get_path (file);
@@ -1205,19 +1445,54 @@ chirurgien_view_undo (ChirurgienView *view)
     FileModification *modification;
     guchar *contents;
 
+    GByteArray *new_file_contents;
+    gboolean force_reanalysis = FALSE;
+
     if (view->modification_index == G_MAXUINT)
         return;
 
     modification = g_queue_peek_nth (&view->modifications, view->modification_index);
 
-    contents = view->file_contents + modification->modification_offset;
+    if (modification->type == FieldEdition)
+    {
+        contents = view->file_contents->data + modification->offset;
 
-    for (gsize i = 0; i < modification->modification_length; i++)
-        contents[i] ^= modification->modification[i];
+        for (gsize i = 0; i < modification->length; i++)
+            contents[i] ^= modification->data[i];
+    }
+    else if (modification->type == FieldDeletion)
+    {
+        new_file_contents = g_byte_array_sized_new (view->file_contents->len +
+                                                    modification->length);
+        g_byte_array_append (new_file_contents,
+                             view->file_contents->data,
+                             modification->offset);
+        g_byte_array_append (new_file_contents,
+                             modification->data,
+                             modification->length);
+        g_byte_array_append (new_file_contents,
+                             view->file_contents->data +
+                             modification->offset,
+                             view->file_contents->len -
+                             modification->offset);
+
+        g_byte_array_unref (view->file_contents);
+        view->file_contents = new_file_contents;
+
+        force_reanalysis = TRUE;
+    }
+    else if (modification->type == FieldInsertion)
+    {
+        g_byte_array_remove_range (view->file_contents,
+                                   modification->offset,
+                                   modification->length);
+
+        force_reanalysis = TRUE;
+    }
 
     view->modification_index--;
 
-    file_modified (view);
+    file_modified (view, force_reanalysis);
 }
 
 void
@@ -1226,17 +1501,52 @@ chirurgien_view_redo (ChirurgienView *view)
     FileModification *modification;
     guchar *contents;
 
+    GByteArray *new_file_contents;
+    gboolean force_reanalysis = FALSE;
+
     if (view->modification_index == view->modifications.length - 1)
         return;
 
     modification = g_queue_peek_nth (&view->modifications, ++view->modification_index);
 
-    contents = view->file_contents + modification->modification_offset;
+    if (modification->type == FieldEdition)
+    {
+        contents = view->file_contents->data + modification->offset;
 
-    for (gsize i = 0; i < modification->modification_length; i++)
-        contents[i] ^= modification->modification[i];
+        for (gsize i = 0; i < modification->length; i++)
+            contents[i] ^= modification->data[i];
+    }
+    else if (modification->type == FieldDeletion)
+    {
+        g_byte_array_remove_range (view->file_contents,
+                                   modification->offset,
+                                   modification->length);
 
-    file_modified (view);
+        force_reanalysis = TRUE;
+    }
+    else if (modification->type == FieldInsertion)
+    {
+        new_file_contents = g_byte_array_sized_new (view->file_contents->len +
+                                                    modification->length);
+        g_byte_array_append (new_file_contents,
+                             view->file_contents->data,
+                             modification->offset);
+        g_byte_array_append (new_file_contents,
+                             modification->data,
+                             modification->length);
+        g_byte_array_append (new_file_contents,
+                             view->file_contents->data +
+                             modification->offset,
+                             view->file_contents->len -
+                             modification->offset);
+
+        g_byte_array_unref (view->file_contents);
+        view->file_contents = new_file_contents;
+
+        force_reanalysis = TRUE;
+    }
+
+    file_modified (view, force_reanalysis);
 }
 
 void

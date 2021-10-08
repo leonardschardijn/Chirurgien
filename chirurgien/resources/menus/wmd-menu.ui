@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <menu id="wmd-menu">
+    <submenu>
+      <attribute name="label" translatable="yes">_File</attribute>
+      <section>
+        <item>
+          <attribute name="label" translatable="yes">Open</attribute>
+          <attribute name="action">win.open</attribute>
+        </item>
+      </section>
+      <section id="recent-menu" />
+      <section>
+        <item>
+          <attribute name="label" translatable="yes">Save</attribute>
+          <attribute name="action">win.save</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">Save as…</attribute>
+          <attribute name="action">win.save-as</attribute>
+        </item>
+      </section>
+      <section>
+        <item>
+          <attribute name="label" translatable="yes">Close</attribute>
+          <attribute name="action">win.close-tab</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">Quit</attribute>
+          <attribute name="action">app.quit</attribute>
+        </item>
+      </section>
+    </submenu>
+    <submenu>
+      <attribute name="label" translatable="yes">_Edit</attribute>
+      <section>
+        <item>
+          <attribute name="label" translatable="yes">Undo</attribute>
+          <attribute name="action">win.undo</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">Redo</attribute>
+          <attribute name="action">win.redo</attribute>
+        </item>
+      </section>
+      <section>
+        <item>
+          <attribute name="label" translatable="yes">Preferences</attribute>
+          <attribute name="action">app.preferences</attribute>
+        </item>
+      </section>
+    </submenu>
+    <submenu>
+      <attribute name="label" translatable="yes">_View</attribute>
+      <section>
+        <item>
+          <attribute name="label" translatable="yes">Disable client-side decorations</attribute>
+          <attribute name="action">app.disable-csd</attribute>
+        </item>
+      </section>
+      <section>
+        <item>
+          <attribute name="label" translatable="yes">Next tab</attribute>
+          <attribute name="action">win.next-tab</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">Previous tab</attribute>
+          <attribute name="action">win.previous-tab</attribute>
+        </item>
+      </section>
+      <section>
+        <item>
+          <attribute name="label" translatable="yes">Hexadecimal view</attribute>
+          <attribute name="action">win.hex-view</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">Text view</attribute>
+          <attribute name="action">win.text-view</attribute>
+        </item>
+      </section>
+      <section>
+        <item>
+          <attribute name="label" translatable="yes">Reanalyze</attribute>
+          <attribute name="action">win.reanalyze</attribute>
+        </item>
+      </section>
+    </submenu>
+    <submenu>
+      <attribute name="label" translatable="yes">_Help</attribute>
+      <section>
+        <item>
+          <attribute name="label" translatable="yes">Formats</attribute>
+          <attribute name="action">app.formats</attribute>
+        </item>
+      </section>
+      <section>
+        <item>
+          <attribute name="label" translatable="yes">Keyboard shortcuts</attribute>
+          <attribute name="action">app.shortcuts</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">About</attribute>
+          <attribute name="action">app.about</attribute>
+        </item>
+      </section>
+    </submenu>
+  </menu>
+</interface>

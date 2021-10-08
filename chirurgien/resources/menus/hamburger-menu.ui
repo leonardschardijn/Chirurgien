@@ -3,6 +3,12 @@
   <menu id="hamburger-menu">
     <section>
       <item>
+        <attribute name="label" translatable="yes">Disable client-side decorations</attribute>
+        <attribute name="action">app.disable-csd</attribute>
+      </item>
+    </section>
+    <section>
+      <item>
         <attribute name="label" translatable="yes">Preferences</attribute>
         <attribute name="action">app.preferences</attribute>
       </item>
@@ -23,4 +29,3 @@
     </section>
   </menu>
 </interface>
-

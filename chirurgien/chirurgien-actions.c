@@ -27,6 +27,57 @@
 #include "chirurgien-preferences-dialog.h"
 
 
+static gboolean
+in_flatpak_sandbox (void)
+{
+    static const char *flatpak_sandbox = NULL;
+
+    if (G_UNLIKELY (flatpak_sandbox == NULL))
+    {
+        if (g_file_test ("/.flatpak-info", G_FILE_TEST_EXISTS))
+            flatpak_sandbox = "1";
+        else
+            flatpak_sandbox = "0";
+    }
+
+    return flatpak_sandbox[0] == '1';
+}
+
+void
+chirurgien_actions_disable_csd (G_GNUC_UNUSED GSimpleAction *action,
+                                GVariant *parameter,
+                                gpointer  user_data)
+{
+    ChirurgienWindow *window;
+    GtkWidget *dialog;
+
+    window = CHIRURGIEN_WINDOW (gtk_application_get_active_window (user_data));
+
+    if (gtk_notebook_get_n_pages (GTK_NOTEBOOK (gtk_window_get_child (GTK_WINDOW (window)))))
+    {
+        dialog = gtk_message_dialog_new (GTK_WINDOW (window),
+                                         GTK_DIALOG_MODAL,
+                                         GTK_MESSAGE_INFO,
+                                         GTK_BUTTONS_CANCEL,
+                                         _("Open files need to be closed"));
+
+        g_signal_connect (dialog, "response", G_CALLBACK (gtk_window_destroy), NULL);
+        gtk_window_present (GTK_WINDOW (dialog));
+
+        return;
+    }
+
+    g_settings_set_boolean(chirurgien_window_get_preferences (window), "disable-csd",
+                           g_variant_get_boolean (parameter));
+
+    g_application_hold (user_data);
+
+    gtk_window_close (GTK_WINDOW (window));
+    g_application_activate (user_data);
+
+    g_application_release (user_data);
+}
+
 static void
 close_preferences (G_GNUC_UNUSED GtkDialog *dialog,
                    G_GNUC_UNUSED gint       response_id,
@@ -178,7 +229,7 @@ open_response (GtkNativeDialog *self,
          * Flatpak-specific ~/.var/app/<app-id>/data/recently-used.xbel recent list.
          * Thus, the entry needs to be added manually
          */
-        if (g_file_test ("/.flatpak-info", G_FILE_TEST_EXISTS))
+        if (in_flatpak_sandbox ())
         {
             g_autofree gchar *uri = g_file_get_uri (file);
             gtk_recent_manager_add_item (gtk_recent_manager_get_default (), uri);
@@ -231,7 +282,7 @@ save_response (GtkNativeDialog *self,
              * Flatpak-specific ~/.var/app/<app-id>/data/recently-used.xbel recent list.
              * Thus, the entry needs to be added manually
              */
-            if (g_file_test ("/.flatpak-info", G_FILE_TEST_EXISTS))
+            if (in_flatpak_sandbox ())
             {
                 g_autofree gchar *uri = g_file_get_uri (file);
                 gtk_recent_manager_add_item (gtk_recent_manager_get_default (), uri);
