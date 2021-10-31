@@ -28,11 +28,15 @@
 #include "png/chirurgien-png.h"
 #include "tar/chirurgien-tar.h"
 #include "tiff/chirurgien-tiff.h"
+#include "webp/chirurgien-webp.h"
 
 
 void
 chirurgien_formats_analyze (FormatsFile *file)
 {
+    /* Container formats */
+    const guchar riff_magic_number[] = { 0x52,0x49,0x46,0x46 };
+    /* File formats */
     const guchar cpio_magic_number1[] = { 0xC7,0x71 };
     const guchar cpio_magic_number2[] = { 0x71,0xC7 };
     const guchar cpio_magic_number3[] = { 0x30,0x37,0x30,0x37,0x30,0x37 };
@@ -48,6 +52,7 @@ chirurgien_formats_analyze (FormatsFile *file)
     const guchar tar_magic_number[] = { 0x75,0x73,0x74,0x61,0x72 };
     const guchar tiff_magic_number1[] = { 0x49,0x49,0x2A,0x00 };
     const guchar tiff_magic_number2[] = { 0x4D,0x4D,0x00,0x2A };
+    const guchar webp_magic_number[] = { 0x57,0x45,0x42,0x50 };
 
     gboolean find_unused = FALSE;
 
@@ -134,6 +139,17 @@ chirurgien_formats_analyze (FormatsFile *file)
     {
         chirurgien_tiff (file);
         find_unused = TRUE;
+    }
+    /* RIFF container */
+    else if (FILE_HAS_DATA_N (file, 12) &&
+             !memcmp (file->file_contents, riff_magic_number, 4))
+    {
+        /* RIFF formats */
+        /* WebP */
+        if (!memcmp (file->file_contents + 8, webp_magic_number, 4))
+        {
+            chirurgien_webp (file);
+        }
     }
     else
     {

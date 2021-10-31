@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <object class="GtkGrid" id="format-info">
+    <property name="row-spacing">3</property>
+    <property name="column-spacing">30</property>
+    <property name="can-focus">f</property>
+    <child>
+      <object class="GtkLabel">
+        <property name="label">WebP image</property>
+        <property name="margin-bottom">5</property>
+        <attributes>
+          <attribute name="weight" value="PANGO_WEIGHT_BOLD"/>
+          <attribute name="scale" value="1.3"/>
+        </attributes>
+        <layout>
+          <property name="row">0</property>
+          <property name="column">0</property>
+          <property name="row-span">1</property>
+          <property name="column-span">6</property>
+        </layout>
+      </object>
+    </child>
+    <child>
+      <object class="GtkLabel">
+        <property name="label" translatable="yes">Background colors</property>
+        <property name="margin-bottom">5</property>
+        <layout>
+          <property name="row">1</property>
+          <property name="column">0</property>
+          <property name="row-span">1</property>
+          <property name="column-span">6</property>
+        </layout>
+      </object>
+    </child>
+    <child>
+      <object class="GtkColorButton" id="color0">
+        <property name="can-target">f</property>
+        <property name="halign">GTK_ALIGN_END</property>
+        <layout>
+          <property name="row">2</property>
+          <property name="column">0</property>
+          <property name="row-span">1</property>
+          <property name="column-span">1</property>
+        </layout>
+      </object>
+    </child>
+    <child>
+      <object class="GtkLabel">
+        <property name="label" translatable="yes">Chunk FourCC</property>
+        <layout>
+          <property name="row">2</property>
+          <property name="column">1</property>
+          <property name="row-span">1</property>
+          <property name="column-span">1</property>
+        </layout>
+      </object>
+    </child>
+    <child>
+      <object class="GtkColorButton" id="color1">
+        <property name="can-target">f</property>
+        <property name="halign">GTK_ALIGN_END</property>
+        <layout>
+          <property name="row">2</property>
+          <property name="column">2</property>
+          <property name="row-span">1</property>
+          <property name="column-span">1</property>
+        </layout>
+      </object>
+    </child>
+    <child>
+      <object class="GtkLabel">
+        <property name="label" translatable="yes">Chunk size</property>
+        <layout>
+          <property name="row">2</property>
+          <property name="column">3</property>
+          <property name="row-span">1</property>
+          <property name="column-span">1</property>
+        </layout>
+      </object>
+    </child>
+    <child>
+      <object class="GtkBox">
+        <property name="orientation">GTK_ORIENTATION_HORIZONTAL</property>
+        <property name="halign">GTK_ALIGN_END</property>
+        <child>
+          <object class="GtkColorButton" id="color2">
+            <property name="can-target">f</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkColorButton" id="color3">
+            <property name="can-target">f</property>
+          </object>
+        </child>
+        <style>
+          <class name="linked"/>
+        </style>
+        <layout>
+          <property name="row">2</property>
+          <property name="column">4</property>
+          <property name="row-span">1</property>
+          <property name="column-span">1</property>
+        </layout>
+      </object>
+    </child>
+    <child>
+      <object class="GtkLabel">
+        <property name="label" translatable="yes">Chunk data</property>
+        <layout>
+          <property name="row">2</property>
+          <property name="column">5</property>
+          <property name="row-span">1</property>
+          <property name="column-span">1</property>
+        </layout>
+      </object>
+    </child>
+    <child>
+      <object class="GtkLabel">
+        <property name="label" translatable="yes">Foreground colors</property>
+        <property name="margin-top">5</property>
+        <property name="margin-bottom">5</property>
+        <layout>
+          <property name="row">3</property>
+          <property name="column">0</property>
+          <property name="row-span">1</property>
+          <property name="column-span">6</property>
+        </layout>
+      </object>
+    </child>
+    <child>
+      <object class="GtkColorButton" id="color8">
+        <property name="can-target">f</property>
+        <property name="halign">GTK_ALIGN_END</property>
+        <layout>
+          <property name="row">4</property>
+          <property name="column">0</property>
+          <property name="row-span">1</property>
+          <property name="column-span">1</property>
+        </layout>
+      </object>
+    </child>
+    <child>
+      <object class="GtkLabel">
+        <property name="label" translatable="yes">Padding</property>
+        <layout>
+          <property name="row">4</property>
+          <property name="column">1</property>
+          <property name="row-span">1</property>
+          <property name="column-span">1</property>
+        </layout>
+      </object>
+    </child>
+    <child>
+      <object class="GtkBox">
+        <property name="orientation">GTK_ORIENTATION_HORIZONTAL</property>
+        <property name="halign">GTK_ALIGN_END</property>
+        <child>
+          <object class="GtkColorButton" id="color6">
+            <property name="can-target">f</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkColorButton" id="color7">
+            <property name="can-target">f</property>
+          </object>
+        </child>
+        <style>
+          <class name="linked"/>
+        </style>
+        <layout>
+          <property name="row">4</property>
+          <property name="column">2</property>
+          <property name="row-span">1</property>
+          <property name="column-span">1</property>
+        </layout>
+      </object>
+    </child>
+    <child>
+      <object class="GtkLabel">
+        <property name="label" translatable="yes">Error</property>
+        <layout>
+          <property name="row">4</property>
+          <property name="column">3</property>
+          <property name="row-span">1</property>
+          <property name="column-span">1</property>
+        </layout>
+      </object>
+    </child>
+    <child>
+      <object class="GtkLabel">
+        <property name="label" translatable="yes">Details</property>
+        <property name="margin-top">10</property>
+        <property name="margin-bottom">5</property>
+        <layout>
+          <property name="row">6</property>
+          <property name="column">0</property>
+          <property name="row-span">1</property>
+          <property name="column-span">6</property>
+        </layout>
+      </object>
+    </child>
+    <child>
+      <object class="GtkScrolledWindow">
+        <property name="hexpand">t</property>
+        <property name="vexpand">t</property>
+        <property name="hscrollbar-policy">GTK_POLICY_NEVER</property>
+        <child>
+          <object class="GtkTextView">
+            <property name="can-target">f</property>
+            <property name="left-margin">10</property>
+            <property name="right-margin">10</property>
+            <property name="top-margin">7</property>
+            <property name="bottom-margin">7</property>
+            <property name="editable">f</property>
+            <property name="cursor-visible">f</property>
+            <property name="wrap-mode">GTK_WRAP_WORD</property>
+            <property name="buffer">details</property>
+          </object>
+        </child>
+        <layout>
+          <property name="row">7</property>
+          <property name="column">0</property>
+          <property name="row-span">1</property>
+          <property name="column-span">6</property>
+        </layout>
+      </object>
+    </child>
+  </object>
+  <object class="GtkTextBuffer" id="details">
+    <property name="text" translatable="yes"><![CDATA[<b>Recognized chunk types</b>:
+VP8, VP8L, VP8X, ANIM, ANMF, ALPH, ICCP, EXIF, XMP
+
+NOTE: The RIFF and WEBP types are implicitly recognized, as they are the file format's identifier
+
+The following checks are <span foreground="green">implemented</span>:
+    - The RIFF chunk size marks the end of file
+
+The following checks are <span foreground="red">not implemented</span>:
+    - The chunks inside a chunk-containing chunk do not exceed the container's size (e.g. the chunks inside an ANMF chunk do not exceed the ANMF chunk size), does not apply to the main RIFF chunk]]></property>
+  </object>
+</interface>
+

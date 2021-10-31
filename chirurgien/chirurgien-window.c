@@ -281,6 +281,11 @@ create_window (ChirurgienWindow *window)
     GMenuModel *menu;
     GAction *action;
 
+    GtkSettings *settings;
+
+    settings = gtk_widget_get_settings (GTK_WIDGET (window));
+    g_object_set (settings, "gtk-icon-theme-name", "Adwaita", NULL);
+
     /* Window Manager decorations */
     if (g_settings_get_boolean (window->preferences_settings, "disable-csd"))
     {
@@ -573,9 +578,20 @@ chirurgien_window_dispose (GObject *object)
 }
 
 static void
+chirurgien_window_finalize (GObject *object)
+{
+    g_signal_handlers_disconnect_by_func (gtk_recent_manager_get_default (),
+                                          recent_changed,
+                                          object);
+
+    G_OBJECT_CLASS (chirurgien_window_parent_class)->finalize (object);
+}
+
+static void
 chirurgien_window_class_init (ChirurgienWindowClass *klass)
 {
     G_OBJECT_CLASS (klass)->dispose = chirurgien_window_dispose;
+    G_OBJECT_CLASS (klass)->finalize = chirurgien_window_finalize;
 }
 
 static void

@@ -23,5 +23,6 @@
     <file preprocess="xml-stripblanks">formats/png-tab.ui</file>
     <file preprocess="xml-stripblanks">formats/tar-tab.ui</file>
     <file preprocess="xml-stripblanks">formats/tiff-tab.ui</file>
+    <file preprocess="xml-stripblanks">formats/webp-tab.ui</file>
   </gresource>
 </gresources>

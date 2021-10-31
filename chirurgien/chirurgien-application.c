@@ -75,7 +75,7 @@ chirurgien_application_startup (GApplication *app)
 static void
 chirurgien_application_init (G_GNUC_UNUSED ChirurgienApplication *app)
 {
-
+    gtk_window_set_default_icon_name ("io.github.leonardschardijn.Chirurgien");
 }
 
 static void

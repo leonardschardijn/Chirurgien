@@ -5,6 +5,14 @@ chirurgien_sources += [
   'formats/chirurgien-formats.c'
 ]
 
+# Container formats
+
+chirurgien_sources += [
+  'formats/container-formats/riff/riff-format.c'
+]
+
+# File formats
+
 chirurgien_sources += [
   'formats/cpio/cpio-format.c'
 ]
@@ -80,4 +88,15 @@ chirurgien_sources += [
   'formats/tiff/tiff-short-tag.c',
   'formats/tiff/tiff-long-tag.c',
   'formats/tiff/tiff-rational-tag.c'
+]
+
+chirurgien_sources += [
+  'formats/webp/webp-format.c',
+  'formats/webp/webp-vp8-chunk.c',
+  'formats/webp/webp-vp8l-chunk.c',
+  'formats/webp/webp-vp8x-chunk.c',
+  'formats/webp/webp-anim-chunk.c',
+  'formats/webp/webp-anmf-chunk.c',
+  'formats/webp/webp-alph-chunk.c',
+  'formats/webp/webp-generic-chunk.c'
 ]
