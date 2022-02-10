@@ -1,0 +1,889 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<format name="Joint Photographic Experts Group" short-name="JPEG">
+  <endianness>
+    <big-endian/>
+  </endianness>
+  <magic>
+    <signature>
+      <match hex-value="FFD8"/>
+    </signature>
+  </magic>
+  <colors>
+    <color id="mrkr-type" name="Marker type" index="0" background="true"/>
+    <color id="data-len" name="Segment data length" index="1" background="true"/>
+    <color id="seg-data-1" name="Segment data" index="2" background="true"/>
+    <color id="seg-data-2" name="Segment data" index="3" background="true"/>
+    <color id="huff-arith" name="Huffman/Arithmetic table definition" index="4" background="true"/>
+    <color id="comp-def" name="Component definition" index="5" background="true"/>
+    <color id="error-1" name="Error" index="6" background="false"/>
+    <color id="error-2" name="Error" index="7" background="false"/>
+  </colors>
+  <run>
+    <field id="soi-marker" navigation="SOI" section="JFIF and/or Exif header"/>
+    <exec var-id="soi-count" add="1"/>
+    <loop until-set="eoi-count">
+      <selection>
+        <match hex-value="FFE0">
+          <field id="app0-marker" navigation="APP0"/>
+          <exec var-id="app0-count" add="1"/>
+          <block id="read-data-len"/>
+          <selection>
+            <match var-id="sof-count" op="def">
+              <field id="app0-error-1" limit="data-len"/>
+            </match>
+            <match var-id="exif-count" op="def">
+              <field id="app0-error-2" limit="data-len"/>
+            </match>
+            <match>
+              <selection>
+                <match hex-value="4A46494600">
+                  <selection>
+                    <match var-id="jfif-count" op="def">
+                      <field id="jfif-error" limit="data-len"/>
+                    </match>
+                    <match>
+                      <field id="jfif-id" limit="data-len"/>
+                      <exec var-id="jfif-count" add="1"/>
+                      <field id="jfif0" limit="data-len"/>
+                      <field id="jfif1" limit="data-len"/>
+                      <field id="jfif2" limit="data-len"/>
+                      <field id="jfif3" limit="data-len"/>
+                      <field id="jfif4" limit="data-len" store-var="thumb-size"/>
+                      <field id="jfif5" limit="data-len" store-var="thumb-y"/>
+                      <exec var-id="thumb-size" multiply="thumb-y"/>
+                      <exec var-id="thumb-size" multiply="3"/>
+                      <exec var-id="data-len" subtract="thumb-size"/>
+                      <field id="jfif6" limit="thumb-size"/>
+                    </match>
+                  </selection>
+                </match>
+                <match hex-value="4A46585800">
+                  <field id="jfxx-id" limit="data-len"/>
+                  <field id="jfxx0" limit="data-len" store-var="thumb-format"/>
+                  <selection>
+                    <match var-id="thumb-format" hex-value="00">
+                      <field id="jfxx1" limit="data-len"/>
+                    </match>
+                    <match var-id="thumb-format" hex-value="11">
+                      <field id="jfxx2" limit="data-len" store-var="thumb-size"/>
+                      <field id="jfxx3" limit="data-len" store-var="thumb-y"/>
+                      <exec var-id="thumb-size" multiply="thumb-y"/>
+                      <loop until-set="thumb-palette" num-value="256" limit="data-len">
+                        <selection>
+                          <match var-id="thumb-palette" op="bit">
+                            <field id="jfxx5" limit="data-len"/>
+                          </match>
+                          <match>
+                            <field id="jfxx4" limit="data-len"/>
+                          </match>
+                        </selection>
+                        <exec var-id="thumb-palette" add="1"/>
+                      </loop>
+                      <exec var-id="data-len" subtract="thumb-size"/>
+                      <field id="jfxx6" limit="thumb-size"/>
+                    </match>
+                    <match var-id="thumb-format" hex-value="13">
+                      <field id="jfxx2" limit="data-len" store-var="thumb-size"/>
+                      <field id="jfxx3" limit="data-len" store-var="thumb-y"/>
+                      <exec var-id="thumb-size" multiply="thumb-y"/>
+                      <exec var-id="data-len" subtract="thumb-size"/>
+                      <field id="jfxx6" limit="thumb-size"/>
+                    </match>
+                  </selection>
+                </match>
+              </selection>
+            </match>
+          </selection>
+        </match>
+        <match hex-value="FFE1">
+          <field id="app1-marker" navigation="APP1"/>
+          <exec var-id="app1-count" add="1"/>
+          <block id="read-data-len"/>
+          <selection>
+            <match hex-value="457869660000">
+              <selection>
+                <match var-id="sof-count" op="def">
+                  <field id="exif-error" limit="data-len"/>
+                </match>
+                <match>
+                  <field id="exif-id" limit="data-len"/>
+                  <exec var-id="exif-count" add="1"/>
+                  <field id="exif0" limit="data-len"/>
+                  <print line="Exif metadata available"/>
+                </match>
+              </selection>
+            </match>
+            <match hex-value="687474703A2F2F6E732E61646F62652E636F6D2F7861702F312E302F00">
+              <field id="xmp-id" limit="data-len"/>
+              <field id="xmp0" limit="data-len"/>
+            </match>
+          </selection>
+        </match>
+        <match hex-value="FFE2">
+          <field id="app2-marker" navigation="APP2"/>
+          <exec var-id="app2-count" add="1"/>
+          <block id="read-data-len"/>
+          <match hex-value="4943435F50524F46494C4500">
+            <field id="iccp-id" limit="data-len"/>
+            <field id="iccp0" limit="data-len"/>
+            <field id="iccp1" limit="data-len"/>
+            <field id="iccp2" limit="data-len"/>
+          </match>
+        </match>
+        <match hex-value="FFDB">
+          <field id="dqt-marker" navigation="DQT"/>
+          <exec var-id="dqt-count" add="1"/>
+          <block id="read-data-len"/>
+          <loop limit="data-len">
+            <field id="dqt0" limit="data-len" tab="DQT" section="Quantization table"/>
+            <field id="dqt1" limit="data-len" tab="DQT" store-var="dqt-len"/>
+            <field id="dqt2" limit="data-len" tab="DQT"/>
+            <selection>
+              <match var-id="dqt-len" hex-value="00">
+                <field id="dqt3" limit="data-len"/>
+              </match>
+              <match var-id="dqt-len" hex-value="10">
+                <field id="dqt4" limit="data-len"/>
+              </match>
+              <match>
+                <field id="dqt-error" limit="data-len"/>
+              </match>
+            </selection>
+          </loop>
+          <print tab="DQT" insert-tab="true"/>
+        </match>
+        <match hex-value="FFC4">
+          <field id="dht-marker" navigation="DHT"/>
+          <exec var-id="dht-count" add="1"/>
+          <block id="read-data-len"/>
+          <loop limit="data-len">
+            <field id="dht0" limit="data-len" tab="DHT" section="Huffman code table"/>
+            <field id="dht1" limit="data-len" tab="DHT"/>
+            <field id="dht2" limit="data-len"/>
+            <field id="dht3" limit="data-len" tab="DHT" store-var="codes-1"/>
+            <field id="dht4" limit="data-len" tab="DHT" store-var="codes-2"/>
+            <field id="dht5" limit="data-len" tab="DHT" store-var="codes-3"/>
+            <field id="dht6" limit="data-len" tab="DHT" store-var="codes-4"/>
+            <field id="dht7" limit="data-len" tab="DHT" store-var="codes-5"/>
+            <field id="dht8" limit="data-len" tab="DHT" store-var="codes-6"/>
+            <field id="dht9" limit="data-len" tab="DHT" store-var="codes-7"/>
+            <field id="dht10" limit="data-len" tab="DHT" store-var="codes-8"/>
+            <field id="dht11" limit="data-len" tab="DHT" store-var="codes-9"/>
+            <field id="dht12" limit="data-len" tab="DHT" store-var="codes-10"/>
+            <field id="dht13" limit="data-len" tab="DHT" store-var="codes-11"/>
+            <field id="dht14" limit="data-len" tab="DHT" store-var="codes-12"/>
+            <field id="dht15" limit="data-len" tab="DHT" store-var="codes-13"/>
+            <field id="dht16" limit="data-len" tab="DHT" store-var="codes-14"/>
+            <field id="dht17" limit="data-len" tab="DHT" store-var="codes-15"/>
+            <field id="dht18" limit="data-len" tab="DHT" store-var="codes-16"/>
+            <exec var-id="data-len" subtract="codes-1"/>
+            <field id="dht19" limit="codes-1"/>
+            <exec var-id="data-len" subtract="codes-2"/>
+            <field id="dht20" limit="codes-2"/>
+            <exec var-id="data-len" subtract="codes-3"/>
+            <field id="dht21" limit="codes-3"/>
+            <exec var-id="data-len" subtract="codes-4"/>
+            <field id="dht22" limit="codes-4"/>
+            <exec var-id="data-len" subtract="codes-5"/>
+            <field id="dht23" limit="codes-5"/>
+            <exec var-id="data-len" subtract="codes-6"/>
+            <field id="dht24" limit="codes-6"/>
+            <exec var-id="data-len" subtract="codes-7"/>
+            <field id="dht25" limit="codes-7"/>
+            <exec var-id="data-len" subtract="codes-8"/>
+            <field id="dht26" limit="codes-8"/>
+            <exec var-id="data-len" subtract="codes-9"/>
+            <field id="dht27" limit="codes-9"/>
+            <exec var-id="data-len" subtract="codes-10"/>
+            <field id="dht28" limit="codes-10"/>
+            <exec var-id="data-len" subtract="codes-11"/>
+            <field id="dht29" limit="codes-11"/>
+            <exec var-id="data-len" subtract="codes-12"/>
+            <field id="dht30" limit="codes-12"/>
+            <exec var-id="data-len" subtract="codes-13"/>
+            <field id="dht31" limit="codes-13"/>
+            <exec var-id="data-len" subtract="codes-14"/>
+            <field id="dht32" limit="codes-14"/>
+            <exec var-id="data-len" subtract="codes-15"/>
+            <field id="dht33" limit="codes-15"/>
+            <exec var-id="data-len" subtract="codes-16"/>
+            <field id="dht34" limit="codes-16"/>
+          </loop>
+          <print tab="DHT" insert-tab="true"/>
+        </match>
+        <match hex-value="FFCC">
+          <field id="dac-marker" navigation="DAC"/>
+          <exec var-id="dac-count" add="1"/>
+          <block id="read-data-len"/>
+          <loop limit="data-len">
+            <field id="dac0" limit="data-len" tab="DAC" section="Arithmetic conditioning table"/>
+            <field id="dht1" limit="data-len" tab="DAC"/>
+            <field id="dac2" limit="data-len"/>
+            <field id="dac3" limit="data-len" tab="DAC"/>
+          </loop>
+          <print tab="DAC" insert-tab="true"/>
+        </match>
+        <match hex-value="FFC0">
+          <selection>
+            <match var-id="sof-count" op="def">
+              <field id="sof0-marker" navigation="SOF0" suppress-print="true"/>
+              <exec var-id="sof-count" add="1"/>
+              <block id="read-data-len"/>
+              <field id="sofn-error" limit="data-len"/>
+            </match>
+            <match>
+              <field id="sof0-marker" navigation="SOF0" section="Image details"/>
+              <exec var-id="sof-count" add="1"/>
+              <block id="read-data-len"/>
+              <block id="sofn-seg"/>
+            </match>
+          </selection>
+        </match>
+        <match hex-value="FFC1">
+          <selection>
+            <match var-id="sof-count" op="def">
+              <field id="sof1-marker" navigation="SOF1" suppress-print="true"/>
+              <exec var-id="sof-count" add="1"/>
+              <block id="read-data-len"/>
+              <field id="sofn-error" limit="data-len"/>
+            </match>
+            <match>
+              <field id="sof1-marker" navigation="SOF1" section="Image details"/>
+              <exec var-id="sof-count" add="1"/>
+              <block id="read-data-len"/>
+              <block id="sofn-seg"/>
+            </match>
+          </selection>
+        </match>
+        <match hex-value="FFC2">
+          <selection>
+            <match var-id="sof-count" op="def">
+              <field id="sof2-marker" navigation="SOF2" suppress-print="true"/>
+              <exec var-id="sof-count" add="1"/>
+              <block id="read-data-len"/>
+              <field id="sofn-error" limit="data-len"/>
+            </match>
+            <match>
+              <field id="sof2-marker" navigation="SOF2" section="Image details"/>
+              <exec var-id="sof-count" add="1"/>
+              <block id="read-data-len"/>
+              <block id="sofn-seg"/>
+            </match>
+          </selection>
+        </match>
+        <match hex-value="FFC3">
+          <selection>
+            <match var-id="sof-count" op="def">
+              <field id="sof3-marker" navigation="SOF3" suppress-print="true"/>
+              <exec var-id="sof-count" add="1"/>
+              <block id="read-data-len"/>
+              <field id="sofn-error" limit="data-len"/>
+            </match>
+            <match>
+              <field id="sof3-marker" navigation="SOF3" section="Image details"/>
+              <exec var-id="sof-count" add="1"/>
+              <block id="read-data-len"/>
+              <block id="sofn-seg"/>
+            </match>
+          </selection>
+        </match>
+        <match hex-value="FFC5">
+          <selection>
+            <match var-id="sof-count" op="def">
+              <field id="sof5-marker" navigation="SOF5" suppress-print="true"/>
+              <exec var-id="sof-count" add="1"/>
+              <block id="read-data-len"/>
+              <field id="sofn-error" limit="data-len"/>
+            </match>
+            <match>
+              <field id="sof5-marker" navigation="SOF5" section="Image details"/>
+              <exec var-id="sof-count" add="1"/>
+              <block id="read-data-len"/>
+              <block id="sofn-seg"/>
+            </match>
+          </selection>
+        </match>
+        <match hex-value="FFC6">
+          <selection>
+            <match var-id="sof-count" op="def">
+              <field id="sof6-marker" navigation="SOF6" suppress-print="true"/>
+              <exec var-id="sof-count" add="1"/>
+              <block id="read-data-len"/>
+              <field id="sofn-error" limit="data-len"/>
+            </match>
+            <match>
+              <field id="sof6-marker" navigation="SOF6" section="Image details"/>
+              <exec var-id="sof-count" add="1"/>
+              <block id="read-data-len"/>
+              <block id="sofn-seg"/>
+            </match>
+          </selection>
+        </match>
+        <match hex-value="FFC7">
+          <selection>
+            <match var-id="sof-count" op="def">
+              <field id="sof7-marker" navigation="SOF7" suppress-print="true"/>
+              <exec var-id="sof-count" add="1"/>
+              <block id="read-data-len"/>
+              <field id="sofn-error" limit="data-len"/>
+            </match>
+            <match>
+              <field id="sof7-marker" navigation="SOF7" section="Image details"/>
+              <exec var-id="sof-count" add="1"/>
+              <block id="read-data-len"/>
+              <block id="sofn-seg"/>
+            </match>
+          </selection>
+        </match>
+        <match hex-value="FFC9">
+          <selection>
+            <match var-id="sof-count" op="def">
+              <field id="sof9-marker" navigation="SOF9" suppress-print="true"/>
+              <exec var-id="sof-count" add="1"/>
+              <block id="read-data-len"/>
+              <field id="sofn-error" limit="data-len"/>
+            </match>
+            <match>
+              <field id="sof9-marker" navigation="SOF9" section="Image details"/>
+              <exec var-id="sof-count" add="1"/>
+              <block id="read-data-len"/>
+              <block id="sofn-seg"/>
+            </match>
+          </selection>
+        </match>
+        <match hex-value="FFCA">
+          <selection>
+            <match var-id="sof-count" op="def">
+              <field id="sof10-marker" navigation="SOF10" suppress-print="true"/>
+              <exec var-id="sof-count" add="1"/>
+              <block id="read-data-len"/>
+              <field id="sofn-error" limit="data-len"/>
+            </match>
+            <match>
+              <field id="sof10-marker" navigation="SOF10" section="Image details"/>
+              <exec var-id="sof-count" add="1"/>
+              <block id="read-data-len"/>
+              <block id="sofn-seg"/>
+            </match>
+          </selection>
+        </match>
+        <match hex-value="FFCB">
+          <selection>
+            <match var-id="sof-count" op="def">
+              <field id="sof11-marker" navigation="SOF11" suppress-print="true"/>
+              <exec var-id="sof-count" add="1"/>
+              <block id="read-data-len"/>
+              <field id="sofn-error" limit="data-len"/>
+            </match>
+            <match>
+              <field id="sof11-marker" navigation="SOF11" section="Image details"/>
+              <exec var-id="sof-count" add="1"/>
+              <block id="read-data-len"/>
+              <block id="sofn-seg"/>
+            </match>
+          </selection>
+        </match>
+        <match hex-value="FFCD">
+          <selection>
+            <match var-id="sof-count" op="def">
+              <field id="sof13-marker" navigation="SOF13" suppress-print="true"/>
+              <exec var-id="sof-count" add="1"/>
+              <block id="read-data-len"/>
+              <field id="sofn-error" limit="data-len"/>
+            </match>
+            <match>
+              <field id="sof13-marker" navigation="SOF13" section="Image details"/>
+              <exec var-id="sof-count" add="1"/>
+              <block id="read-data-len"/>
+              <block id="sofn-seg"/>
+            </match>
+          </selection>
+        </match>
+        <match hex-value="FFCE">
+          <selection>
+            <match var-id="sof-count" op="def">
+              <field id="sof14-marker" navigation="SOF14" suppress-print="true"/>
+              <exec var-id="sof-count" add="1"/>
+              <block id="read-data-len"/>
+              <field id="sofn-error" limit="data-len"/>
+            </match>
+            <match>
+              <field id="sof14-marker" navigation="SOF14" section="Image details"/>
+              <exec var-id="sof-count" add="1"/>
+              <block id="read-data-len"/>
+              <block id="sofn-seg"/>
+            </match>
+          </selection>
+        </match>
+        <match hex-value="FFCF">
+          <selection>
+            <match var-id="sof-count" op="def">
+              <field id="sof15-marker" navigation="SOF15" suppress-print="true"/>
+              <exec var-id="sof-count" add="1"/>
+              <block id="read-data-len"/>
+              <field id="sofn-error" limit="data-len"/>
+            </match>
+            <match>
+              <field id="sof15-marker" navigation="SOF15" section="Image details"/>
+              <exec var-id="sof-count" add="1"/>
+              <block id="read-data-len"/>
+              <block id="sofn-seg"/>
+            </match>
+          </selection>
+        </match>
+        <match hex-value="FFDD">
+          <field id="dri-marker" navigation="DRI"/>
+          <exec var-id="dri-count" add="1"/>
+          <block id="read-data-len"/>
+          <field id="dri0" limit="data-len" tab="DRI" section="Restart interval" insert-tab="true"/>
+        </match>
+        <match hex-value="FFDA">
+          <field id="sos-marker" navigation="SOS"/>
+          <exec var-id="sos-count" add="1"/>
+          <block id="read-data-len"/>
+          <field id="sos0" limit="data-len" store-var="scan-comp" tab="SOS" section="Scan header"/>
+          <loop until-set="scan-comp" num-value="0" limit="data-len">
+            <field id="sos1" limit="data-len" tab="SOS" margin-top="10"/>
+            <field id="sos2" limit="data-len" tab="SOS"/>
+            <field id="sos3" limit="data-len" tab="SOS"/>
+            <field id="sos4" limit="data-len" tab="SOS"/>
+            <exec var-id="scan-comp" subtract="1"/>
+          </loop>
+          <field id="sos5" limit="data-len" tab="SOS" margin-top="10"/>
+          <field id="sos6" limit="data-len" tab="SOS"/>
+          <field id="sos7" limit="data-len" tab="SOS" insert-tab="true"/>
+          <exec var-id="stop-scan" set="0"/>
+          <loop until-set="stop-scan" num-value="1">
+            <field id="sos8"/>
+            <selection>
+              <match hex-value="FF00">
+                <field id="sos9"/>
+              </match>
+              <match hex-value="FFD0">
+                <field id="rst0-marker" navigation="RST0"/>
+              </match>
+              <match hex-value="FFD1">
+                <field id="rst1-marker" navigation="RST1"/>
+              </match>
+              <match hex-value="FFD2">
+                <field id="rst2-marker" navigation="RST2"/>
+              </match>
+              <match hex-value="FFD3">
+                <field id="rst3-marker" navigation="RST3"/>
+              </match>
+              <match hex-value="FFD4">
+                <field id="rst4-marker" navigation="RST4"/>
+              </match>
+              <match hex-value="FFD5">
+                <field id="rst5-marker" navigation="RST5"/>
+              </match>
+              <match hex-value="FFD6">
+                <field id="rst6-marker" navigation="RST6"/>
+              </match>
+              <match hex-value="FFD7">
+                <field id="rst7-marker" navigation="RST7"/>
+              </match>
+              <match>
+                <exec var-id="stop-scan" set="1"/>
+              </match>
+            </selection>
+          </loop>
+        </match>
+        <match hex-value="FFDC">
+          <field id="dnl-marker" navigation="DNL"/>
+          <exec var-id="dnl-count" add="1"/>
+          <block id="read-data-len"/>
+          <field id="dnl0" limit="data-len" tab="DNL" section="Define number of lines" insert-tab="true"/>
+        </match>
+        <match hex-value="FFFE">
+          <field id="com-marker" navigation="COM"/>
+          <exec var-id="com-count" add="1"/>
+          <block id="read-data-len"/>
+          <field id="com0" limit="data-len" tab="COM" insert-tab="true"/>
+        </match>
+        <match hex-value="FFD9">
+          <field id="eoi-marker" navigation="EOI"/>
+          <exec var-id="eoi-count" add="1"/>
+        </match>
+        <match>
+          <field id="unknown-marker" navigation="???"/>
+          <block id="read-data-len"/>
+          <field id="unrecognized" limit="data-len"/>
+        </match>
+      </selection>
+      <field id="unrecognized" limit="data-len" limit-failed="true"/>
+    </loop>
+    <print line="SOI markers" var-id="soi-count" section="Marker count"/>
+    <print line="APP0 markers" var-id="app0-count" omit-undefined="true"/>
+    <print line="APP1 markers" var-id="app1-count" omit-undefined="true"/>
+    <print line="APP2 markers" var-id="app2-count" omit-undefined="true"/>
+    <print line="DQT markers" var-id="dqt-count" omit-undefined="true"/>
+    <print line="DHT markers" var-id="dht-count" omit-undefined="true"/>
+    <print line="DAC markers" var-id="dac-count" omit-undefined="true"/>
+    <print line="SOFn markers" var-id="sof-count" omit-undefined="true"/>
+    <print line="DRI markers" var-id="dri-count" omit-undefined="true"/>
+    <print line="SOS markers" var-id="sos-count" omit-undefined="true"/>
+    <print line="DNL markers" var-id="dnl-count" omit-undefined="true"/>
+    <print line="COM markers" var-id="com-count" omit-undefined="true"/>
+    <print line="EOI markers" var-id="eoi-count" omit-undefined="true"/>
+    <field id="unrecognized" limit-failed="true"/>
+  </run>
+  <block-defs>
+    <block-def id="read-data-len">
+      <field id="data-len" convert-endianness="true" store-var="data-len"/>
+      <exec var-id="data-len" subtract="2"/>
+    </block-def>
+    <block-def id="sofn-seg">
+      <field id="sofn0" limit="data-len"/>
+      <field id="sofn1" limit="data-len"/>
+      <field id="sofn2" limit="data-len"/>
+      <field id="sofn3" limit="data-len" store-var="num-comp"/>
+      <print section="Image components"/>
+      <loop until-set="num-comp" num-value="0" limit="data-len">
+        <field id="sofn4" limit="data-len"/>
+        <field id="sofn5" limit="data-len"/>
+        <field id="sofn6" limit="data-len"/>
+        <field id="sofn7" limit="data-len"/>
+        <selection>
+          <match var-id="num-comp" hex-value="01">
+            <field id="sofn8" limit="data-len"/>
+          </match>
+          <match>
+            <field id="sofn8" limit="data-len" margin-bottom="10"/>
+          </match>
+        </selection>
+        <exec var-id="num-comp" subtract="1"/>
+      </loop>
+    </block-def>
+  </block-defs>
+  <!-- JPEG fields -->
+  <field-defs>
+    <field-def id="data-len" name="Data length" color="data-len" size="2"/>
+    <!-- SOI segment fields -->
+    <field-def id="soi-marker" name="Marker type: SOI" color="mrkr-type" size="2"/>
+    <!-- APP0 segment fields -->
+    <field-def id="app0-marker" name="Marker type: APP0" color="mrkr-type" size="2"/>
+    <field-def id="app0-error-1" tag="APP0 segments should be defined before SOF segments" color="error-2" size="available"/>
+    <field-def id="app0-error-2" tag="APP0 segments cannot follow an Exif APP1 segment" color="error-2" size="available"/>
+    <!-- APP0/JFIF segment fields -->
+    <field-def id="jfif-id" name="JFIF identifier" color="seg-data-1" size="5"/>
+    <field-def id="jfif0" name="JFIF version" color="seg-data-2" size="2" print="option">
+      <options>
+        <option name="v1.00" hex-value="0100"/>
+        <option name="v1.01" hex-value="0101"/>
+        <option name="v1.02" hex-value="0102"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <field-def id="jfif1" name="Density units" color="seg-data-1" size="1" print="option">
+      <options>
+        <option name="No units" hex-value="00"/>
+        <option name="Pixels per inch" hex-value="01"/>
+        <option name="Pixels per centimeter" hex-value="02"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <field-def id="jfif2" name="Xdensity" tooltip="Must not be zero" color="seg-data-2" size="2" print="uint"/>
+    <field-def id="jfif3" name="Ydensity" tooltip="Must not be zero" color="seg-data-1" size="2" print="uint"/>
+    <field-def id="jfif4" name="Xthumbnail" tooltip="Thumbnail width" color="seg-data-2" size="1" print="uint"/>
+    <field-def id="jfif5" name="Ythumbnail" tooltip="Thumbnail height" color="seg-data-1" size="1" print="uint"/>
+    <field-def id="jfif6" name="Thumbnail image" color="seg-data-2" size="available"/>
+    <field-def id="jfif-error" name="JFIF APP0 segment already defined" color="error-1" size="available"/>
+    <!-- APP0/JFXX segment fields -->
+    <field-def id="jfxx-id" name="JFIF extension identifier" color="seg-data-1" size="5"/>
+    <field-def id="jfxx0" name="Thumbnail format" color="seg-data-2" size="1" print="option">
+      <options>
+        <option name="JPEG image" hex-value="00"/>
+        <option name="8-bit indexed-color image" hex-value="11"/>
+        <option name="8-bit RGB image" hex-value="13"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <field-def id="jfxx1" name="Embedded JPEG image" color="seg-data-1" size="available"/>
+    <field-def id="jfxx2" tag="Xthumbnail" name="JFXX Xthumbnail" tooltip="Thumbnail width" color="seg-data-1" size="1" print="uint"/>
+    <field-def id="jfxx3" tag="Ythumbnail" name="JFXX Ythumbnail" tooltip="Thumbnail height" color="seg-data-2" size="1" print="uint"/>
+    <field-def id="jfxx4" name="RGB palette entry" color="seg-data-1" size="3"/>
+    <field-def id="jfxx5" name="RGB palette entry" color="seg-data-2" size="3"/>
+    <field-def id="jfxx6" name="Thumbnail image" color="seg-data-1" size="available"/>
+    <!-- APP1 segment fields -->
+    <field-def id="app1-marker" name="Marker type: APP1" color="mrkr-type" size="2"/>
+    <!-- APP1/Exif segment fields -->
+    <field-def id="exif-id" name="Exif identifier" color="seg-data-1" size="6"/>
+    <field-def id="exif0" name="Embedded TIFF file" color="seg-data-2" size="available"/>
+    <field-def id="exif-error" tag="Exif APP1 segments should be defined before SOF segments" color="error-2" size="available"/>
+    <!-- APP1/XMP segment fields -->
+    <field-def id="xmp-id" name="XMP identifier" color="seg-data-1" size="29"/>
+    <field-def id="xmp0" name="Embedded XMP file" color="seg-data-2" size="available"/>
+    <!-- APP2 segment fields -->
+    <field-def id="app2-marker" name="Marker type: APP2" color="mrkr-type" size="2"/>
+    <!-- APP2/ICC_PROFILE segment fields -->
+    <field-def id="iccp-id" name="ICC profile identifier" color="seg-data-1" size="12"/>
+    <field-def id="iccp0" name="ICC profile chunk number" color="seg-data-2" size="1"/>
+    <field-def id="iccp1" name="Total ICC profile chunks" color="seg-data-1" size="1"/>
+    <field-def id="iccp2" name="Embedded ICC profile" color="seg-data-2" size="available"/>
+    <!-- DQT segment fields -->
+    <field-def id="dqt-marker" name="Marker type: DQT" color="mrkr-type" size="2"/>
+    <field-def id="dqt0" name="Quantization table identifier" size="1" mask="F" print="option">
+      <tooltip>Valid quantization table destination identifiers: 0-3</tooltip>
+      <options>
+        <option name="0" hex-value="00"/>
+        <option name="1" hex-value="01"/>
+        <option name="2" hex-value="02"/>
+        <option name="4" hex-value="03"/>
+      </options>
+    </field-def>
+    <field-def id="dqt1" name="Quantization table precision" size="1" shift="4" print="option">
+      <options>
+        <option name="8 bit values" hex-value="00"/>
+        <option name="16 bit values" hex-value="01"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <field-def id="dqt2" color="seg-data-1" size="1">
+      <tag>
+Quantization table information
+Lower four bits: Quantization table identifier
+Upper four bits: Quantization table precision
+      </tag>
+    </field-def>
+    <field-def id="dqt3" name="Quantization table values" color="seg-data-2" size="64"/>
+    <field-def id="dqt4" name="Quantization table values" color="seg-data-2" size="128"/>
+    <field-def id="dqt-error" name="Invalid table precision" color="error-1" size="available"/>
+    <!-- DHT segment fields -->
+    <field-def id="dht-marker" name="Marker type: DHT" color="mrkr-type" size="2"/>
+    <field-def id="dht0" name="Huffman table identifier" size="1" mask="F" print="uint"/>
+    <field-def id="dht1" name="Table class" size="1" shift="4" print="option">
+      <options>
+        <option name="DC table (or lossless table)" hex-value="00"/>
+        <option name="AC table" hex-value="01"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <field-def id="dht2" color="huff-arith" size="1">
+      <tag>
+Huffman table information
+Lower four bits: Huffman table identifier
+Upper four bits: Table class
+      </tag>
+    </field-def>
+    <field-def id="dht3" tag="Number of Huffman codes of 1 bit" color="seg-data-1" size="1" name="Codes of length 1" print="uint"/>
+    <field-def id="dht4" tag="Number of Huffman codes of 2 bits" color="seg-data-2" size="1" name="Codes of length 2" print="uint"/>
+    <field-def id="dht5" tag="Number of Huffman codes of 3 bits" color="seg-data-1" size="1" name="Codes of length 3" print="uint"/>
+    <field-def id="dht6" tag="Number of Huffman codes of 4 bits" color="seg-data-2" size="1" name="Codes of length 4" print="uint"/>
+    <field-def id="dht7" tag="Number of Huffman codes of 5 bits" color="seg-data-1" size="1" name="Codes of length 5" print="uint"/>
+    <field-def id="dht8" tag="Number of Huffman codes of 6 bits" color="seg-data-2" size="1" name="Codes of length 6" print="uint"/>
+    <field-def id="dht9" tag="Number of Huffman codes of 7 bits" color="seg-data-1" size="1" name="Codes of length 7" print="uint"/>
+    <field-def id="dht10" tag="Number of Huffman codes of 8 bits" color="seg-data-2" size="1" name="Codes of length 8" print="uint"/>
+    <field-def id="dht11" tag="Number of Huffman codes of 9 bits" color="seg-data-1" size="1" name="Codes of length 9" print="uint"/>
+    <field-def id="dht12" tag="Number of Huffman codes of 10 bits" color="seg-data-2" size="1" name="Codes of length 10" print="uint"/>
+    <field-def id="dht13" tag="Number of Huffman codes of 11 bits" color="seg-data-1" size="1" name="Codes of length 11" print="uint"/>
+    <field-def id="dht14" tag="Number of Huffman codes of 12 bits" color="seg-data-2" size="1" name="Codes of length 12" print="uint"/>
+    <field-def id="dht15" tag="Number of Huffman codes of 13 bits" color="seg-data-1" size="1" name="Codes of length 13" print="uint"/>
+    <field-def id="dht16" tag="Number of Huffman codes of 14 bits" color="seg-data-2" size="1" name="Codes of length 14" print="uint"/>
+    <field-def id="dht17" tag="Number of Huffman codes of 15 bits" color="seg-data-1" size="1" name="Codes of length 15" print="uint"/>
+    <field-def id="dht18" tag="Number of Huffman codes of 16 bits" color="seg-data-2" size="1" name="Codes of length 16" print="uint"/>
+    <field-def id="dht19" tag="Huffman code values of 1 bit" color="seg-data-1" size="available"/>
+    <field-def id="dht20" tag="Huffman code values of 2 bit" color="seg-data-2" size="available"/>
+    <field-def id="dht21" tag="Huffman code values of 3 bit" color="seg-data-1" size="available"/>
+    <field-def id="dht22" tag="Huffman code values of 4 bit" color="seg-data-2" size="available"/>
+    <field-def id="dht23" tag="Huffman code values of 5 bit" color="seg-data-1" size="available"/>
+    <field-def id="dht24" tag="Huffman code values of 6 bit" color="seg-data-2" size="available"/>
+    <field-def id="dht25" tag="Huffman code values of 7 bit" color="seg-data-1" size="available"/>
+    <field-def id="dht26" tag="Huffman code values of 8 bit" color="seg-data-2" size="available"/>
+    <field-def id="dht27" tag="Huffman code values of 9 bit" color="seg-data-1" size="available"/>
+    <field-def id="dht28" tag="Huffman code values of 10 bit" color="seg-data-2" size="available"/>
+    <field-def id="dht29" tag="Huffman code values of 11 bit" color="seg-data-1" size="available"/>
+    <field-def id="dht30" tag="Huffman code values of 12 bit" color="seg-data-2" size="available"/>
+    <field-def id="dht31" tag="Huffman code values of 13 bit" color="seg-data-1" size="available"/>
+    <field-def id="dht32" tag="Huffman code values of 14 bit" color="seg-data-2" size="available"/>
+    <field-def id="dht33" tag="Huffman code values of 15 bit" color="seg-data-1" size="available"/>
+    <field-def id="dht34" tag="Huffman code values of 16 bit" color="seg-data-2" size="available"/>
+    <!-- DAC segment fields -->
+    <field-def id="dac-marker" name="Marker type: DAC" color="mrkr-type" size="2"/>
+    <field-def id="dac0" name="Arithmetic conditioning table identifier" size="1" mask="F" print="uint"/>
+    <field-def id="dac2" color="huff-arith" size="1">
+      <tag>
+Arithmetic conditioning table information
+Lower four bits: Arithmetic conditioning table identifier
+Upper four bits: Table class
+      </tag>
+    </field-def>
+    <field-def id="dac3" name="Conditioning table value" color="seg-data-1" size="1"/>
+    <!-- SOFn segment fields -->
+    <field-def id="sof0-marker" tag="Marker type: SOF0" name="Compression method" color="mrkr-type" size="2">
+      <print>Baseline DCT</print>
+      <tooltip>The compression method is determined by the SOFn marker</tooltip>
+    </field-def>
+    <field-def id="sof1-marker" tag="Marker type: SOF1" name="Compression method" color="mrkr-type" size="2">
+      <print>Extended sequential DCT - Huffman coding</print>
+      <tooltip>The compression method is determined by the SOFn marker</tooltip>
+    </field-def>
+    <field-def id="sof2-marker" tag="Marker type: SOF2" name="Compression method" color="mrkr-type" size="2">
+      <print>Progressive DCT - Huffman coding</print>
+      <tooltip>The compression method is determined by the SOFn marker</tooltip>
+    </field-def>
+    <field-def id="sof3-marker" tag="Marker type: SOF3" name="Compression method" color="mrkr-type" size="2">
+      <print>Lossless (sequential) - Huffman coding</print>
+      <tooltip>The compression method is determined by the SOFn marker</tooltip>
+    </field-def>
+    <field-def id="sof5-marker" tag="Marker type: SOF5" name="Compression method" color="mrkr-type" size="2">
+      <print>Differential sequential DCT - Huffman coding</print>
+      <tooltip>The compression method is determined by the SOFn marker</tooltip>
+    </field-def>
+    <field-def id="sof6-marker" tag="Marker type: SOF6" name="Compression method" color="mrkr-type" size="2">
+      <print>Differential progressive DCT - Huffman coding</print>
+      <tooltip>The compression method is determined by the SOFn marker</tooltip>
+    </field-def>
+    <field-def id="sof7-marker" tag="Marker type: SOF7" name="Compression method" color="mrkr-type" size="2">
+      <print>Differential lossless (sequential) - Huffman coding</print>
+      <tooltip>The compression method is determined by the SOFn marker</tooltip>
+    </field-def>
+    <field-def id="sof9-marker" tag="Marker type: SOF9" name="Compression method" color="mrkr-type" size="2">
+      <print>Extended sequential DCT - Arithmetic coding</print>
+      <tooltip>The compression method is determined by the SOFn marker</tooltip>
+    </field-def>
+    <field-def id="sof10-marker" tag="Marker type: SOF10" name="Compression method" color="mrkr-type" size="2">
+      <print>Progressive DCT - Arithmetic coding</print>
+      <tooltip>The compression method is determined by the SOFn marker</tooltip>
+    </field-def>
+    <field-def id="sof11-marker" tag="Marker type: SOF11" name="Compression method" color="mrkr-type" size="2">
+      <print>Lossless (sequential) - Arithmetic coding</print>
+      <tooltip>The compression method is determined by the SOFn marker</tooltip>
+    </field-def>
+    <field-def id="sof13-marker" tag="Marker type: SOF13" name="Compression method" color="mrkr-type" size="2">
+      <print>Differential sequential DCT - Arithmetic coding</print>
+      <tooltip>The compression method is determined by the SOFn marker</tooltip>
+    </field-def>
+    <field-def id="sof14-marker" tag="Marker type: SOF14" name="Compression method" color="mrkr-type" size="2">
+      <print>Differential progressive DCT - Arithmetic coding</print>
+      <tooltip>The compression method is determined by the SOFn marker</tooltip>
+    </field-def>
+    <field-def id="sof15-marker" tag="Marker type: SOF15" name="Compression method" color="mrkr-type" size="2">
+      <print>Differential lossless (sequential) - Arithmetic coding</print>
+      <tooltip>The compression method is determined by the SOFn marker</tooltip>
+    </field-def>
+    <field-def id="sofn0" name="Sample precision" color="seg-data-1" size="1" print="uint"/>
+    <field-def id="sofn1" name="Image height" color="seg-data-2" size="2" print="uint">
+      <tooltip><![CDATA[
+Minimum value: 0 (DNL marker defines height)
+Maximum value: 2<sup>16</sup> - 1 (unsigned 16-bit integer)
+      ]]></tooltip>
+    </field-def>
+    <field-def id="sofn2" name="Image width" color="seg-data-1" size="2" print="uint">
+      <tooltip><![CDATA[
+Minimum value: 0 (DNL marker defines height)
+Maximum value: 2<sup>16</sup> - 1 (unsigned 16-bit integer)
+      ]]></tooltip>
+    </field-def>
+    <field-def id="sofn3" name="Number of components" color="seg-data-2" size="1" print="uint">
+      <tooltip>
+Scan components in the image
+Progressive DCT: 1-4 components
+All other cases: 1-255 components
+      </tooltip>
+    </field-def>
+    <field-def id="sofn4" name="Component identifier" color="comp-def" size="1" print="uint"/>
+    <field-def id="sofn5" name="Vertical sampling factor" size="1" mask="F" print="option">
+      <tooltip>
+Relationship between the component vertical dimension and maximum image dimension Y
+Valid values: 1-4
+      </tooltip>
+      <options>
+        <option name="1" hex-value="01"/>
+        <option name="2" hex-value="02"/>
+        <option name="3" hex-value="03"/>
+        <option name="4" hex-value="04"/>
+      </options>
+    </field-def>
+    <field-def id="sofn6" name="Horizontal sampling factor" size="1" shift="4" print="option">
+      <tooltip>
+Relationship between the component horizontal dimension and maximum image dimension X
+Valid values: 1-4
+      </tooltip>
+      <options>
+        <option name="1" hex-value="01"/>
+        <option name="2" hex-value="02"/>
+        <option name="3" hex-value="03"/>
+        <option name="4" hex-value="04"/>
+      </options>
+    </field-def>
+    <field-def id="sofn7" color="seg-data-1" size="1">
+      <tag>
+Sampling factor
+Lower four bits: Vertical sampling factor
+Upper four bits: Horizontal sampling factor
+      </tag>
+    </field-def>
+    <field-def id="sofn8" name="Quantization table selector" color="seg-data-2" size="1" print="option">
+      <tooltip>Valid values: 0-4</tooltip>
+      <options>
+        <option name="0" hex-value="00"/>
+        <option name="1" hex-value="01"/>
+        <option name="2" hex-value="02"/>
+        <option name="4" hex-value="03"/>
+      </options>
+    </field-def>
+    <field-def id="sofn-error" name="SOF segment already defined" color="error-1" size="available"/>
+    <!-- DRI segment fields -->
+    <field-def id="dri-marker" name="Marker type: DRI" color="mrkr-type" size="2"/>
+    <field-def id="dri0" name="Restart interval" color="seg-data-1" size="2" print="uint"/>
+    <!-- SOS segment fields -->
+    <field-def id="sos-marker" name="Marker type: SOS" color="mrkr-type" size="2"/>
+    <field-def id="sos0" tag="Number of components in scan" color="seg-data-1" size="1" name="Components in scan" print="uint"/>
+    <field-def id="sos1" name="Scan component selector" color="seg-data-2" size="1" print="uint"/>
+    <field-def id="sos2" name="AC entropy coding table selector" size="1" mask="F" print="uint"/>
+    <field-def id="sos3" name="DC entropy coding table selector" size="1" shift="4" print="uint"/>
+    <field-def id="sos4" color="seg-data-1" size="1">
+      <tag>
+Component table selectors
+Lower four bits: AC entropy coding table selector
+Upper four bits: DC entropy coding table selector
+      </tag>
+    </field-def>
+    <field-def id="sos5" name="Start of spectral (or predictor) selection" color="seg-data-2" size="1" print="uint"/>
+    <field-def id="sos6" name="End of spectral selection" color="seg-data-1" size="1" print="uint"/>
+    <field-def id="sos7" color="seg-data-2" size="1">
+      <tag>
+Successive approximation bit positions
+DCT mode:
+    Lower four bits: Point transform used (for the specified band)
+    Upper four bits: Point transform used in the preceding scan (for the specified band)
+ossless mode:
+    Lower four bits: Point transform used
+    Upper four bits: No meaning
+      </tag>
+    </field-def>
+    <field-def id="sos8" name="Entropy-encoded image" color="seg-data-1" value="FF"/>
+    <field-def id="sos9" name="Escaped byte" color="seg-data-2" size="2"/>
+    <field-def id="rst0-marker" name="Marker type: RST0" color="mrkr-type" size="2"/>
+    <field-def id="rst1-marker" name="Marker type: RST1" color="mrkr-type" size="2"/>
+    <field-def id="rst2-marker" name="Marker type: RST2" color="mrkr-type" size="2"/>
+    <field-def id="rst3-marker" name="Marker type: RST3" color="mrkr-type" size="2"/>
+    <field-def id="rst4-marker" name="Marker type: RST4" color="mrkr-type" size="2"/>
+    <field-def id="rst5-marker" name="Marker type: RST5" color="mrkr-type" size="2"/>
+    <field-def id="rst6-marker" name="Marker type: RST6" color="mrkr-type" size="2"/>
+    <field-def id="rst7-marker" name="Marker type: RST7" color="mrkr-type" size="2"/>
+    <!-- DNL segment fields -->
+    <field-def id="dnl-marker" name="Marker type: DNL" color="mrkr-type" size="2"/>
+    <field-def id="dnl0" name="Number of lines" color="seg-data-1" size="2" print="uint"/>
+    <!-- COM segment fields -->
+    <field-def id="com-marker" name="Marker type: COM" color="mrkr-type" size="2"/>
+    <field-def id="com0" name="Comment" color="seg-data-1" size="available" print="text"/>
+    <!-- EOI segment fields -->
+    <field-def id="eoi-marker" name="Marker type: EOI" color="mrkr-type" size="2"/>
+    <!-- Miscellaneous fields -->
+    <field-def id="unknown-marker" name="Marker type: Unknown" color="error-2" size="2"/>
+    <field-def id="unrecognized" name="Unrecognized data" color="error-1" size="available"/>
+  </field-defs>
+  <details><![CDATA[
+<b>Recognized marker types</b>:
+SOI, APP0 (JFIF/JFXX), APP1 (Exif/XMP), APP2 (ICC_PROFILE), DQT, DHT, DAC, SOFn, DRI, SOS, DNL, COM, EOI
+
+It is assumed that COM segments are encoded using UTF-8 (this will often not be the case)
+While not standards-compliant, an APP1 (Exif) segment is allowed to follow an APP0 (JFIF) segment
+The presence of an APP0 (JFIF) or APP1 (Exif) is not required
+
+The following checks are <span foreground="green">implemented</span>:
+    - The EOI marker is end of file
+  ]]></details>
+</format>

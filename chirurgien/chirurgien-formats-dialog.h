@@ -26,6 +26,10 @@ G_BEGIN_DECLS
 
 G_DECLARE_FINAL_TYPE (ChirurgienFormatsDialog, chirurgien_formats_dialog, CHIRURGIEN, FORMATS_DIALOG, GtkDialog)
 
-GtkWidget * chirurgien_formats_dialog_new (GtkWindow *);
+GtkWidget *    chirurgien_formats_dialog_new            (GtkWindow *);
+
+void           chirurgien_formats_dialog_set_message    (ChirurgienFormatsDialog *,
+                                                         const gchar *);
+void           chirurgien_formats_dialog_add_format     (ChirurgienFormatsDialog *);
 
 G_END_DECLS

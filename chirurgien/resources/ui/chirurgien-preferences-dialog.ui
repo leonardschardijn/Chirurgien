@@ -81,7 +81,7 @@ A reanalysis is always triggered automatically</property>
                 <child>
                   <object class="GtkLabel">
                     <property name="halign">GTK_ALIGN_START</property>
-                    <property name="label" translatable="yes">Background colors</property>
+                    <property name="label" translatable="yes">Available colors</property>
                     <attributes>
                       <attribute name="weight" value="PANGO_WEIGHT_BOLD"/>
                     </attributes>
@@ -238,27 +238,12 @@ A reanalysis is always triggered automatically</property>
                   </object>
                 </child>
                 <child>
-                  <object class="GtkLabel">
-                    <property name="halign">GTK_ALIGN_START</property>
-                    <property name="label" translatable="yes">Foreground colors</property>
-                    <attributes>
-                      <attribute name="weight" value="PANGO_WEIGHT_BOLD"/>
-                    </attributes>
-                    <layout>
-                      <property name="row">3</property>
-                      <property name="column">0</property>
-                      <property name="row-span">1</property>
-                      <property name="column-span">6</property>
-                    </layout>
-                  </object>
-                </child>
-                <child>
                   <object class="GtkColorButton" id="color6">
                     <property name="modal">t</property>
                     <property name="use-alpha">t</property>
                     <property name="title" translatable="yes">Color 6</property>
                     <layout>
-                      <property name="row">4</property>
+                      <property name="row">3</property>
                       <property name="column">0</property>
                       <property name="row-span">1</property>
                       <property name="column-span">1</property>
@@ -269,7 +254,7 @@ A reanalysis is always triggered automatically</property>
                   <object class="GtkLabel">
                     <property name="label" translatable="yes">Color 6</property>
                     <layout>
-                      <property name="row">4</property>
+                      <property name="row">3</property>
                       <property name="column">1</property>
                       <property name="row-span">1</property>
                       <property name="column-span">1</property>
@@ -282,7 +267,7 @@ A reanalysis is always triggered automatically</property>
                     <property name="use-alpha">t</property>
                     <property name="title" translatable="yes">Color 7</property>
                     <layout>
-                      <property name="row">4</property>
+                      <property name="row">3</property>
                       <property name="column">2</property>
                       <property name="row-span">1</property>
                       <property name="column-span">1</property>
@@ -293,7 +278,7 @@ A reanalysis is always triggered automatically</property>
                   <object class="GtkLabel">
                     <property name="label" translatable="yes">Color 7</property>
                     <layout>
-                      <property name="row">4</property>
+                      <property name="row">3</property>
                       <property name="column">3</property>
                       <property name="row-span">1</property>
                       <property name="column-span">1</property>
@@ -306,7 +291,7 @@ A reanalysis is always triggered automatically</property>
                     <property name="use-alpha">t</property>
                     <property name="title" translatable="yes">Color 8</property>
                     <layout>
-                      <property name="row">4</property>
+                      <property name="row">3</property>
                       <property name="column">4</property>
                       <property name="row-span">1</property>
                       <property name="column-span">1</property>
@@ -317,7 +302,7 @@ A reanalysis is always triggered automatically</property>
                   <object class="GtkLabel">
                     <property name="label" translatable="yes">Color 8</property>
                     <layout>
-                      <property name="row">4</property>
+                      <property name="row">3</property>
                       <property name="column">5</property>
                       <property name="row-span">1</property>
                       <property name="column-span">1</property>
@@ -332,7 +317,7 @@ A reanalysis is always triggered automatically</property>
                       <attribute name="weight" value="PANGO_WEIGHT_BOLD"/>
                     </attributes>
                     <layout>
-                      <property name="row">5</property>
+                      <property name="row">4</property>
                       <property name="column">0</property>
                       <property name="row-span">1</property>
                       <property name="column-span">6</property>
@@ -346,7 +331,7 @@ A reanalysis is always triggered automatically</property>
                       <class name="flat"/>
                     </style>
                     <layout>
-                      <property name="row">6</property>
+                      <property name="row">5</property>
                       <property name="column">0</property>
                       <property name="row-span">1</property>
                       <property name="column-span">6</property>

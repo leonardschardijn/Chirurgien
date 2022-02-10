@@ -1,102 +1,34 @@
 formats_include_dir = include_directories('.')
 
 chirurgien_sources += [
-  'formats/format-utils.c',
-  'formats/chirurgien-formats.c'
+  'formats/chirurgien-formats.c',
 ]
 
-# Container formats
+# Format validator
 
 chirurgien_sources += [
-  'formats/container-formats/riff/riff-format.c'
+  'formats/validator/validator.c',
+  'formats/validator/validator-utils.c',
+  'formats/validator/validate-root.c',
+  'formats/validator/validate-endianness.c',
+  'formats/validator/validate-magic.c',
+  'formats/validator/validate-colors.c',
+  'formats/validator/validate-run.c',
+  'formats/validator/validate-block-defs.c',
+  'formats/validator/validate-field-defs.c',
 ]
 
-# File formats
+# Format processor
 
 chirurgien_sources += [
-  'formats/cpio/cpio-format.c'
-]
-
-chirurgien_sources += [
-  'formats/elf/elf-format.c',
-  'formats/elf/elf-program-header.c',
-  'formats/elf/elf-section-header.c'
-]
-
-chirurgien_sources += [
-  'formats/gif/gif-format.c',
-  'formats/gif/gif-logical-screen-descriptor-block.c',
-  'formats/gif/gif-image-descriptor-block.c',
-  'formats/gif/gif-application-ext-block.c',
-  'formats/gif/gif-comment-ext-block.c',
-  'formats/gif/gif-graphic-control-ext-block.c',
-  'formats/gif/gif-plain-text-ext-block.c'
-]
-
-chirurgien_sources += [
-  'formats/jpeg/jpeg-format.c',
-  'formats/jpeg/jpeg-app0-marker.c',
-  'formats/jpeg/jpeg-app1-marker.c',
-  'formats/jpeg/jpeg-app2-marker.c',
-  'formats/jpeg/jpeg-dqt-marker.c',
-  'formats/jpeg/jpeg-dht-marker.c',
-  'formats/jpeg/jpeg-dac-marker.c',
-  'formats/jpeg/jpeg-sofn-marker.c',
-  'formats/jpeg/jpeg-dri-dnl-marker.c',
-  'formats/jpeg/jpeg-sos-marker.c',
-  'formats/jpeg/jpeg-com-marker.c'
-]
-
-chirurgien_sources += [
-  'formats/pe/pe-format.c',
-  'formats/pe/pe-data-directories.c',
-  'formats/pe/pe-section-table.c'
-]
-
-chirurgien_sources += [
-  'formats/png/png-format.c',
-  'formats/png/png-ihdr-chunk.c',
-  'formats/png/png-plte-chunk.c',
-  'formats/png/png-idat-chunk.c',
-  'formats/png/png-trns-chunk.c',
-  'formats/png/png-chrm-chunk.c',
-  'formats/png/png-gama-chunk.c',
-  'formats/png/png-iccp-chunk.c',
-  'formats/png/png-sbit-chunk.c',
-  'formats/png/png-srgb-chunk.c',
-  'formats/png/png-text-chunk.c',
-  'formats/png/png-ztxt-chunk.c',
-  'formats/png/png-itxt-chunk.c',
-  'formats/png/png-bkgd-chunk.c',
-  'formats/png/png-hist-chunk.c',
-  'formats/png/png-phys-chunk.c',
-  'formats/png/png-splt-chunk.c',
-  'formats/png/png-time-chunk.c',
-  'formats/png/png-zlib-deflate.c'
-]
-
-chirurgien_sources += [
-  'formats/tar/tar-format.c'
-]
-
-chirurgien_sources += [
-  'formats/tiff/tiff-format.c',
-  'formats/tiff/exif-format.c',
-  'formats/tiff/exif-gpsinfo-format.c',
-  'formats/tiff/tiff-byte-undefined-tag.c',
-  'formats/tiff/tiff-ascii-tag.c',
-  'formats/tiff/tiff-short-tag.c',
-  'formats/tiff/tiff-long-tag.c',
-  'formats/tiff/tiff-rational-tag.c'
-]
-
-chirurgien_sources += [
-  'formats/webp/webp-format.c',
-  'formats/webp/webp-vp8-chunk.c',
-  'formats/webp/webp-vp8l-chunk.c',
-  'formats/webp/webp-vp8x-chunk.c',
-  'formats/webp/webp-anim-chunk.c',
-  'formats/webp/webp-anmf-chunk.c',
-  'formats/webp/webp-alph-chunk.c',
-  'formats/webp/webp-generic-chunk.c'
+  'formats/processor/processor.c',
+  'formats/processor/processor-file.c',
+  'formats/processor/processor-utils.c',
+  'formats/processor/process-field-step.c',
+  'formats/processor/process-match-step.c',
+  'formats/processor/process-loop-step.c',
+  'formats/processor/process-selection-step.c',
+  'formats/processor/process-print-step.c',
+  'formats/processor/process-exec-step.c',
+  'formats/processor/process-block-step.c'
 ]

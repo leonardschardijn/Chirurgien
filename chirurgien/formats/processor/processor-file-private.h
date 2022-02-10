@@ -1,6 +1,6 @@
-/* chirurgien-formats.h
+/* processor-file-private.h
  *
- * Copyright (C) 2020 - Daniel Léonard Schardijn
+ * Copyright (C) 2021 - Daniel Léonard Schardijn
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,16 +18,32 @@
 
 #pragma once
 
-#include <glib.h>
-
-#include "processor/processor-file.h"
+#include <gtk/gtk.h>
 
 G_BEGIN_DECLS
 
-void    chirurgien_formats_analyze       (ProcessorFile *);
+struct _ProcessorFile
+{
+    /* File contents and size */
+    gconstpointer   file_contents;
+    gsize           file_size;
 
-void    chirurgien_formats_initialize    (const gchar *);
+    /* Current file contents index */
+    gsize           file_contents_index;
 
-gchar * chirurgien_formats_load          (GFile *);
+    /* File fields */
+    GSList         *file_fields;
+
+    /* Description panel container */
+    GtkNotebook    *description;
+
+    /* Main description page: 'Overview' page */
+    GtkBox         *overview;
+
+    /* Current description section grid and lines count */
+    GtkGrid        *section;
+    guint           description_lines_count;
+
+};
 
 G_END_DECLS

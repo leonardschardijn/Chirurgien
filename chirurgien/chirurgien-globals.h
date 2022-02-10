@@ -1,6 +1,6 @@
-/* chirurgien-formats.h
+/* chirurgien-globals.h
  *
- * Copyright (C) 2020 - Daniel Léonard Schardijn
+ * Copyright (C) 2021 - Daniel Léonard Schardijn
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,16 +18,27 @@
 
 #pragma once
 
-#include <glib.h>
-
-#include "processor/processor-file.h"
+#include <gtk/gtk.h>
 
 G_BEGIN_DECLS
 
-void    chirurgien_formats_analyze       (ProcessorFile *);
+#define CHIRURGIEN_TOTAL_COLORS 9
 
-void    chirurgien_formats_initialize    (const gchar *);
+extern const gchar * const hex_chars;
 
-gchar * chirurgien_formats_load          (GFile *);
+extern GdkRGBA    chirurgien_colors[CHIRURGIEN_TOTAL_COLORS];
+
+extern PangoColor pango_colors[CHIRURGIEN_TOTAL_COLORS];
+extern guint16    pango_alphas[CHIRURGIEN_TOTAL_COLORS];
+
+extern GSList    *chirurgien_system_format_definitions;
+extern GSList    *chirurgien_system_format_descriptions;
+
+extern GList     *chirurgien_user_format_definitions;
+extern GList     *chirurgien_user_format_descriptions;
+
+
+/* Access color names */
+const gchar *     get_color_name (gint);
 
 G_END_DECLS

@@ -1,4 +1,4 @@
-/* chirurgien-editor.h
+/* process-block-step.c
  *
  * Copyright (C) 2021 - Daniel Léonard Schardijn
  *
@@ -16,22 +16,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include "processor.h"
 
-#include <gtk/gtk.h>
 
-G_BEGIN_DECLS
+GSList *
+process_block_step (const FormatDefinition *format_definition,
+                    RunStep                *run_step,
+                    ProcessorState         *state,
+                    GSList                 *run_iter)
+{
+    GSList *run_block;
 
-#define CHIRURGIEN_TYPE_EDITOR (chirurgien_editor_get_type ())
+    run_block = g_hash_table_lookup (format_definition->blocks,
+                                     run_step->block.block_id);
+    if (run_block)
+    {
+        g_queue_push_tail (&state->block_stack, run_iter->next);
+        run_iter = run_block;
+    }
+    else
+    {
+        run_iter = run_iter->next;
+    }
 
-G_DECLARE_FINAL_TYPE (ChirurgienEditor, chirurgien_editor, CHIRURGIEN, EDITOR, GtkWidget)
-
-GtkWidget *       chirurgien_editor_new                  (void);
-
-void              chirurgien_editor_set_contents         (ChirurgienEditor *,
-                                                          const guchar *,
-                                                          gsize);
-const guchar *    chirurgien_editor_get_contents         (ChirurgienEditor *);
-gsize             chirurgien_editor_get_contents_size    (ChirurgienEditor *);
-
-G_END_DECLS
+    return run_iter;
+}

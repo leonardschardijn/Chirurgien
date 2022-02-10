@@ -1,0 +1,531 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<format name="Graphics Interchange Format" short-name="GIF">
+  <endianness>
+    <little-endian/>
+  </endianness>
+  <magic>
+    <signature>
+      <match char-value="GIF87a"/>
+    </signature>
+    <signature>
+      <match char-value="GIF89a"/>
+    </signature>
+  </magic>
+  <colors>
+    <color id="hdr-blk" name="GIF header block" index="0" background="true"/>
+    <color id="blk-lbl" name="Block label" index="1" background="true"/>
+    <color id="blk-data-1" name="Block data" index="2" background="true"/>
+    <color id="blk-data-2" name="Block data" index="3" background="true"/>
+    <color id="data-subblk" name="Data sub-block size" index="4" background="true"/>
+    <color id="img-start" name="LZW minimum code size (start of compressed image)" index="5" background="true"/>
+    <color id="error-1" name="Error" index="6" background="false"/>
+    <color id="error-2" name="Error" index="7" background="false"/>
+  </colors>
+  <run>
+    <field id="hdr-blk" navigation="Header"/>
+    <field id="lsd0" section="Image details"/>
+    <field id="lsd1"/>
+    <field id="lsd2" store-var="gct-size"/>
+    <field id="lsd3" store-var="gct-sorted"/>
+    <field id="lsd4" store-var="clr-res"/>
+    <field id="lsd5" store-var="gct-def"/>
+    <field id="lsd6"/>
+    <exec var-id="clr-res" add="1"/>
+    <print line="Color resolution" var-id="clr-res" tooltip="Number of bits per primary color available to the original image (calculated using the color resolution (bits 4-6 of the packed fields): color resolution + 1)"/>
+    <field id="lsd7"/>
+    <field id="lsd8" store-var="pxl"/>
+    <match var-id="pxl" op="def">
+      <exec var-id="pxl" add="15" divide="64"/>
+      <print line="Aspect ratio" var-id="pxl" tooltip="Aspect ratio aproximation (calculated as: pixel aspect ratio + 15 / 64)"/>
+    </match>
+    <match var-id="gct-def" op="def">
+      <selection>
+        <match var-id="gct-sorted" op="def">
+          <field id="gct-sorted-yes" section="Global Color Table"/>
+        </match>
+        <match>
+          <field id="gct-sorted-no" section="Global Color Table"/>
+        </match>
+      </selection>
+      <exec var-id="gct-entries" set="2"/>
+      <match var-id="gct-size" op="gt" num-value="0">
+        <loop until-set="gct-size" num-value="0">
+          <exec var-id="gct-entries" multiply="2"/>
+          <exec var-id="gct-size" subtract="1"/>
+        </loop>
+      </match>
+      <print line="Global Color Table entries" var-id="gct-entries" tooltip="Number of entries in the Global Color Table (calculated using the Global Color Table size (bits 0-2 of the packed fields): 2&lt;sup&gt;size + 1&lt;/sup&gt;)"/>
+      <loop until-set="gct-entries" num-value="0">
+        <selection>
+          <match var-id="toggle" op="def">
+            <field id="gct-entry-1"/>
+            <exec var-id="toggle" set="0"/>
+          </match>
+          <match>
+            <field id="gct-entry-2"/>
+            <exec var-id="toggle" set="1"/>
+          </match>
+        </selection>
+        <exec var-id="gct-entries" subtract="1"/>
+      </loop>
+    </match>
+    <exec var-id="lsd-count" add="1"/>
+    <exec var-id="bad-blk" add="0"/>
+    <loop until-set="trailer-count">
+      <selection>
+        <match hex-value="2C">
+          <field id="id-lbl" navigation="ID"/>
+          <exec var-id="id-count" add="1"/>
+          <field id="id0" tab="Graphics" section="Image descriptor"/>
+          <field id="id1" tab="Graphics"/>
+          <field id="id2" tab="Graphics"/>
+          <field id="id3" tab="Graphics"/>
+          <field id="id4" store-var="lct-size"/>
+          <field id="id5" store-var="lct-sorted"/>
+          <field id="id6" store-var="id-interlace"/>
+          <field id="id7" store-var="lct-def"/>
+          <field id="id8"/>
+          <selection>
+            <match var-id="id-interlace" op="def">
+              <field id="interlaced-yes" tab="Graphics"/>
+            </match>
+            <match>
+              <field id="interlaced-no" tab="Graphics"/>
+            </match>
+          </selection>
+          <match var-id="lct-def" op="def">
+            <selection>
+              <match var-id="lct-sorted" op="def">
+                <field id="lct-sorted-yes" tab="Graphics" section="Local color Table"/>
+              </match>
+              <match>
+                <field id="lct-sorted-no" tab="Graphics" section="Local color Table"/>
+              </match>
+            </selection>
+            <exec var-id="lct-entries" set="2"/>
+            <match var-id="lct-size" op="gt" num-value="0">
+              <loop until-set="lct-size" num-value="0">
+                <exec var-id="lct-entries" multiply="2"/>
+                <exec var-id="lct-size" subtract="1"/>
+              </loop>
+            </match>
+            <print line="Local color table entries" var-id="lct-entries" tab="Graphics" tooltip="Number of entries in the Local Color Table (calculated using the Local Color Table size (bits 0-2 of the packed fields): 2&lt;sup&gt;size + 1&lt;/sup&gt;)"/>
+            <exec var-id="toggle" set="0"/>
+            <loop until-set="lct-entries" num-value="0">
+              <print line="TEST" var-id="lct-entries" tab="Graphics"/>
+              <selection>
+                <match var-id="toggle" op="def">
+                  <field id="lct-entry-1"/>
+                  <exec var-id="toggle" set="0"/>
+                </match>
+                <match>
+                  <field id="lct-entry-2"/>
+                  <exec var-id="toggle" set="1"/>
+                </match>
+              </selection>
+              <exec var-id="lct-entries" subtract="1"/>
+            </loop>
+          </match>
+          <field id="lzw-min"/>
+          <exec var-id="stop" set="0"/>
+          <loop until-set="stop" num-value="1">
+            <selection>
+              <match hex-value="00">
+                <field id="data-subblk-term"/>
+                <exec var-id="stop" set="1"/>
+              </match>
+              <match>
+                <field id="data-subblk" store-var="data-blk"/>
+                <field id="img-data" limit="data-blk"/>
+              </match>
+            </selection>
+          </loop>
+        </match>
+        <match hex-value="3B">
+          <field id="trailer-lbl" navigation="Trailer"/>
+          <exec var-id="trailer-count" add="1"/>
+        </match>
+        <match hex-value="21">
+          <field id="ext-lbl"/>
+          <selection>
+            <match hex-value="F9">
+              <field id="gce-lbl" navigation="GCE"/>
+              <exec var-id="gce-count" add="1"/>
+              <selection>
+                <match hex-value="00">
+                  <field id="data-subblk-term"/>
+                </match>
+                <match>
+                  <field id="data-subblk" store-var="data-blk"/>
+                  <field id="gce0" store-var="t-color"/>
+                  <selection>
+                    <match var-id="t-color" op="def">
+                      <field id="t-color-used" tab="Graphics" section="Graphic control extension"/>
+                    </match>
+                    <match>
+                      <field id="t-color-not-used" tab="Graphics" section="Graphic control extension"/>
+                    </match>
+                  </selection>
+                  <field id="gce1" store-var="usr-input"/>
+                  <selection>
+                    <match var-id="usr-input" op="def">
+                      <field id="usr-input-set" tab="Graphics"/>
+                    </match>
+                    <match>
+                      <field id="usr-input-unset" tab="Graphics"/>
+                    </match>
+                  </selection>
+                  <field id="gce2" tab="Graphics"/>
+                  <field id="gce3" limit="data-blk"/>
+                  <field id="gce4" limit="data-blk" tab="Graphics"/>
+                  <field id="gce5" limit="data-blk" tab="Graphics"/>
+                  <match var-id="data-blk" op="gt" num-value="0">
+                    <field id="unrecognized" limit="data-blk"/>
+                  </match>
+                  <block id="bad-blk"/>
+                </match>
+              </selection>
+            </match>
+            <match hex-value="FE">
+              <field id="ce-lbl" navigation="CE"/>
+              <exec var-id="ce-count" add="1"/>
+              <selection>
+                <match hex-value="00">
+                  <field id="data-subblk-term"/>
+                </match>
+                <match>
+                  <exec var-id="stop" set="0"/>
+                  <loop until-set="stop" num-value="1">
+                    <selection>
+                      <match hex-value="00">
+                        <field id="data-subblk-term"/>
+                        <exec var-id="stop" set="1"/>
+                      </match>
+                      <match>
+                        <field id="data-subblk" store-var="data-blk"/>
+                        <field id="ce0" limit="data-blk" tab="Comment ext."/>
+                      </match>
+                    </selection>
+                  </loop>
+                  <print tab="Comment ext." insert-tab="true"/>
+                </match>
+              </selection>
+            </match>
+            <match hex-value="FF">
+              <field id="ae-lbl" navigation="AE"/>
+              <exec var-id="ae-count" add="1"/>
+              <selection>
+                <match hex-value="00">
+                  <field id="data-subblk-term"/>
+                </match>
+                <match>
+                  <field id="data-subblk" store-var="data-blk"/>
+                  <field id="ae0" limit="data-blk" tab="Application ext." insert-tab="true"/>
+                  <field id="ae1" limit="data-blk"/>
+                  <match var-id="data-blk" op="gt" num-value="0">
+                    <field id="unrecognized" limit="data-blk"/>
+                  </match>
+                  <exec var-id="stop" set="0"/>
+                  <loop until-set="stop" num-value="1">
+                    <selection>
+                      <match hex-value="00">
+                        <field id="data-subblk-term"/>
+                        <exec var-id="stop" set="1"/>
+                      </match>
+                      <match>
+                        <field id="data-subblk" store-var="data-blk"/>
+                        <field id="ae2" limit="data-blk"/>
+                      </match>
+                    </selection>
+                  </loop>
+                </match>
+              </selection>
+            </match>
+            <match hex-value="01">
+              <field id="pte-lbl" navigation="PTE"/>
+              <exec var-id="pte-count" add="1"/>
+              <print line="The preceding Graphic Control Extension (if present) affects a Plain Text Extension" tab="Graphics" section="Plain text extension"/>
+              <selection>
+                <match hex-value="00">
+                  <field id="data-subblk-term"/>
+                </match>
+                <match>
+                  <field id="data-subblk" store-var="data-blk"/>
+                  <field id="pte0" limit="data-blk" tab="Plain text ext." section="Plain text extension"/>
+                  <field id="pte1" limit="data-blk" tab="Plain text ext."/>
+                  <field id="pte2" limit="data-blk" tab="Plain text ext."/>
+                  <field id="pte3" limit="data-blk" tab="Plain text ext."/>
+                  <field id="pte4" limit="data-blk" tab="Plain text ext."/>
+                  <field id="pte5" limit="data-blk" tab="Plain text ext."/>
+                  <field id="pte6" limit="data-blk" tab="Plain text ext."/>
+                  <field id="pte7" limit="data-blk" tab="Plain text ext."/>
+                  <match var-id="data-blk" op="gt" num-value="0">
+                    <field id="unrecognized" limit="data-blk"/>
+                  </match>
+                  <exec var-id="stop" set="0"/>
+                  <loop until-set="stop" num-value="1">
+                    <selection>
+                      <match hex-value="00">
+                        <field id="data-subblk-term"/>
+                        <exec var-id="stop" set="1"/>
+                      </match>
+                      <match>
+                        <field id="data-subblk" store-var="data-blk"/>
+                        <field id="pte8" limit="data-blk" tab="Plain text ext."/>
+                      </match>
+                    </selection>
+                  </loop>
+                  <print tab="Plain text ext." insert-tab="true"/>
+                </match>
+              </selection>
+            </match>
+            <match>
+              <field id="unknown-lbl" navigation="???"/>
+              <block id="bad-blk"/>
+            </match>
+          </selection>
+        </match>
+        <match>
+          <field id="unknown-lbl" navigation="???"/>
+          <block id="bad-blk"/>
+        </match>
+      </selection>
+    </loop>
+    <field id="unrecognized" limit-failed="true"/>
+    <print tab="Graphics" insert-tab="true"/>
+    <print line="Logical Screen Descriptor" var-id="lsd-count" section="Block count"/>
+    <print line="Image Descriptor" var-id="id-count" omit-undefined="true"/>
+    <print line="Plain Text Extension" var-id="pte-count" omit-undefined="true"/>
+    <print line="Graphical Control Extension" var-id="gce-count" omit-undefined="true"/>
+    <print line="CommentExtension" var-id="ce-count" omit-undefined="true"/>
+    <print line="Application Extension" var-id="ae-count" omit-undefined="true"/>
+    <print line="Trailer" var-id="trailer-count" omit-undefined="true"/>
+  </run>
+  <block-defs>
+    <block-def id="bad-blk">
+      <exec var-id="stop" set="0"/>
+      <loop until-set="stop" num-value="1">
+        <selection>
+          <match hex-value="00">
+            <field id="data-subblk-term"/>
+            <exec var-id="stop" set="1"/>
+          </match>
+          <match>
+            <field id="data-subblk" store-var="data-blk"/>
+            <field id="unrecognized" limit="data-blk"/>
+          </match>
+        </selection>
+      </loop>
+    </block-def>
+  </block-defs>
+  <!-- GIF fields -->
+  <field-defs>
+    <field-def id="hdr-blk" name="GIF header block" color="hdr-blk" size="6"/>
+    <!-- Logical Screen Descriptor fields -->
+    <field-def id="lsd0" name="Logical screen width" color="blk-data-1" size="2" print="uint">
+      <tooltip><![CDATA[Maximum value: 2<sup>16</sup> - 1 (unsigned 16-bit integer)]]></tooltip>
+    </field-def>
+    <field-def id="lsd1" name="Logical screen height" color="blk-data-2" size="2" print="uint">
+      <tooltip><![CDATA[Maximum value: 2<sup>16</sup> - 1 (unsigned 16-bit integer)]]></tooltip>
+    </field-def>
+    <field-def id="lsd2" mask="7" size="1"/>
+    <field-def id="lsd3" shift="3" mask="1" size="1"/>
+    <field-def id="lsd4" shift="4" mask="7" size="1"/>
+    <field-def id="lsd5" shift="7" size="1"/>
+    <field-def id="lsd6" color="blk-data-1" size="1">
+      <tag>
+Logical Screen Descriptor packed fields
+Bit 0-2: Global Color Table size
+Bit 3: Sorted flag
+Bit 4-6: Color resolution
+Bit 7: Global Color Table flag
+      </tag>
+    </field-def>
+    <field-def id="lsd7" name="Background color index" color="blk-data-2" size="1" print="uint">
+      <tooltip>Global Color Table index of the background color</tooltip>
+    </field-def>
+    <field-def id="lsd8" name="Pixel aspect ratio" color="blk-data-1" size="1"/>
+    <field-def id="gct-entry-1" name="Global Color Table entry (RGB triplet)" color="blk-data-1" size="3"/>
+    <field-def id="gct-entry-2" name="Global Color Table entry (RGB triplet)" color="blk-data-2" size="3"/>
+    <field-def id="gct-sorted-yes" name="Sorted">
+      <print>Yes</print>
+      <tooltip>
+Sorted flag (bit 3 of the packed fields)
+If the Global Color Table is sorted, in order of decreasing importance
+      </tooltip>
+    </field-def>
+    <field-def id="gct-sorted-no" name="Sorted">
+      <print>No</print>
+      <tooltip>
+Sorted flag (bit 3 of the packed fields)
+If the Global Color Table is sorted, in order of decreasing importance
+      </tooltip>
+    </field-def>
+    <!-- Image Descriptor fields -->
+    <field-def id="id-lbl" name="Image Descriptor block label" color="blk-lbl" size="1"/>
+    <field-def id="id0" name="Image left position" color="blk-data-1" size="2" print="uint">
+      <tooltip><![CDATA[Image column number in the Logical Screen]]></tooltip>
+    </field-def>
+    <field-def id="id1" name="Image top position" color="blk-data-2" size="2" print="uint">
+      <tooltip><![CDATA[Image row number in the Logical Screen]]></tooltip>
+    </field-def>
+    <field-def id="id2" name="Image width" color="blk-data-1" size="2" print="uint">
+      <tooltip><![CDATA[Maximum value: 2<sup>16</sup> - 1 (unsigned 16-bit integer)]]></tooltip>
+    </field-def>
+    <field-def id="id3" name="Image height" color="blk-data-2" size="2" print="uint">
+      <tooltip><![CDATA[Maximum value: 2<sup>16</sup> - 1 (unsigned 16-bit integer)]]></tooltip>
+    </field-def>
+    <field-def id="id4" mask="7" size="1"/>
+    <field-def id="id5" shift="5" mask="1" size="1"/>
+    <field-def id="id6" shift="6" mask="1" size="1"/>
+    <field-def id="id7" shift="7" size="1"/>
+    <field-def id="id8" color="blk-data-1" size="1">
+      <tag>
+Image Descriptor packed fields
+Bit 0-2: Local Color Table size
+Bit 5: Sorted flag
+Bit 6: Interlace flag
+Bit 7: Local Color Table flag
+      </tag>
+    </field-def>
+    <field-def id="interlaced-yes" name="Interlaced image">
+      <print>Yes</print>
+      <tooltip>
+Interlace flag (bit 6 of the packed fields)
+If the image is interlaced
+      </tooltip>
+    </field-def>
+    <field-def id="interlaced-no" name="Interlaced image">
+      <print>No</print>
+      <tooltip>
+Interlace flag (bit 6 of the packed fields)
+If the image is interlaced
+      </tooltip>
+    </field-def>
+    <field-def id="lct-entry-1" name="Local Color Table entry (RGB triplet)" color="blk-data-1" size="3"/>
+    <field-def id="lct-entry-2" name="Local Color Table entry (RGB triplet)" color="blk-data-2" size="3"/>
+    <field-def id="lct-sorted-yes" name="Sorted">
+      <print>Yes</print>
+      <tooltip>
+Sorted flag (bit 5 of the packed fields)
+If the Local Color Table is sorted, in order of decreasing importance
+      </tooltip>
+    </field-def>
+    <field-def id="lct-sorted-no" name="Sorted">
+      <print>No</print>
+      <tooltip>
+Sorted flag (bit 5 of the packed fields)
+If the Local Color Table is sorted, in order of decreasing importance
+      </tooltip>
+    </field-def>
+    <field-def id="lzw-min" name="LZW minimum code size" color="img-start" size="1">
+      <tooltip>Initial number of bits for LZW codes</tooltip>
+    </field-def>
+    <field-def id="img-data" name="Image Descriptor data block (LZW compressed image)" color="blk-data-1" size="available"/>
+    <!-- Graphic Control Extension fields -->
+    <field-def id="gce-lbl" name="Graphic Control Extension block label" color="blk-lbl" size="1"/>
+    <field-def id="gce0" mask="1" size="1"/>
+    <field-def id="t-color-used" name="Transparency color">
+      <print>Used</print>
+      <tooltip>
+Transparency color flag (bit 0 of the packed fields)
+If the transparency color is used
+      </tooltip>
+    </field-def>
+    <field-def id="t-color-not-used" name="Transparency color">
+      <print>Not used</print>
+      <tooltip>
+Transparency color flag (bit 0 of the packed fields)
+If the transparency color is used
+      </tooltip>
+    </field-def>
+    <field-def id="gce1" shift="1" mask="1" size="1"/>
+    <field-def id="usr-input-set" name="User input">
+      <print>Expected</print>
+      <tooltip>
+User input (bit 1 of the packed fields)
+If user input is expected
+      </tooltip>
+    </field-def>
+    <field-def id="usr-input-unset" name="User input">
+      <print>Not expected</print>
+      <tooltip>
+User input (bit 1 of the packed fields)
+If user input is expected
+      </tooltip>
+    </field-def>
+    <field-def id="gce2" name="Disposal method" shift="2" mask="7" size="1" print="option">
+      <options>
+        <option name="No disposal specified" hex-value="00"/>
+        <option name="Do not dispose" hex-value="01"/>
+        <option name="Restore to background color" hex-value="02"/>
+        <option name="Restore to previous" hex-value="03"/>
+      </options>
+      <tooltip auto="true">Disposal method (bits 2-4 of the packed fields)</tooltip>
+    </field-def>
+    <field-def id="gce3" color="blk-data-1" size="1">
+      <tag>
+Graphic Control Extension packed fields
+Bit 0: Transparency color flag
+Bit 1: User input flag
+Bits 2-4: Disposal method
+      </tag>
+    </field-def>
+    <field-def id="gce4" name="Delay time" color="blk-data-2" size="2" print="uint">
+      <tooltip>Data stream processing delay time, in centiseconds</tooltip>
+    </field-def>
+    <field-def id="gce5" name="Transparency index" color="blk-data-1" size="1" print="uint">
+      <tooltip>Used when the transparency color flag is set (bit 0 of packed field)</tooltip>
+    </field-def>
+    <!-- Comment Extension fields -->
+    <field-def id="ce-lbl" name="Comment Extension label" color="blk-lbl" size="1"/>
+    <field-def id="ce0" tag="Comment Extension data block" name="Comment" color="blk-data-1" size="available" print="text"/>
+    <!-- Application Extension fields -->
+    <field-def id="ae-lbl" name="Application Extension block label" color="blk-lbl" size="1"/>
+    <field-def id="ae0" name="Application identifier" color="blk-data-1" size="8" print="text"/>
+    <field-def id="ae1" name="Authentication code" color="blk-data-2" size="3"/>
+    <field-def id="ae2" name="Application Extension data block" color="blk-data-1" size="available"/>
+    <!-- Plain Text Extension fields -->
+    <field-def id="pte-lbl" name="Plain Text Extension label" color="blk-lbl" size="1"/>
+    <field-def id="pte0" name="Text grid left position" color="blk-data-1" size="2" print="uint">
+      <tooltip>Text grid column number in the Logical Screen</tooltip>
+    </field-def>
+    <field-def id="pte1" name="Text grid top position" color="blk-data-2" size="2" print="uint">
+      <tooltip>Text grid row number in the Logical Screen</tooltip>
+    </field-def>
+    <field-def id="pte2" name="Text grid width" color="blk-data-1" size="2" print="uint">
+      <tooltip><![CDATA[Maximum value: 2<sup>16</sup> - 1 (unsigned 16-bit integer)]]></tooltip>
+    </field-def>
+    <field-def id="pte3" name="Text grid height" color="blk-data-2" size="2" print="uint">
+      <tooltip><![CDATA[Maximum value: 2<sup>16</sup> - 1 (unsigned 16-bit integer)]]></tooltip>
+    </field-def>
+    <field-def id="pte4" name="Character cell width" color="blk-data-1" size="1" print="uint">
+      <tooltip><![CDATA[Maximum value: 2<sup>8</sup> - 1 (unsigned 8-bit integer))]]></tooltip>
+    </field-def>
+    <field-def id="pte5" name="Character cell height" color="blk-data-2" size="1" print="uint">
+      <tooltip><![CDATA[Maximum value: 2<sup>8</sup> - 1 (unsigned 8-bit integer)]]></tooltip>
+    </field-def>
+    <field-def id="pte6" name="Text foreground color index" color="blk-data-1" size="1" print="uint">
+      <tooltip>Global Color Table index of the text foreground color</tooltip>
+    </field-def>
+    <field-def id="pte7" name="Text background color index" color="blk-data-2" size="1" print="uint">
+      <tooltip>Global Color Table index of the text background color</tooltip>
+    </field-def>
+    <field-def id="pte8" tag="Plain Text Extension data block" name="Plain text" color="blk-data-1" size="available" print="text"/>
+    <!-- Trailer fields -->
+    <field-def id="trailer-lbl" name="Trailer block label" color="blk-lbl" size="1"/>
+    <!-- Miscellaneous fields -->
+    <field-def id="ext-lbl" name="Extension block label" color="blk-lbl" size="1"/>
+    <field-def id="data-subblk" name="Data block size" color="data-subblk" size="1"/>
+    <field-def id="data-subblk-term" name="Data block terminator" color="data-subblk" size="1"/>
+    <field-def id="unknown-lbl" name="Unknown block label" color="error-2" size="1"/>
+    <field-def id="unrecognized" name="Unrecognized data" color="error-1" size="available"/>
+  </field-defs>
+  <details><![CDATA[
+<b>Recognized blocks</b>:
+Header, Logical Screen Descriptor, Image Descriptor, Comment Extension, Graphical Control Extension, Application Extension, Plain Text Extension, Trailer
+
+The following checks are <span foreground="green">implemented</span>:
+    - The Trailer block is end of file
+  ]]></details>
+</format>

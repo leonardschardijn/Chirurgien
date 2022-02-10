@@ -22,22 +22,11 @@
 
 #include <glib/gi18n.h>
 
-#include "chirurgien-colors.h"
+#include "chirurgien-globals.h"
 
 #include "chirurgien-view.h"
 #include "chirurgien-actions.h"
 
-
-/* Available colors */
-GdkRGBA colors[TOTAL_COLORS];
-PangoColor pango_colors[TOTAL_COLORS];
-guint16 pango_alphas[TOTAL_COLORS];
-
-const gchar *color_names[TOTAL_COLORS] = {
-    "color0", "color1", "color2",
-    "color3", "color4", "color5",
-    "color6", "color7", "color8",
-};
 
 struct _ChirurgienWindow
 {
@@ -151,7 +140,7 @@ build_recent_menu (ChirurgienWindow *window)
     recent_menu = g_menu_new ();
 
     for (list_item = window->recent_files.head, menu_entries = 0;
-         list_item != NULL;
+         list_item;
          list_item = list_item->next, menu_entries++)
     {
         item_name = escape_underscores (gtk_recent_info_get_display_name (list_item->data));
@@ -221,7 +210,7 @@ build_recent_files (ChirurgienWindow *window)
 
     /* Get all recent files used by the application */
     for (list_item = recent_files;
-         list_item != NULL;
+         list_item;
          list_item = list_item->next)
     {
         if (gtk_recent_info_has_application (list_item->data, g_get_prgname ()))
@@ -237,7 +226,7 @@ build_recent_files (ChirurgienWindow *window)
 
     /* Keep only the 10 most recent files */
     for (list_item = g_queue_peek_nth_link (&window->recent_files, 10);
-         list_item != NULL;
+         list_item;
          list_item = list_item->next)
     {
         gtk_recent_info_unref (list_item->data);
@@ -263,7 +252,7 @@ recent_changed (G_GNUC_UNUSED GtkRecentManager *recent_manager,
     window->recent_rebuild_needed = FALSE;
 
     for (list_item = window->recent_files.head;
-         list_item != NULL;
+         list_item;
          list_item = list_item->next)
     {
         gtk_recent_info_unref (list_item->data);
@@ -562,7 +551,7 @@ chirurgien_window_dispose (GObject *object)
         g_settings_apply (window->state_settings);
 
     for (list_item = window->recent_files.head;
-         list_item != NULL;
+         list_item;
          list_item = list_item->next)
     {
         gtk_recent_info_unref (list_item->data);
@@ -648,17 +637,18 @@ chirurgien_window_init (ChirurgienWindow *window)
     chirurgien_window_load_view_font (window);
 
     /* Load colors */
-    for (gint i = 0; i < TOTAL_COLORS; i++)
+    for (gint i = 0; i < CHIRURGIEN_TOTAL_COLORS; i++)
     {
-        color_string = g_settings_get_string (window->preferences_settings, color_names[i]);
+        color_string = g_settings_get_string (window->preferences_settings,
+                                              get_color_name (i));
 
-        gdk_rgba_parse (&colors[i], color_string);
+        gdk_rgba_parse (&chirurgien_colors[i], color_string);
 
-        pango_colors[i].red = colors[i].red * 65535;
-        pango_colors[i].green = colors[i].green * 65535;
-        pango_colors[i].blue = colors[i].blue * 65535;
+        pango_colors[i].red = chirurgien_colors[i].red * 65535;
+        pango_colors[i].green = chirurgien_colors[i].green * 65535;
+        pango_colors[i].blue = chirurgien_colors[i].blue * 65535;
 
-        pango_alphas[i] = colors[i].alpha * 65535;
+        pango_alphas[i] = chirurgien_colors[i].alpha * 65535;
 
         g_free (color_string);
     }
@@ -706,7 +696,7 @@ chirurgien_window_update_recent (ChirurgienWindow *window,
     }
 
     for (list_item = window->recent_files.head;
-         list_item != NULL && !found;
+         list_item && !found;
          list_item = list_item->next)
     {
         if (gtk_recent_info_match (list_item->data, recent_info))

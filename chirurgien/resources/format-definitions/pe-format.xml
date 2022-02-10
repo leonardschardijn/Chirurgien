@@ -1,0 +1,551 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<format name="Portable Executable" short-name="PE">
+  <endianness>
+    <little-endian/>
+  </endianness>
+  <magic>
+    <signature>
+      <match hex-value="4D5A"/>
+      <read var-id="pe-offset" size="4" offset="60"/>
+      <match hex-value="50450000" offset="pe-offset"/>
+    </signature>
+  </magic>
+  <colors>
+    <color id="signature" name="DOS and PE file signature" index="0" background="true"/>
+    <color id="sec-name" name="Section name" index="1" background="true"/>
+    <color id="data-1" name="Header/section fields or section data" index="2" background="true"/>
+    <color id="data-2" name="Header/section fields or section data" index="3" background="true"/>
+    <color id="data-dir" name="Data directory definition" index="4" background="true"/>
+    <color id="start-data" name="Start of section data" index="5" background="true"/>
+    <color id="unused" name="Unused data" index="8" background="false"/>
+  </colors>
+  <run>
+    <field id="dos-sig" navigation="DOS"/>
+    <field id="dos-hdr"/>
+    <field id="read-pe-offset" store-var="pe-offset" convert-endianness="true" offset="60"/>
+    <exec var-id="stub-size" set="pe-offset" subtract="64"/>
+    <field id="dos-stub" limit="stub-size"/>
+    <field id="pe-sig" navigation="PE"/>
+    <field id="coff0" section="COFF header"/>
+    <field id="coff1" store-var="sections"/>
+    <field id="coff2"/>
+    <field id="coff3" store-var="sym-tbl-offset"/>
+    <field id="coff4" store-var="sym-tbl-entries"/>
+    <field id="coff5" store-var="opt-hdr"/>
+    <field id="coff6"/>
+    <match var-id="sym-tbl-offset" op="def">
+      <exec var-id="sym-tbl-size" set="sym-tbl-entries" multiply="18"/>
+      <exec var-id="str-tbl-offset" set="sym-tbl-offset" add="sym-tbl-size"/>
+      <field id="sym-tbl" limit="sym-tbl-size" offset="sym-tbl-offset" navigation="Sym."/>
+      <field id="str-tbl-size" offset="str-tbl-offset" store-var="str-tbl-size" navigation="Str."/>
+      <exec var-id="str-tbl-offset" add="4"/>
+      <exec var-id="str-tbl-size" subtract="4"/>
+      <field id="str-tbl" limit="str-tbl-size" offset="str-tbl-offset"/>
+    </match>
+    <exec var-id="data-dirs" set="0"/>
+    <match var-id="opt-hdr" op="def">
+      <field id="opt-hdr0" store-var="magic" section="Optional header standard fields"/>
+      <field id="opt-hdr1"/>
+      <field id="opt-hdr2"/>
+      <field id="opt-hdr3"/>
+      <field id="opt-hdr4"/>
+      <field id="opt-hdr5"/>
+      <field id="opt-hdr6"/>
+      <field id="opt-hdr7"/>
+      <match var-id="magic" hex-value="010B" convert-endianness="true">
+        <field id="opt-hdr-only-pe32"/>
+      </match>
+      <selection>
+        <match var-id="magic" hex-value="020B" convert-endianness="true">
+          <field id="win-hdr0" limit="8" section="Optional header Windows-specific fields"/>
+        </match>
+        <match>
+          <field id="win-hdr0" limit="4" section="Optional header Windows-specific fields"/>
+        </match>
+      </selection>
+      <field id="win-hdr1"/>
+      <field id="win-hdr2"/>
+      <field id="win-hdr3"/>
+      <field id="win-hdr4"/>
+      <field id="win-hdr5"/>
+      <field id="win-hdr6"/>
+      <field id="win-hdr7"/>
+      <field id="win-hdr8"/>
+      <field id="win-hdr9"/>
+      <field id="win-hdr10"/>
+      <field id="win-hdr11"/>
+      <field id="win-hdr12"/>
+      <field id="win-hdr13"/>
+      <field id="win-hdr14"/>
+      <selection>
+        <match var-id="magic" hex-value="020B" convert-endianness="true">
+          <field id="win-hdr15" limit="8"/>
+          <field id="win-hdr16" limit="8"/>
+          <field id="win-hdr17" limit="8"/>
+          <field id="win-hdr18" limit="8"/>
+        </match>
+        <match>
+          <field id="win-hdr15" limit="4"/>
+          <field id="win-hdr16" limit="4"/>
+          <field id="win-hdr17" limit="4"/>
+          <field id="win-hdr18" limit="4"/>
+        </match>
+      </selection>
+      <field id="win-hdr19"/>
+      <field id="win-hdr20" store-var="data-dirs"/>
+    </match>
+    <exec var-id="data-dir-count" set="0"/>
+    <loop until-set="data-dirs" num-value="0">
+      <selection>
+        <match var-id="data-dir-count" op="eq" num-value="0">
+          <field id="data-dir-addr0" tab="Data directories" section="Export Table"/>
+          <field id="data-dir-size0" tab="Data directories"/>
+        </match>
+        <match var-id="data-dir-count" op="eq" num-value="1">
+          <field id="data-dir-addr1" tab="Data directories" section="Import Table"/>
+          <field id="data-dir-size1" tab="Data directories"/>
+        </match>
+        <match var-id="data-dir-count" op="eq" num-value="2">
+          <field id="data-dir-addr2" tab="Data directories" section="Resource Table"/>
+          <field id="data-dir-size2" tab="Data directories"/>
+        </match>
+        <match var-id="data-dir-count" op="eq" num-value="3">
+          <field id="data-dir-addr3" tab="Data directories" section="Exception Table"/>
+          <field id="data-dir-size3" tab="Data directories"/>
+        </match>
+        <match var-id="data-dir-count" op="eq" num-value="4">
+          <field id="data-dir-addr4" store-var="cert-offset" tab="Data directories" section="Certificate Table"/>
+          <field id="data-dir-size4" store-var="cert-size" tab="Data directories"/>
+          <match var-id="cert-size" op="gt" num-value="0">
+            <field id="cert-tbl" limit="cert-size" offset="cert-offset" additional-color="start-data" navigation="Cert."/>
+          </match>
+        </match>
+        <match var-id="data-dir-count" op="eq" num-value="5">
+          <field id="data-dir-addr5" tab="Data directories" section="Base Relocation Table"/>
+          <field id="data-dir-size5" tab="Data directories"/>
+        </match>
+        <match var-id="data-dir-count" op="eq" num-value="6">
+          <field id="data-dir-addr6" tab="Data directories" section="Debug"/>
+          <field id="data-dir-size6" tab="Data directories"/>
+        </match>
+        <match var-id="data-dir-count" op="eq" num-value="7">
+          <field id="data-dir-addr7" tab="Data directories" section="Architecture"/>
+          <field id="data-dir-size7" tab="Data directories"/>
+        </match>
+        <match var-id="data-dir-count" op="eq" num-value="8">
+          <field id="data-dir-addr8" tab="Data directories" section="Global Ptr"/>
+          <field id="data-dir-size8" tab="Data directories"/>
+        </match>
+        <match var-id="data-dir-count" op="eq" num-value="9">
+          <field id="data-dir-addr9" tab="Data directories" section="TLS Table"/>
+          <field id="data-dir-size9" tab="Data directories"/>
+        </match>
+        <match var-id="data-dir-count" op="eq" num-value="10">
+          <field id="data-dir-addr10" tab="Data directories" section="Load Config Table"/>
+          <field id="data-dir-size10" tab="Data directories"/>
+        </match>
+        <match var-id="data-dir-count" op="eq" num-value="11">
+          <field id="data-dir-addr11" tab="Data directories" section="Bound Import"/>
+          <field id="data-dir-size11" tab="Data directories"/>
+        </match>
+        <match var-id="data-dir-count" op="eq" num-value="12">
+          <field id="data-dir-addr12" tab="Data directories" section="Import Address Table"/>
+          <field id="data-dir-size12" tab="Data directories"/>
+        </match>
+        <match var-id="data-dir-count" op="eq" num-value="13">
+          <field id="data-dir-addr13" tab="Data directories" section="Delay Import Descriptor"/>
+          <field id="data-dir-size13" tab="Data directories"/>
+        </match>
+        <match var-id="data-dir-count" op="eq" num-value="14">
+          <field id="data-dir-addr14" tab="Data directories" section="CLR Runtime Header"/>
+          <field id="data-dir-size14" tab="Data directories"/>
+        </match>
+        <match var-id="data-dir-count" op="eq" num-value="15">
+          <field id="data-dir-addr15" tab="Data directories" section="Reserved"/>
+          <field id="data-dir-size15" tab="Data directories"/>
+        </match>
+        <match>
+          <field id="data-dir-addr16" tab="Data directories" section="???"/>
+          <field id="data-dir-size16" tab="Data directories"/>
+        </match>
+      </selection>
+      <exec var-id="data-dir-count" add="1"/>
+      <exec var-id="data-dirs" subtract="1"/>
+    </loop>
+    <print tab="Data directories" insert-tab="true"/>
+    <loop until-set="sections" num-value="0">
+      <exec var-id="sec-name" set="index"/>
+      <field id="sec0" tab="Section table"/>
+      <field id="sec1" tab="Section table" section="Section table entry"/>
+      <field id="sec2" tab="Section table"/>
+      <field id="sec3" tab="Section table" store-var="sec-size"/>
+      <field id="sec4" tab="Section table" store-var="sec-offset"/>
+      <field id="sec5" tab="Section table"/>
+      <field id="sec6" tab="Section table"/>
+      <field id="sec7" tab="Section table"/>
+      <field id="sec8" tab="Section table"/>
+      <field id="sec9" tab="Section table"/>
+      <match var-id="sec-size" op="gt" num-value="0">
+        <field id="sec-data" limit="sec-size" offset="sec-offset" additional-color="start-data" navigation="sec-name" navigation-limit="8"/>
+      </match>
+      <exec var-id="sections" subtract="1"/>
+    </loop>
+    <print tab="Section table" insert-tab="true"/>
+  </run>
+  <!-- PE fields -->
+  <field-defs>
+    <field-def id="dos-sig" name="DOS file signature" color="signature" size="2"/>
+    <field-def id="dos-hdr" name="DOS header" color="data-1" size="62"/>
+    <field-def id="dos-stub" name="DOS stub" color="data-2" size="available"/>
+    <field-def id="pe-sig" name="PE file signature" color="signature" size="4"/>
+    <!-- COFF header fields -->
+    <field-def id="coff0" name="Machine" color="data-1" size="2" print="option">
+      <options convert-endianness="true">
+        <option name="Any machine" hex-value="0000"/>
+        <option name="x64 (amd64/x86_64)" hex-value="8664"/>
+        <option name="ARM little-endian" hex-value="01C0"/>
+        <option name="ARM64 little-endian" hex-value="AA64"/>
+        <option name="ARM Thumb-2 little-endian" hex-value="01C4"/>
+        <option name="EFI byte code" hex-value="0EBC"/>
+        <option name="Intel 80386" hex-value="014C"/>
+        <option name="Intel Itanium" hex-value="0200"/>
+        <option name="PowerPC little-endian" hex-value="01F0"/>
+        <option name="PowerPC with floating point support" hex-value="01F1"/>
+        <option name="RISC-V 32-bit address space" hex-value="5032"/>
+        <option name="RISC-V 64-bit address space" hex-value="5064"/>
+        <option name="RISC-V 128-bit address space" hex-value="5128"/>
+      </options>
+      <tooltip auto="true">Machine types (incomplete list)</tooltip>
+    </field-def>
+    <field-def id="coff1" name="NumberOfSections" color="data-2" size="2" print="uint">
+      <tooltip>The number of sections</tooltip>
+    </field-def>
+    <field-def id="coff2" name="TimeDateStamp" color="data-1" size="4" print="uint">
+      <tooltip>File creation date (seconds since January 1, 1970)</tooltip>
+    </field-def>
+    <field-def id="coff3" name="PointerToSymbolTable" color="data-2" size="4" print="uint">
+      <tooltip>File offset to the COFF symbol table</tooltip>
+    </field-def>
+    <field-def id="coff4" name="NumberOfSymbols" color="data-1" size="4" print="uint">
+      <tooltip>Number of entries in the symbol table</tooltip>
+    </field-def>
+    <field-def id="coff5" name="SizeOfOptionalHeader" color="data-2" size="2" print="uint">
+      <tooltip>Size of the optional header (required for executable files)</tooltip>
+    </field-def>
+    <field-def id="coff6" name="Characteristics" color="data-1" size="2" print="flags">
+      <flags convert-endianness="true">
+        <flag name="IMAGE_FILE_RELOCS_STRIPPED" mask="1" meaning="File has no base relocations"/>
+        <flag name="IMAGE_FILE_EXECUTABLE_IMAGE" mask="2" meaning="File can be run"/>
+        <flag name="IMAGE_FILE_LARGE_ADDRESS_AWARE" mask="20" meaning="Application can handle &gt;2GiB addresses"/>
+        <flag name="IMAGE_FILE_32BIT_MACHINE" mask="100" meaning="Machine is based on a 32-bit-word architecture"/>
+        <flag name="IMAGE_FILE_DEBUG_STRIPPED" mask="200" meaning="Debugging information is removed"/>
+        <flag name="IMAGE_FILE_REMOVABLE_RUN_FROM_SWAP" mask="400" meaning="If the image is on removable media, fully load it and copy it to the swap file"/>
+        <flag name="IMAGE_FILE_NET_RUN_FROM_SWAP" mask="800" meaning="If the image is on network media, fully load it and copy it to the swap file"/>
+        <flag name="IMAGE_FILE_SYSTEM" mask="1000" meaning="The image file is a system file, not a user program"/>
+        <flag name="IMAGE_FILE_DLL" mask="2000" meaning="The image file is a dynamic-link library (DLL)"/>
+        <flag name="IMAGE_FILE_UP_SYSTEM_ONLY" mask="4000" meaning="The file should be run only on a uniprocessor machine"/>
+      </flags>
+      <tooltip auto="true"/>
+    </field-def>
+    <field-def id="sym-tbl" name="Symbol table" color="data-1" size="available"/>
+    <field-def id="str-tbl-size" name="String table size" color="data-1" size="4"/>
+    <field-def id="str-tbl" name="String table" color="data-2" size="available"/>
+    <!-- Optional header standard fields -->
+    <field-def id="opt-hdr0" name="Magic" color="data-2" size="2" print="option">
+      <options convert-endianness="true">
+        <option name="ROM image" hex-value="0107"/>
+        <option name="PE32" hex-value="010B"/>
+        <option name="PE32+" hex-value="020B"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <field-def id="opt-hdr1" name="MajorLinkerVersion" color="data-1" size="1" print="uint">
+      <tooltip>The linker major version number</tooltip>
+    </field-def>
+    <field-def id="opt-hdr2" name="MinorLinkerVersion" color="data-2" size="1" print="uint">
+      <tooltip>The linker minor version number</tooltip>
+    </field-def>
+    <field-def id="opt-hdr3" name="SizeOfCode" color="data-1" size="4" print="uint">
+      <tooltip>The size of the code (text) section, or the sum of all code sections if there are multiple sections</tooltip>
+    </field-def>
+    <field-def id="opt-hdr4" name="SizeOfInitializedData" color="data-2" size="4" print="uint">
+      <tooltip>The size of the initialized data section, or the sum of all such sections if there are multiple data sections</tooltip>
+    </field-def>
+    <field-def id="opt-hdr5" name="SizeOfUninitializedData" color="data-1" size="4" print="uint">
+      <tooltip>The size of the uninitialized data section (BSS), or the sum of all such sections if there are multiple BSS sections</tooltip>
+    </field-def>
+    <field-def id="opt-hdr6" name="AddressOfEntryPoint" color="data-2" size="4" print="uint">
+      <tooltip>The address of the entry point relative to the image base when the executable file is loaded into memory</tooltip>
+    </field-def>
+    <field-def id="opt-hdr7" name="BaseOfCode" color="data-1" size="4" print="uint">
+      <tooltip>The address that is relative to the image base of the beginning-of-code section when it is loaded into memory</tooltip>
+    </field-def>
+    <field-def id="opt-hdr-only-pe32" name="BaseOfData" color="data-2" size="4" print="uint">
+      <tooltip>The address that is relative to the image base of the beginning-of-data section when it is loaded into memory</tooltip>
+    </field-def>
+    <!-- Optional header Windows-specific fields -->
+    <field-def id="win-hdr0" name="ImageBase" color="data-2" size="available" print="uint">
+      <tooltip>The preferred address of the first byte of image when loaded into memory; must be a multiple of 64KiB</tooltip>
+    </field-def>
+    <field-def id="win-hdr1" name="SectionAlignment" color="data-1" size="4" print="uint">
+      <tooltip>The alignment (in bytes) of sections when they are loaded into memory</tooltip>
+    </field-def>
+    <field-def id="win-hdr2" name="FileAlignment" color="data-2" size="4" print="uint">
+      <tooltip>The alignment factor (in bytes) that is used to align the raw data of sections in the image file</tooltip>
+    </field-def>
+    <field-def id="win-hdr3" name="MajorOperatingSystemVersion" color="data-1" size="2" print="uint">
+      <tooltip>The major version number of the required operating system</tooltip>
+    </field-def>
+    <field-def id="win-hdr4" name="MinorOperatingSystemVersion" color="data-2" size="2" print="uint">
+      <tooltip>The minor version number of the required operating system</tooltip>
+    </field-def>
+    <field-def id="win-hdr5" name="MajorImageVersion" color="data-1" size="2" print="uint">
+      <tooltip>The major version number of the image</tooltip>
+    </field-def>
+    <field-def id="win-hdr6" name="MinorImageVersion" color="data-2" size="2" print="uint">
+      <tooltip>The minor version number of the image</tooltip>
+    </field-def>
+    <field-def id="win-hdr7" name="MajorSubsystemVersion" color="data-1" size="2" print="uint">
+      <tooltip>The major version number of the subsystem</tooltip>
+    </field-def>
+    <field-def id="win-hdr8" name="MinorSubsystemVersion" color="data-2" size="2" print="uint">
+      <tooltip>The minor version number of the subsystem</tooltip>
+    </field-def>
+    <field-def id="win-hdr9" name="Win32VersionValue" color="data-1" size="4"/>
+    <field-def id="win-hdr10" name="SizeOfImage" color="data-2" size="4" print="uint">
+      <tooltip>The size (in bytes) of the image, including all headers, as the image is loaded in memory</tooltip>
+    </field-def>
+    <field-def id="win-hdr11" name="SizeOfHeaders" color="data-1" size="4" print="uint">
+      <tooltip>The combined size of an MS-DOS stub, PE header, and section headers rounded up to a multiple of FileAlignment</tooltip>
+    </field-def>
+    <field-def id="win-hdr12" name="CheckSum" color="data-2" size="4"/>
+    <field-def id="win-hdr13" name="Subsystem" color="data-1" size="2" print="option">
+      <options convert-endianness="true">
+        <option name="Unknown subsystem" hex-value="0000"/>
+        <option name="Device drivers and native Windows processes" hex-value="0001"/>
+        <option name="The Windows graphical user interface (GUI) subsystem" hex-value="0002"/>
+        <option name="The Windows character subsystem" hex-value="0003"/>
+        <option name="The OS/2 character subsystem" hex-value="0005"/>
+        <option name="The Posix character subsystem" hex-value="0007"/>
+        <option name="Native Win9x driver" hex-value="0008"/>
+        <option name="Windows CE" hex-value="0009"/>
+        <option name="An Extensible Firmware Interface (EFI) application" hex-value="000A"/>
+        <option name="An EFI driver with boot services" hex-value="000B"/>
+        <option name="An EFI driver with run-time services" hex-value="000C"/>
+        <option name="An EFI ROM image" hex-value="000D"/>
+        <option name="XBOX" hex-value="000E"/>
+        <option name="Windows boot application" hex-value="0010"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <field-def id="win-hdr14" name="DllCharacteristics" color="data-2" size="2" print="flags">
+      <flags convert-endianness="true">
+        <flag name="IMAGE_DLLCHARACTERISTICS_HIGH_ENTROPY_VA" mask="20" meaning="Image can handle a high entropy 64-bit virtual address space"/>
+        <flag name="IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE" mask="40" meaning="DLL can be relocated at load time"/>
+        <flag name="IMAGE_DLLCHARACTERISTICS_FORCE_INTEGRITY" mask="80" meaning="Code Integrity checks are enforced"/>
+        <flag name="IMAGE_DLLCHARACTERISTICS_NX_COMPAT" mask="100" meaning="Image is NX compatible"/>
+        <flag name="IMAGE_DLLCHARACTERISTICS_NO_ISOLATION" mask="200" meaning="Isolation aware, but do not isolate the image"/>
+        <flag name="IMAGE_DLLCHARACTERISTICS_NO_SEH" mask="400" meaning="Does not use structured exception (SE) handling"/>
+        <flag name="IMAGE_DLLCHARACTERISTICS_NO_BIND" mask="800" meaning="Do not bind the image"/>
+        <flag name="IMAGE_DLLCHARACTERISTICS_APPCONTAINER" mask="1000" meaning="Image must execute in an AppContainer"/>
+        <flag name="IMAGE_DLLCHARACTERISTICS_WDM_DRIVER" mask="2000" meaning="A WDM driver"/>
+        <flag name="IMAGE_DLLCHARACTERISTICS_GUARD_CF" mask="4000" meaning="Image supports Control Flow Guard"/>
+        <flag name="IMAGE_DLLCHARACTERISTICS_TERMINAL_SERVER_AWARE" mask="8000" meaning="Terminal Server aware"/>
+      </flags>
+      <tooltip auto="true"/>
+    </field-def>
+    <field-def id="win-hdr15" name="SizeOfStackReserve" color="data-1" size="available" print="uint">
+      <tooltip>The size of the stack to reserve</tooltip>
+    </field-def>
+    <field-def id="win-hdr16" name="SizeOfStackCommit" color="data-2" size="available" print="uint">
+      <tooltip>The size of the stack to commit</tooltip>
+    </field-def>
+    <field-def id="win-hdr17" name="SizeOfHeapReserve" color="data-1" size="available" print="uint">
+      <tooltip>The size of the local heap space to reserve</tooltip>
+    </field-def>
+    <field-def id="win-hdr18" name="SizeOfHeapCommit" color="data-2" size="available" print="uint">
+      <tooltip>The size of the local heap space to commit</tooltip>
+    </field-def>
+    <field-def id="win-hdr19" name="LoaderFlags" color="data-1" size="4"/>
+    <field-def id="win-hdr20" name="NumberOfRvaAndSizes" color="data-2" size="4" print="uint">
+      <tooltip>The number of data-directory entries in the remainder of the optional header</tooltip>
+    </field-def>
+    <!-- Data directory fields -->
+    <field-def id="data-dir-addr0" name="Export Table VirtualAddress" color="data-dir" size="4" print="uint">
+      <tooltip>Relative virtual address of the data directory</tooltip>
+    </field-def>
+    <field-def id="data-dir-size0" name="Export Table Size" color="data-1" size="4" print="uint">
+      <tooltip>Size in bytes</tooltip>
+    </field-def>
+    <field-def id="data-dir-addr1" name="Import Table VirtualAddress" color="data-dir" size="4" print="uint">
+      <tooltip>Relative virtual address of the data directory</tooltip>
+    </field-def>
+    <field-def id="data-dir-size1" name="Import Table Size" color="data-1" size="4" print="uint">
+      <tooltip>Size in bytes</tooltip>
+    </field-def>
+    <field-def id="data-dir-addr2" name="Resource Table VirtualAddress" color="data-dir" size="4" print="uint">
+      <tooltip>Relative virtual address of the data directory</tooltip>
+    </field-def>
+    <field-def id="data-dir-size2" name="Resource Table Size" color="data-1" size="4" print="uint">
+      <tooltip>Size in bytes</tooltip>
+    </field-def>
+    <field-def id="data-dir-addr3" name="Exception Table VirtualAddress" color="data-dir" size="4" print="uint">
+      <tooltip>Relative virtual address of the data directory</tooltip>
+    </field-def>
+    <field-def id="data-dir-size3" name="Exception Table Size" color="data-1" size="4" print="uint">
+      <tooltip>Size in bytes</tooltip>
+    </field-def>
+    <field-def id="data-dir-addr4" name="Certificate Table VirtualAddress" color="data-dir" size="4" print="uint">
+      <tooltip>Relative virtual address of the data directory</tooltip>
+    </field-def>
+    <field-def id="data-dir-size4" name="Certificate Table Size" color="data-1" size="4" print="uint">
+      <tooltip>Size in bytes</tooltip>
+    </field-def>
+    <field-def id="cert-tbl" name="Certificate Table" color="data-1" size="available"/>
+    <field-def id="data-dir-addr5" name="Base Relocation Table VirtualAddress" color="data-dir" size="4" print="uint">
+      <tooltip>Relative virtual address of the data directory</tooltip>
+    </field-def>
+    <field-def id="data-dir-size5" name="Base Relocation Table Size" color="data-1" size="4" print="uint">
+      <tooltip>Size in bytes</tooltip>
+    </field-def>
+    <field-def id="data-dir-addr6" name="Debug VirtualAddress" color="data-dir" size="4" print="uint">
+      <tooltip>Relative virtual address of the data directory</tooltip>
+    </field-def>
+    <field-def id="data-dir-size6" name="Debug Size" color="data-1" size="4" print="uint">
+      <tooltip>Size in bytes</tooltip>
+    </field-def>
+    <field-def id="data-dir-addr7" name="Architecture VirtualAddress" color="data-dir" size="4" print="uint">
+      <tooltip>Relative virtual address of the data directory</tooltip>
+    </field-def>
+    <field-def id="data-dir-size7" name="Architecture Size" color="data-1" size="4" print="uint">
+      <tooltip>Size in bytes</tooltip>
+    </field-def>
+    <field-def id="data-dir-addr8" name="Global Ptr VirtualAddress" color="data-dir" size="4" print="uint">
+      <tooltip>Relative virtual address of the data directory</tooltip>
+    </field-def>
+    <field-def id="data-dir-size8" name="Global Ptr Size" color="data-1" size="4" print="uint">
+      <tooltip>Size in bytes</tooltip>
+    </field-def>
+    <field-def id="data-dir-addr9" name="TLS Table VirtualAddress" color="data-dir" size="4" print="uint">
+      <tooltip>Relative virtual address of the data directory</tooltip>
+    </field-def>
+    <field-def id="data-dir-size9" name="TLS Table Size" color="data-1" size="4" print="uint">
+      <tooltip>Size in bytes</tooltip>
+    </field-def>
+    <field-def id="data-dir-addr10" name="Load Config Table VirtualAddress" color="data-dir" size="4" print="uint">
+      <tooltip>Relative virtual address of the data directory</tooltip>
+    </field-def>
+    <field-def id="data-dir-size10" name="Load Config Table Size" color="data-1" size="4" print="uint">
+      <tooltip>Size in bytes</tooltip>
+    </field-def>
+    <field-def id="data-dir-addr11" name="Bound Import VirtualAddress" color="data-dir" size="4" print="uint">
+      <tooltip>Relative virtual address of the data directory</tooltip>
+    </field-def>
+    <field-def id="data-dir-size11" name="Bound Import Size" color="data-1" size="4" print="uint">
+      <tooltip>Size in bytes</tooltip>
+    </field-def>
+    <field-def id="data-dir-addr12" name="Import Address Table VirtualAddress" color="data-dir" size="4" print="uint">
+      <tooltip>Relative virtual address of the data directory</tooltip>
+    </field-def>
+    <field-def id="data-dir-size12" name="Import Address Table Size" color="data-1" size="4" print="uint">
+      <tooltip>Size in bytes</tooltip>
+    </field-def>
+    <field-def id="data-dir-addr13" name="Delay Import Descriptor VirtualAddress" color="data-dir" size="4" print="uint">
+      <tooltip>Relative virtual address of the data directory</tooltip>
+    </field-def>
+    <field-def id="data-dir-size13" name="Delay Import Descriptor Size" color="data-1" size="4" print="uint">
+      <tooltip>Size in bytes</tooltip>
+    </field-def>
+    <field-def id="data-dir-addr14" name="CLR Runtime Header VirtualAddress" color="data-dir" size="4" print="uint">
+      <tooltip>Relative virtual address of the data directory</tooltip>
+    </field-def>
+    <field-def id="data-dir-size14" name="CLR Runtime Header  Size" color="data-1" size="4" print="uint">
+      <tooltip>Size in bytes</tooltip>
+    </field-def>
+    <field-def id="data-dir-addr15" name="Reserved VirtualAddress" color="data-dir" size="4" print="uint">
+      <tooltip>Relative virtual address of the data directory</tooltip>
+    </field-def>
+    <field-def id="data-dir-size15" name="Reserved Size" color="data-1" size="4" print="uint">
+      <tooltip>Size in bytes</tooltip>
+    </field-def>
+    <field-def id="data-dir-addr16" name="??? VirtualAddress" color="data-dir" size="4" print="uint">
+      <tooltip>Relative virtual address of the data directory</tooltip>
+    </field-def>
+    <field-def id="data-dir-size16" name="??? Size" color="data-1" size="4" print="uint">
+      <tooltip>Size in bytes</tooltip>
+    </field-def>
+    <!-- Section table fields -->
+    <field-def id="sec0" name="Section name" color="sec-name" size="8" print="text"/>
+    <field-def id="sec1" name="VirtualSize" color="data-1" size="4" print="uint">
+      <tooltip>The total size of the section when loaded into memory</tooltip>
+    </field-def>
+    <field-def id="sec2" name="VirtualAddress" color="data-2" size="4" print="uint">
+      <tooltip>Address of the first byte of the section relative to the image base when the section is loaded into memory</tooltip>
+    </field-def>
+    <field-def id="sec3" name="SizeOfRawData" color="data-1" size="4" print="uint">
+      <tooltip>The size of the section on disk</tooltip>
+    </field-def>
+    <field-def id="sec4" name="PointerToRawData" color="data-2" size="4" print="uint">
+      <tooltip>The file pointer to the first page of the section within the COFF file</tooltip>
+    </field-def>
+    <field-def id="sec5" name="PointerToRelocations" color="data-1" size="4" print="uint">
+      <tooltip>The file pointer to the beginning of relocation entries for the section</tooltip>
+    </field-def>
+    <field-def id="sec6" name="PointerToLinenumbers" color="data-2" size="4" print="uint">
+      <tooltip>The file pointer to the beginning of line-number entries for the section</tooltip>
+    </field-def>
+    <field-def id="sec7" name="NumberOfRelocations" color="data-1" size="2" print="uint">
+      <tooltip>The number of relocation entries for the section</tooltip>
+    </field-def>
+    <field-def id="sec8" name="NumberOfLinenumbers" color="data-2" size="2" print="uint">
+      <tooltip>The number of line-number entries for the section</tooltip>
+    </field-def>
+    <field-def id="sec9" name="Characteristics" color="data-1" size="4" print="flags">
+      <flags convert-endianness="true">
+        <flag name="IMAGE_SCN_TYPE_NO_PAD" mask="8" meaning="The section should not be padded to the next boundary"/>
+        <flag name="IMAGE_SCN_CNT_CODE" mask="20" meaning="The section contains executable code"/>
+        <flag name="IMAGE_SCN_CNT_INITIALIZED_DATA" mask="40" meaning="The section contains initialized data"/>
+        <flag name="IMAGE_SCN_CNT_UNINITIALIZED_DATA" mask="80" meaning="The section contains uninitialized data"/>
+        <flag name="IMAGE_SCN_LNK_INFO" mask="200" meaning="The section contains comments or other information"/>
+        <flag name="IMAGE_SCN_LNK_REMOVE" mask="800" meaning="The section will not become part of the image"/>
+        <flag name="IMAGE_SCN_LNK_COMDAT" mask="1000" meaning="The section contains COMDAT data"/>
+        <flag name="IMAGE_SCN_GPREL" mask="8000" meaning="The section contains data referenced through the global pointer (GP)"/>
+        <flag name="IMAGE_SCN_ALIGN_1BYTES" mask="100000" meaning="Align data on a 1-byte boundary"/>
+        <flag name="IMAGE_SCN_ALIGN_2BYTES" mask="200000" meaning="Align data on a 2-byte boundary"/>
+        <flag name="IMAGE_SCN_ALIGN_4BYTES" mask="300000" meaning="Align data on a 4-byte boundary"/>
+        <flag name="IMAGE_SCN_ALIGN_8BYTES" mask="400000" meaning="Align data on a 8-byte boundary"/>
+        <flag name="IMAGE_SCN_ALIGN_16BYTES" mask="500000" meaning="Align data on a 16-byte boundary"/>
+        <flag name="IMAGE_SCN_ALIGN_32BYTES" mask="600000" meaning="Align data on a 32-byte boundary"/>
+        <flag name="IMAGE_SCN_ALIGN_64BYTES" mask="700000" meaning="Align data on a 64-byte boundary"/>
+        <flag name="IMAGE_SCN_ALIGN_128BYTES" mask="800000" meaning="Align data on a 128-byte boundary"/>
+        <flag name="IMAGE_SCN_ALIGN_256BYTES" mask="900000" meaning="Align data on a 256-byte boundary"/>
+        <flag name="IMAGE_SCN_ALIGN_512BYTES" mask="A00000" meaning="Align data on a 512-byte boundary"/>
+        <flag name="IMAGE_SCN_ALIGN_1024BYTES" mask="B00000" meaning="Align data on a 1024-byte boundary"/>
+        <flag name="IMAGE_SCN_ALIGN_2048BYTES" mask="C00000" meaning="Align data on a 2048-byte boundary"/>
+        <flag name="IMAGE_SCN_ALIGN_4096BYTES" mask="D00000" meaning="Align data on a 4096-byte boundary"/>
+        <flag name="IMAGE_SCN_ALIGN_8192BYTES" mask="E00000" meaning="Align data on a 8192-byte boundary"/>
+        <flag name="IMAGE_SCN_LNK_NRELOC_OVFL" mask="1000000" meaning="The section contains extended relocations"/>
+        <flag name="IMAGE_SCN_MEM_DISCARDABLE" mask="2000000" meaning="The section can be discarded as needed"/>
+        <flag name="IMAGE_SCN_MEM_NOT_CACHED" mask="4000000" meaning="The section cannot be cached"/>
+        <flag name="IMAGE_SCN_MEM_NOT_PAGED" mask="8000000" meaning="The section is not pageable"/>
+        <flag name="IMAGE_SCN_MEM_SHARED" mask="10000000" meaning="The section can be executed as code"/>
+        <flag name="IMAGE_SCN_MEM_EXECUTE" mask="20000000" meaning="The section can be shared in memory"/>
+        <flag name="IMAGE_SCN_MEM_READ" mask="40000000" meaning="The section can be read"/>
+        <flag name="IMAGE_SCN_MEM_WRITE" mask="80000000" meaning="The section can be written to"/>
+      </flags>
+      <tooltip auto="true"/>
+    </field-def>
+    <field-def id="sec-data" tag="navigation" name="Section data" color="data-1" size="available"/>
+    <!-- Miscellaneous fields -->
+    <field-def id="read-pe-offset" size="4"/>
+    <field-def id="unused-data" name="Unused data" color="unused" size="available"/>
+  </field-defs>
+  <details><![CDATA[
+The DOS MZ file is not analyzed
+Deprecated Characteristics flags or header fields are not interpreted
+String table section names are not recognized (ASCII decimal offset section names)
+
+The following checks are <span foreground="red">not implemented</span>:
+    - The optional header CheckSum is correct
+  ]]></details>
+</format>

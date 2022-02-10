@@ -22,6 +22,8 @@
 
 #include <glib/gi18n.h>
 
+#include <chirurgien-formats.h>
+
 #include "chirurgien-view-tab.h"
 #include "chirurgien-formats-dialog.h"
 #include "chirurgien-preferences-dialog.h"
@@ -188,7 +190,7 @@ chirurgien_actions_about (G_GNUC_UNUSED GSimpleAction *action,
                     "program-name", "Chirurgien",
                     "authors", authors,
                     "comments", _("Understand and manipulate file formats"),
-                    "copyright", "Copyright 2020-2021 – Daniel Léonard Schardijn",
+                    "copyright", "Copyright 2020-2022 – Daniel Léonard Schardijn",
                     "license-type", GTK_LICENSE_GPL_3_0,
                     "logo-icon-name", "io.github.leonardschardijn.Chirurgien",
                     "version", VERSION,
@@ -502,41 +504,113 @@ chirurgien_actions_recent_open (G_GNUC_UNUSED GSimpleAction *action,
     chirurgien_actions_new_view (window, file);
 }
 
-void
-chirurgien_actions_new_view (ChirurgienWindow *window,
-                             GFile            *file)
+static gchar *
+validate_file (GFile *file)
 {
     g_autoptr (GFileInfo) file_info;
 
-    ChirurgienView *view;
-    GtkWidget *error_dialog = NULL;
-
     GError *error = NULL;
+    gchar *error_message = NULL;
 
     file_info = g_file_query_info (file, G_FILE_ATTRIBUTE_STANDARD_SIZE","G_FILE_ATTRIBUTE_ACCESS_CAN_READ,
                                    G_FILE_QUERY_INFO_NONE, NULL, &error);
     /* The file was probably deleted */
-    if (error != NULL)
+    if (error)
     {
-        error_dialog = gtk_message_dialog_new (GTK_WINDOW (window), GTK_DIALOG_MODAL, GTK_MESSAGE_INFO,
-                                         GTK_BUTTONS_CLOSE, _("Error: %s"), error->message);
+        error_message = g_strdup_printf (_("Error: %s"), error->message);
         g_error_free (error);
     }
     /* The file is empty */
     else if (!g_file_info_get_size (file_info))
     {
-        error_dialog = gtk_message_dialog_new (GTK_WINDOW (window), GTK_DIALOG_MODAL, GTK_MESSAGE_INFO,
-                                         GTK_BUTTONS_CLOSE, _("The selected file is empty."));
+        error_message = g_strdup (_("The selected file is empty."));
     }
     /* The file cannot be read */
     else if (!g_file_info_get_attribute_boolean (file_info, G_FILE_ATTRIBUTE_ACCESS_CAN_READ))
     {
-        error_dialog = gtk_message_dialog_new (GTK_WINDOW (window), GTK_DIALOG_MODAL, GTK_MESSAGE_INFO,
-                                         GTK_BUTTONS_CLOSE, _("The selected file cannot be read."));
+        error_message = g_strdup (_("The selected file cannot be read."));
     }
 
-    if (error_dialog)
+    return error_message;
+}
+
+static void
+load_format_response (GtkNativeDialog *self,
+                      gint             response_id)
+{
+    ChirurgienFormatsDialog *dialog;
+    g_autoptr (GFile) file = NULL;
+
+    GString *escaped_error_message;
+    g_autofree gchar *dialog_message = NULL;
+    g_autofree gchar *error_message = NULL;
+
+    if (response_id == GTK_RESPONSE_ACCEPT)
     {
+        dialog = CHIRURGIEN_FORMATS_DIALOG (gtk_native_dialog_get_transient_for (self));
+
+        file = gtk_file_chooser_get_file (GTK_FILE_CHOOSER (self));
+
+        if (!(error_message = validate_file (file)))
+            error_message = chirurgien_formats_load (file);
+
+        if (error_message)
+        {
+            escaped_error_message = g_string_new (error_message);
+            g_string_replace (escaped_error_message, "<", "&lt;", 0);
+            g_string_replace (escaped_error_message, ">", "&gt;", 0);
+
+            dialog_message = g_strdup_printf ("<span weight=\"bold\" foreground=\"red\">%s</span>\n\n%s",
+                                              _("Failed to create format definition!"),
+                                              escaped_error_message->str);
+            chirurgien_formats_dialog_set_message (dialog,
+                                                   dialog_message);
+            g_string_free (escaped_error_message, TRUE);
+        }
+        else
+        {
+            dialog_message = g_strdup_printf ("<span weight=\"bold\" foreground=\"green\">%s</span>",
+                                              _("Format definition successfully created!"));
+            chirurgien_formats_dialog_set_message (dialog,
+                                                   dialog_message);
+            chirurgien_formats_dialog_add_format (dialog);
+        }
+    }
+
+    gtk_native_dialog_destroy (self);
+    g_object_unref (self);
+}
+
+void
+chirurgien_actions_load_format (G_GNUC_UNUSED GtkButton *self,
+                                gpointer user_data)
+{
+    GtkFileChooserNative *dialog;
+
+    dialog = gtk_file_chooser_native_new (_("Load new format"), user_data,
+                                            GTK_FILE_CHOOSER_ACTION_OPEN, NULL, NULL);
+
+    gtk_native_dialog_set_modal (GTK_NATIVE_DIALOG (dialog), TRUE);
+
+    g_signal_connect (dialog, "response", G_CALLBACK (load_format_response), NULL);
+    gtk_native_dialog_show (GTK_NATIVE_DIALOG (dialog));
+}
+
+void
+chirurgien_actions_new_view (ChirurgienWindow *window,
+                             GFile            *file)
+{
+    ChirurgienView *view;
+
+    GtkWidget *error_dialog = NULL;
+    g_autofree gchar *error_message = NULL;
+
+    error_message = validate_file (file);
+
+    if (error_message)
+    {
+        error_dialog = gtk_message_dialog_new (GTK_WINDOW (window), GTK_DIALOG_MODAL, GTK_MESSAGE_INFO,
+                                               GTK_BUTTONS_CLOSE, "%s", error_message);
         g_signal_connect (error_dialog, "response", G_CALLBACK (gtk_window_destroy), NULL);
         gtk_window_present (GTK_WINDOW (error_dialog));
 

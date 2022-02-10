@@ -16,146 +16,117 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <chirurgien-globals.h>
 #include "chirurgien-formats.h"
 
-#include "format-utils.h"
+#include "chirurgien-types.h"
 
-#include "cpio/chirurgien-cpio.h"
-#include "elf/chirurgien-elf.h"
-#include "gif/chirurgien-gif.h"
-#include "jpeg/chirurgien-jpeg.h"
-#include "pe/chirurgien-pe.h"
-#include "png/chirurgien-png.h"
-#include "tar/chirurgien-tar.h"
-#include "tiff/chirurgien-tiff.h"
-#include "webp/chirurgien-webp.h"
+#include "validator/chirurgien-validator.h"
+#include "processor/chirurgien-processor.h"
 
 
 void
-chirurgien_formats_analyze (FormatsFile *file)
+chirurgien_formats_analyze (ProcessorFile *file)
 {
-    /* Container formats */
-    const guchar riff_magic_number[] = { 0x52,0x49,0x46,0x46 };
-    /* File formats */
-    const guchar cpio_magic_number1[] = { 0xC7,0x71 };
-    const guchar cpio_magic_number2[] = { 0x71,0xC7 };
-    const guchar cpio_magic_number3[] = { 0x30,0x37,0x30,0x37,0x30,0x37 };
-    const guchar cpio_magic_number4[] = { 0x30,0x37,0x30,0x37,0x30,0x31 };
-    const guchar cpio_magic_number5[] = { 0x30,0x37,0x30,0x37,0x30,0x32 };
-    const guchar dos_mz_magic_number[] = { 0x4D,0x5A };
-    const guchar elf_magic_number[] = { 0x7F,0x45,0x4C,0x46 };
-    const guchar gif_magic_number1[] = { 0x47,0x49,0x46,0x38,0x39,0x61 };
-    const guchar gif_magic_number2[] = { 0x47,0x49,0x46,0x38,0x37,0x61 };
-    const guchar jpeg_magic_number[] = { 0xFF,0xD8 };
-    const guchar pe_magic_number[] = { 0x50,0x45 };
-    const guchar png_magic_number[] = { 0x89,0x50,0x4E,0x47,0x0D,0x0A,0x1A,0x0A };
-    const guchar tar_magic_number[] = { 0x75,0x73,0x74,0x61,0x72 };
-    const guchar tiff_magic_number1[] = { 0x49,0x49,0x2A,0x00 };
-    const guchar tiff_magic_number2[] = { 0x4D,0x4D,0x00,0x2A };
-    const guchar webp_magic_number[] = { 0x57,0x45,0x42,0x50 };
+    const FormatDefinition *format_definition;
 
-    gboolean find_unused = FALSE;
+    gboolean format_found;
 
-    /* cpio */
-    if (FILE_HAS_DATA_N (file, 2) &&
-        !memcmp (file->file_contents, cpio_magic_number1, 2))
-    {
-        chirurgien_cpio (file, BinaryLittleEndian);
-    }
-    else if (FILE_HAS_DATA_N (file, 2) &&
-        !memcmp (file->file_contents, cpio_magic_number2, 2))
-    {
-        chirurgien_cpio (file, BinaryBigEndian);
-    }
-    else if (FILE_HAS_DATA_N (file, 6) &&
-        !memcmp (file->file_contents, cpio_magic_number3, 6))
-    {
-        chirurgien_cpio (file, OldASCII);
-    }
-    else if (FILE_HAS_DATA_N (file, 6) &&
-        !memcmp (file->file_contents, cpio_magic_number4, 6))
-    {
-        chirurgien_cpio (file, NewASCII);
-    }
-    else if (FILE_HAS_DATA_N (file, 6) &&
-        !memcmp (file->file_contents, cpio_magic_number5, 6))
-    {
-        chirurgien_cpio (file, NewCRC);
-    }
-    /* DOS MZ & PE */
-    else if (FILE_HAS_DATA_N (file, 2) &&
-        !memcmp (file->file_contents, dos_mz_magic_number, 2))
-    {
-        guint32 pe_offset;
+    format_found = FALSE;
 
-        if (FILE_HAS_DATA_N (file, 64))
-            memcpy (&pe_offset, file->file_contents + 60, 4);
-        else
-            pe_offset = 0;
+    for (GSList *format_iter = chirurgien_system_format_definitions;
+         format_iter && !format_found;
+         format_iter = format_iter->next)
+    {
+        format_definition = format_iter->data;
 
-        if (pe_offset && FILE_HAS_DATA_N (file, pe_offset + 4) &&
-            !memcmp (file->file_contents + pe_offset, pe_magic_number, 2))
+        if (!format_definition->disabled)
+            format_found = format_identify (format_definition, file);
+    }
+
+    if (!format_found)
+    {
+        for (GList *format_iter = chirurgien_user_format_definitions;
+             format_iter && !format_found;
+             format_iter = format_iter->next)
         {
-            chirurgien_pe (file, pe_offset);
-            find_unused = TRUE;
+            format_definition = format_iter->data;
+
+            format_found = format_identify (format_definition, file);
         }
     }
-    /* ELF */
-    else if (FILE_HAS_DATA_N (file, 4) &&
-        !memcmp (file->file_contents, elf_magic_number, 4))
+
+    if (!format_found)
+        format_definition = NULL;
+
+    format_process (format_definition, file);
+}
+
+void
+chirurgien_formats_initialize (const gchar *format_definition_path)
+{
+    FormatDefinition *format_definition;
+
+    GBytes *format_definition_bytes;
+    const gchar *format_definition_text;
+    gsize format_definition_size;
+
+    format_definition_bytes = g_resources_lookup_data (format_definition_path,
+                                                       G_RESOURCE_LOOKUP_FLAGS_NONE,
+                                                       NULL);
+
+    format_definition_text = g_bytes_get_data (format_definition_bytes,
+                                               &format_definition_size);
+
+    format_definition = format_validate (format_definition_text,
+                                         format_definition_size,
+                                         NULL);
+    chirurgien_system_format_definitions = g_slist_append (chirurgien_system_format_definitions,
+                                                           format_definition);
+
+    g_bytes_unref (format_definition_bytes);
+}
+
+gchar *
+chirurgien_formats_load (GFile *file)
+{
+    FormatDefinition *format_definition;
+
+    g_autoptr (GFileInputStream) file_input;
+    g_autoptr (GFileInfo) file_info;
+
+    g_autofree gchar *format_definition_text;
+    gsize format_definition_size;
+
+    GError *error = NULL;
+    gchar *error_message = NULL;
+
+    file_input = g_file_read (file, NULL, NULL);
+    file_info = g_file_query_info (file, G_FILE_ATTRIBUTE_STANDARD_SIZE,
+                                   G_FILE_QUERY_INFO_NONE, NULL, NULL);
+
+    format_definition_size = g_file_info_get_size (file_info);
+    format_definition_text = g_malloc (format_definition_size);
+
+    g_input_stream_read_all (G_INPUT_STREAM (file_input),
+                             format_definition_text,
+                             format_definition_size,
+                             NULL, NULL, NULL);
+
+    format_definition = format_validate (format_definition_text,
+                                         format_definition_size,
+                                         &error);
+
+    if (error)
     {
-        chirurgien_elf (file);
-        find_unused = TRUE;
-    }
-    /* GIF */
-    else if (FILE_HAS_DATA_N (file, 6) &&
-             (!memcmp (file->file_contents, gif_magic_number1, 6) ||
-              !memcmp (file->file_contents, gif_magic_number2, 6)))
-    {
-        chirurgien_gif (file);
-    }
-    /* JPEG */
-    else if (FILE_HAS_DATA_N (file, 2) &&
-             !memcmp (file->file_contents, jpeg_magic_number, 2))
-    {
-        chirurgien_jpeg (file);
-    }
-    /* PNG */
-    else if (FILE_HAS_DATA_N (file, 8) &&
-             !memcmp (file->file_contents, png_magic_number, 8))
-    {
-        chirurgien_png (file);
-    }
-    /* tar */
-    else if (FILE_HAS_DATA_N (file, 262) &&
-             !memcmp (file->file_contents + 257, tar_magic_number, 5))
-    {
-        chirurgien_tar (file);
-    }
-    /* TIFF */
-    else if (FILE_HAS_DATA_N (file, 4) &&
-             (!memcmp (file->file_contents, tiff_magic_number1, 4) ||
-              !memcmp (file->file_contents, tiff_magic_number2, 4)))
-    {
-        chirurgien_tiff (file);
-        find_unused = TRUE;
-    }
-    /* RIFF container */
-    else if (FILE_HAS_DATA_N (file, 12) &&
-             !memcmp (file->file_contents, riff_magic_number, 4))
-    {
-        /* RIFF formats */
-        /* WebP */
-        if (!memcmp (file->file_contents + 8, webp_magic_number, 4))
-        {
-            chirurgien_webp (file);
-        }
+        error_message = g_strdup (error->message);
+        g_error_free (error);
     }
     else
     {
-        format_utils_set_title (file, "Unrecognized file format");
-        return;
+        chirurgien_user_format_definitions = g_list_append (chirurgien_user_format_definitions,
+                                                            format_definition);
     }
 
-    format_utils_sort_find_unused_bytes (file, find_unused);
+    return error_message;
 }

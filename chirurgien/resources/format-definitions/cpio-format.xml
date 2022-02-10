@@ -1,0 +1,369 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<format name="cpio archive" short-name="cpio">
+  <endianness var-id="endianness">
+    <little-endian hex-value="C771"/>
+    <big-endian hex-value="71C7"/>
+  </endianness>
+  <magic>
+    <signature>
+      <match hex-value="C771"/>
+    </signature>
+    <signature>
+      <match hex-value="71C7"/>
+    </signature>
+    <signature>
+      <match char-value="070707"/>
+    </signature>
+    <signature>
+      <match char-value="070701"/>
+    </signature>
+    <signature>
+      <match char-value="070702"/>
+    </signature>
+  </magic>
+  <colors>
+    <color id="final-hdr" name="Special final header" index="1" background="true"/>
+    <color id="hdr-flds-1" name="Header fields" index="2" background="true"/>
+    <color id="hdr-flds-2" name="Header fields" index="3" background="true"/>
+    <color id="file-name" name="File name" index="4" background="true"/>
+    <color id="contents" name="File contents" index="5" background="true"/>
+    <color id="padding" name="Padding" index="8" background="false"/>
+  </colors>
+  <run>
+    <selection>
+      <match hex-value="C771">
+        <field id="arch-bin-le" section="Archive"/>
+        <loop until-set="stop">
+          <selection>
+            <match hex-value="C7710000000000000000000001000000000000000B0000000000545241494C455221212100">
+              <field id="final-hdr" limit="37" navigation="End"/>
+              <exec var-id="stop" set="1"/>
+            </match>
+            <match>
+              <block id="bin-file"/>
+            </match>
+          </selection>
+        </loop>
+      </match>
+      <match hex-value="71C7">
+        <field id="arch-bin-be" section="Archive"/>
+        <loop until-set="stop">
+          <selection>
+            <match hex-value="71C7000000000000000000000001000000000000000B00000000545241494C455221212100">
+              <field id="final-hdr" limit="37" navigation="End"/>
+              <exec var-id="stop" set="1"/>
+            </match>
+            <match>
+              <block id="bin-file"/>
+            </match>
+          </selection>
+        </loop>
+      </match>
+      <match char-value="070707">
+        <field id="arch-odc" section="Archive"/>
+        <loop until-set="stop">
+          <selection>
+            <match hex-value="30373037303730303030303030303030303030303030303030303030303030303030303030303030303130303030303030303030303030303030303030303031333030303030303030303030545241494C455221212100">
+              <field id="final-hdr" limit="87" navigation="End"/>
+              <exec var-id="stop" set="1"/>
+            </match>
+            <match>
+              <field id="odc-magic" navigation="File"/>
+              <field id="odc-dev" store-var="odc-field" ascii-base="8"/>
+              <print line="Devine number" var-id="odc-field" tab="File" section="File properties"/>
+              <field id="odc-inode" store-var="odc-field" ascii-base="8"/>
+              <print line="inode number" var-id="odc-field" tab="File"/>
+              <field id="odc-type" tab="File"/>
+              <field id="odc-mode" store-var="file-mode" ascii-base="8"/>
+              <block id="octal-mode"/>
+              <print line="File mode" var-id="octal-mode" tooltip="File mode in octal format" tab="File"/>
+              <field id="odc-usr" store-var="odc-field" ascii-base="8"/>
+              <print line="User ID" var-id="odc-field" tab="File"/>
+              <field id="odc-grp" store-var="odc-field" ascii-base="8"/>
+              <print line="Group ID" var-id="odc-field" tab="File"/>
+              <field id="odc-lnks" store-var="odc-field" ascii-base="8"/>
+              <print line="Number of links" var-id="odc-field" tab="File"/>
+              <field id="odc-sdev" store-var="odc-field" ascii-base="8"/>
+              <print line="Character/block special file device number" var-id="odc-field" tab="File"/>
+              <field id="odc-date" store-var="odc-field" ascii-base="8"/>
+              <print line="Last modification time" var-id="odc-field" tooltip="As Unix time (seconds that have elapsed since 1970-01-01 00:00:00 UTC)" tab="File"/>
+              <field id="odc-name-size" store-var="name-size" ascii-base="8"/>
+              <print line="File name size" var-id="name-size" tab="File"/>
+              <field id="odc-file-size" store-var="file-size" ascii-base="8"/>
+              <print line="File size" var-id="file-size" tab="File"/>
+              <field id="file-name" limit="name-size" tab="File" insert-tab="true"/>
+              <field id="contents" limit="file-size"/>
+              <exec var-id="file-count" add="1"/>
+            </match>
+          </selection>
+        </loop>
+      </match>
+      <match char-value="070701">
+        <field id="arch-newc" section="Archive"/>
+        <exec var-id="newc" set="1"/>
+        <loop until-set="stop">
+          <selection>
+            <match hex-value="3037303730313030303030303030303030303030303030303030303030303030303030303030303030303030303130303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030423030303030303030545241494C455221212100">
+              <field id="final-hdr" limit="121" navigation="End"/>
+              <exec var-id="stop" set="1"/>
+            </match>
+            <match>
+              <block id="newc-file"/>
+            </match>
+          </selection>
+        </loop>
+      </match>
+      <match char-value="070702">
+        <field id="arch-crc" section="Archive"/>
+        <exec var-id="newc" set="2"/>
+        <loop until-set="stop">
+          <selection>
+            <match hex-value="3037303730323030303030303030303030303030303030303030303030303030303030303030303030303030303130303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030423030303030303030545241494C455221212100">
+              <field id="final-hdr" limit="121" navigation="End"/>
+              <exec var-id="stop" set="1"/>
+            </match>
+            <match>
+              <block id="newc-file"/>
+            </match>
+          </selection>
+        </loop>
+      </match>
+    </selection>
+    <field id="arch-padding" limit-failed="true"/>
+    <print line="Number of files in archive" var-id="file-count" omit-undefined="true"/>
+  </run>
+  <block-defs>
+    <block-def id="octal-mode">
+      <exec var-id="octal-mode" set="0"/>
+      <match var-id="file-mode" op="bit" num-value="0">
+        <exec var-id="octal-mode" add="1"/>
+      </match>
+      <match var-id="file-mode" op="bit" num-value="1">
+        <exec var-id="octal-mode" add="2"/>
+      </match>
+      <match var-id="file-mode" op="bit" num-value="2">
+        <exec var-id="octal-mode" add="4"/>
+      </match>
+      <match var-id="file-mode" op="bit" num-value="3">
+        <exec var-id="octal-mode" add="10"/>
+      </match>
+      <match var-id="file-mode" op="bit" num-value="4">
+        <exec var-id="octal-mode" add="20"/>
+      </match>
+      <match var-id="file-mode" op="bit" num-value="5">
+        <exec var-id="octal-mode" add="40"/>
+      </match>
+      <match var-id="file-mode" op="bit" num-value="6">
+        <exec var-id="octal-mode" add="100"/>
+      </match>
+      <match var-id="file-mode" op="bit" num-value="7">
+        <exec var-id="octal-mode" add="200"/>
+      </match>
+      <match var-id="file-mode" op="bit" num-value="8">
+        <exec var-id="octal-mode" add="400"/>
+      </match>
+      <match var-id="file-mode" op="bit" num-value="9">
+        <exec var-id="octal-mode" add="1000"/>
+      </match>
+      <match var-id="file-mode" op="bit" num-value="10">
+        <exec var-id="octal-mode" add="2000"/>
+      </match>
+      <match var-id="file-mode" op="bit" num-value="11">
+        <exec var-id="octal-mode" add="4000"/>
+      </match>
+    </block-def>
+    <block-def id="bin-file">
+      <field id="bin-magic" store-var="endianness" navigation="File"/>
+      <field id="bin-dev" tab="File" section="File properties"/>
+      <field id="bin-inode" tab="File"/>
+      <field id="bin-type" tab="File"/>
+      <field id="bin-mode" store-var="file-mode" convert-endianness="true"/>
+      <block id="octal-mode"/>
+      <print line="File mode" var-id="octal-mode" tooltip="File mode in octal format (lower 12 bits of 'File mode and type')" tab="File"/>
+      <field id="bin-mode-type" tab="File"/>
+      <field id="bin-usr" tab="File"/>
+      <field id="bin-grp" tab="File"/>
+      <field id="bin-lnks" tab="File"/>
+      <field id="bin-sdev" tab="File"/>
+      <field id="bin-date" tab="File"/>
+      <field id="bin-name-size" store-var="name-size" convert-endianness="true"/>
+      <print line="File name size" var-id="name-size" tab="File"/>
+      <field id="dummy" limit="2" store-var="shrt" convert-endianness="true"/>
+      <exec var-id="file-size" set="shrt" multiply="65536"/>
+      <exec var-id="size-offset" set="index" add="2"/>
+      <field id="dummy" limit="2" store-var="shrt" convert-endianness="true" offset="size-offset"/>
+      <exec var-id="file-size" add="shrt"/>
+      <field id="bin-file-size"/>
+      <print line="File size" var-id="file-size" tab="File"/>
+      <exec var-id="padding" set="name-size" modulo="2"/>
+      <field id="file-name" limit="name-size" tab="File" insert-tab="true"/>
+      <field id="file-name-pad" limit="padding"/>
+      <exec var-id="padding" set="file-size" modulo="2"/>
+      <field id="contents" limit="file-size"/>
+      <field id="contents-pad" limit="padding"/>
+      <exec var-id="file-count" add="1"/>
+    </block-def>
+    <block-def id="newc-file">
+      <field id="newc-magic" navigation="File"/>
+      <field id="newc-inode" store-var="newc-field" ascii-base="16"/>
+      <print line="inode number" var-id="newc-field" tab="File" section="File properties"/>
+      <field id="newc-unused"/>
+      <field id="newc-type" tab="File"/>
+      <field id="newc-mode" store-var="file-mode" ascii-base="16"/>
+      <block id="octal-mode"/>
+      <print line="File mode" var-id="octal-mode" tooltip="File mode in octal format" tab="File"/>
+      <field id="newc-usr" store-var="newc-field" ascii-base="16"/>
+      <print line="User ID" var-id="newc-field" tab="File"/>
+      <field id="newc-grp" store-var="newc-field" ascii-base="16"/>
+      <print line="Group ID" var-id="newc-field" tab="File"/>
+      <field id="newc-lnks" store-var="newc-field" ascii-base="16"/>
+      <print line="Number of links" var-id="newc-field" tab="File"/>
+      <field id="newc-date" store-var="newc-field" ascii-base="16"/>
+      <print line="Last modification time" var-id="newc-field" tab="File"/>
+      <field id="newc-file-size" store-var="file-size" ascii-base="16"/>
+      <print line="File size" var-id="file-size" tab="File"/>
+      <field id="newc-maj" store-var="newc-field" ascii-base="16"/>
+      <print line="Device major number" var-id="newc-field" tab="File"/>
+      <field id="newc-min" store-var="newc-field" ascii-base="16"/>
+      <print line="Device minor number" var-id="newc-field" tab="File"/>
+      <field id="newc-smaj" store-var="newc-field" ascii-base="16"/>
+      <print line="Character/block special file device major number" var-id="newc-field" tab="File"/>
+      <field id="newc-smin" store-var="newc-field" ascii-base="16"/>
+      <print line="Character/block special file device minor number" var-id="newc-field" tab="File"/>
+      <field id="newc-name-size" store-var="name-size" ascii-base="16"/>
+      <print line="File name size" var-id="name-size" tab="File"/>
+      <selection>
+        <match var-id="newc" op="eq" num-value="1">
+          <field id="newc-chchsum-unused"/>
+        </match>
+        <match>
+          <field id="crc-chcksum"/>
+        </match>
+      </selection>
+      <exec var-id="excess" set="name-size" add="110"/>
+      <exec var-id="excess" modulo="4"/>
+      <selection>
+        <match var-id="excess" op="gt" num-value="0">
+          <exec var-id="padding" set="4" subtract="excess"/>
+        </match>
+        <match>
+          <exec var-id="padding" set="0"/>
+        </match>
+      </selection>
+      <field id="file-name" limit="name-size" tab="File" insert-tab="true"/>
+      <field id="file-name-pad" limit="padding"/>
+      <exec var-id="excess" set="file-size" modulo="4"/>
+      <field id="contents" limit="file-size"/>
+      <match var-id="excess" op="gt" num-value="0">
+        <exec var-id="padding" set="4" subtract="excess"/>
+        <field id="contents-pad" limit="padding"/>
+      </match>
+      <exec var-id="file-count" add="1"/>
+    </block-def>
+  </block-defs>
+  <!-- cpio fields -->
+  <field-defs>
+    <field-def id="dummy" size="available"/>
+    <field-def id="arch-bin-le" name="Archive format" print="Binary format (little-endian)"/>
+    <field-def id="arch-bin-be" name="Archive format" print="Binary format (big-endian)"/>
+    <field-def id="arch-odc" name="Archive format" print="ASCII-encoded octal format"/>
+    <field-def id="arch-newc" name="Archive format" print="ASCII-encoded hexadecimal format"/>
+    <field-def id="arch-crc" name="Archive format" print="ASCII-encoded hexadecimal CRC format"/>
+    <field-def id="file-name" name="File name" color="file-name" size="available" print="text"/>
+    <field-def id="file-name-pad" name="File name padding" color="padding" size="available"/>
+    <field-def id="contents" name="File contents" color="contents" size="available"/>
+    <field-def id="contents-pad" name="File contents padding" color="padding" size="available"/>
+    <field-def id="arch-padding" name="Archive padding" color="padding" size="available"/>
+    <field-def id="final-hdr" name="Special final header" color="final-hdr" size="available"/>
+    <!-- Binary cpio fields -->
+    <field-def id="bin-magic" name="Magic number" color="hdr-flds-1" size="2"/>
+    <field-def id="bin-dev" name="Device number" color="hdr-flds-2" size="2" print="uint"/>
+    <field-def id="bin-inode" name="inode number" color="hdr-flds-1" size="2" print="uint"/>
+    <field-def id="bin-type" name="File type" shift="12" size="2" print="option">
+      <options convert-endianness="true">
+        <option name="FIFO special file" hex-value="0001"/>
+        <option name="Character special file" hex-value="0002"/>
+        <option name="Directory" hex-value="0004"/>
+        <option name="Block special file" hex-value="0006"/>
+        <option name="Regular file" hex-value="0008"/>
+        <option name="Symbolic link" hex-value="000A"/>
+        <option name="Socket" hex-value="000C"/>
+      </options>
+      <tooltip auto="true">File type (upper 4 bits of 'File mode and type')</tooltip>
+    </field-def>
+    <field-def id="bin-mode" mask="FFF" size="2"/>
+    <field-def id="bin-mode-type" name="File mode and type" color="hdr-flds-2" size="2"/>
+    <field-def id="bin-usr" name="User ID" color="hdr-flds-1" size="2" print="uint"/>
+    <field-def id="bin-grp" name="Group ID" color="hdr-flds-2" size="2" print="uint"/>
+    <field-def id="bin-lnks" name="Number of links" color="hdr-flds-1" size="2" print="uint"/>
+    <field-def id="bin-sdev" name="Character/block special file device number" color="hdr-flds-2" size="2" print="uint"/>
+    <field-def id="bin-date" name="Last modification time" color="hdr-flds-1" size="4" print="uint">
+      <tooltip>As Unix time (seconds that have elapsed since 1970-01-01 00:00:00 UTC)</tooltip>
+    </field-def>
+    <field-def id="bin-name-size" name="File name size" color="hdr-flds-2" size="2"/>
+    <field-def id="bin-file-size" name="File size" color="hdr-flds-1" size="4"/>
+    <!-- ASCII-encoded octal cpio fields -->
+    <field-def id="odc-magic" name="Magic number" color="hdr-flds-1" size="6"/>
+    <field-def id="odc-dev" name="Device number" color="hdr-flds-2" size="6"/>
+    <field-def id="odc-inode" name="inode number" color="hdr-flds-1" size="6"/>
+    <field-def id="odc-type" name="File type" color="hdr-flds-2" size="2" print="option">
+      <options>
+        <option name="FIFO special file" hex-value="3031"/>
+        <option name="Character special file" hex-value="3032"/>
+        <option name="Directory" hex-value="3034"/>
+        <option name="Block special file" hex-value="3036"/>
+        <option name="Regular file" hex-value="3130"/>
+        <option name="Symbolic link" hex-value="3132"/>
+        <option name="Socket" hex-value="3134"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <field-def id="odc-mode" name="File mode" color="hdr-flds-1" size="4"/>
+    <field-def id="odc-usr" name="User ID" color="hdr-flds-2" size="6"/>
+    <field-def id="odc-grp" name="Group ID" color="hdr-flds-1" size="6"/>
+    <field-def id="odc-lnks" name="Number of links" color="hdr-flds-2" size="6"/>
+    <field-def id="odc-sdev" name="Character/block special file device number" color="hdr-flds-1" size="6"/>
+    <field-def id="odc-date" name="Last modification time" color="hdr-flds-2" size="11"/>
+    <field-def id="odc-name-size" name="File name size" color="hdr-flds-1" size="6"/>
+    <field-def id="odc-file-size" name="File size" color="hdr-flds-2" size="11"/>
+    <!-- ASCII-encoded hexadecimal cpio fields -->
+    <field-def id="newc-magic" name="Magic number" color="hdr-flds-1" size="6"/>
+    <field-def id="newc-inode" name="inode number" color="hdr-flds-2" size="8"/>
+    <field-def id="newc-unused" name="Unused" color="hdr-flds-1" size="4"/>
+    <field-def id="newc-type" name="File type" color="hdr-flds-2" size="1" print="option">
+      <options>
+        <option name="FIFO special file" hex-value="31"/>
+        <option name="Character special file" hex-value="32"/>
+        <option name="Directory" hex-value="34"/>
+        <option name="Block special file" hex-value="36"/>
+        <option name="Regular file" hex-value="38"/>
+        <option name="Symbolic link" hex-value="41"/>
+        <option name="Socket" hex-value="43"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <field-def id="newc-mode" name="File mode" color="hdr-flds-1" size="3"/>
+    <field-def id="newc-usr" name="User ID" color="hdr-flds-2" size="8"/>
+    <field-def id="newc-grp" name="Group ID" color="hdr-flds-1" size="8"/>
+    <field-def id="newc-lnks" name="Number of links" color="hdr-flds-2" size="8"/>
+    <field-def id="newc-date" name="Last modification time" color="hdr-flds-1" size="8"/>
+    <field-def id="newc-file-size" name="File size" color="hdr-flds-2" size="8"/>
+    <field-def id="newc-maj" name="Device major number" color="hdr-flds-1" size="8"/>
+    <field-def id="newc-min" name="Device minor number" color="hdr-flds-2" size="8"/>
+    <field-def id="newc-smaj" name="Character/block special file device major number" color="hdr-flds-1" size="8"/>
+    <field-def id="newc-smin" name="Character/block special file device minor number" color="hdr-flds-2" size="8"/>
+    <field-def id="newc-name-size" name="File name size" color="hdr-flds-1" size="8"/>
+    <field-def id="newc-chchsum-unused" name="Unused" color="hdr-flds-2" size="8"/>
+    <field-def id="crc-chcksum" name="Checksum" color="hdr-flds-2" size="8"/>
+  </field-defs>
+  <details><![CDATA[
+<b>Recognized cpio archive formats</b>:
+    - Binary format (little-endian and big-endian)
+    - ASCII-encoded octal format (also called "old character" or "odc")
+    - ASCII-encoded hexadecimal format (the "new" ASCII format)
+    - ASCII-encoded hexadecimal CRC format (like the "new" ASCII format but the checksum field is actually used)
+
+The following checks are <span foreground="red">not implemented</span>:
+    - The checksum is correct (when present)
+  ]]></details>
+</format>

@@ -18,6 +18,8 @@
 
 #include "chirurgien-utils.h"
 
+#include "chirurgien-globals.h"
+
 
 void
 chirurgien_utils_hex_print (gchar        *destination,
@@ -27,7 +29,6 @@ chirurgien_utils_hex_print (gchar        *destination,
                             gsize         raw_source_size,
                             gsize         line_break)
 {
-    const gchar * const hex_chars = "0123456789ABCDEF";
     gsize raw_index, formatted_index;
 
     for (raw_index = start_offset, formatted_index = 0;

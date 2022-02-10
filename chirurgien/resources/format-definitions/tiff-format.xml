@@ -1,0 +1,2709 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<format name="Tag Image File Format" short-name="TIFF">
+  <endianness var-id="endianness">
+    <little-endian hex-value="4949"/>
+    <big-endian hex-value="4D4D"/>
+  </endianness>
+  <magic>
+    <signature>
+      <match hex-value="49492A00"/>
+    </signature>
+    <signature>
+      <match hex-value="4D4D002A"/>
+    </signature>
+  </magic>
+  <colors>
+    <color id="ifd" name="Image File Directory (IFD)" index="0" background="true"/>
+    <color id="tag-endian" name="Tag identifier or endianness" index="1" background="true"/>
+    <color id="val-offset-1" name="Tag value/offset or tag data at offset" index="2" background="true"/>
+    <color id="val-offset-2" name="Start of tag offset data" index="3" background="true"/>
+    <color id="field-type" name="Tag field type" index="4" background="true"/>
+    <color id="count" name="Tag count (length)" index="5" background="true"/>
+    <color id="error-1" name="Error" index="6" background="false"/>
+    <color id="error-2" name="Error" index="7" background="false"/>
+    <color id="unused" name="Unused data" index="8" background="false"/>
+  </colors>
+  <run>
+    <field id="endian" store-var="endianness" section="Endianness" navigation="End."/>
+    <field id="tiff-id"/>
+    <field id="ifd-offset" store-var="ifd-offset" convert-endianness="true" section="Standard TIFF tags"/>
+    <exec var-id="index" set="ifd-offset"/>
+    <field id="ifd-ent" store-var="ifd-entries" convert-endianness="true" navigation="IFD"/>
+    <loop until-set="stop">
+      <block id="tiff-tags"/>
+      <selection>
+        <match hex-value="00000000">
+          <field id="ifd-end"/>
+          <exec var-id="stop" set="1"/>
+        </match>
+        <match>
+          <field id="ifd-offset" store-var="ifd-offset" convert-endianness="true"/>
+          <exec var-id="index" set="ifd-offset"/>
+          <field id="ifd-ent" store-var="ifd-entries" convert-endianness="true" navigation="IFD"/>
+        </match>
+      </selection>
+    </loop>
+    <match var-id="jpeg-offset" op="def">
+      <match var-id="jpeg-len" op="def">
+        <field id="embd-jpeg" limit="jpeg-len" offset="jpeg-offset" additional-color="val-offset-2"/>
+      </match>
+    </match>
+    <match var-id="strp-off-offset" op="def">
+      <match var-id="strp-byte-offset" op="def">
+        <exec var-id="loop-strp" set="1"/>
+        <loop until-set="loop-strp" num-value="0">
+          <match var-id="strp-off-count" op="gt" num-value="0">
+            <match var-id="strp-byte-count" op="gt" num-value="0">
+              <selection>
+                <match var-id="strp-off-type" hex-value="0003" convert-endianness="true">
+                  <field id="dummy" limit="2" store-var="strp-off" offset="strp-off-offset" convert-endianness="true"/>
+                  <exec var-id="strp-off-offset" add="2"/>
+                </match>
+                <match var-id="strp-off-type" hex-value="0004" convert-endianness="true">
+                  <field id="dummy" limit="4" store-var="strp-off" offset="strp-off-offset" convert-endianness="true"/>
+                  <exec var-id="strp-off-offset" add="4"/>
+                </match>
+                <match>
+                  <exec var-id="loop-strp" subtract="1"/>
+                </match>
+              </selection>
+              <selection>
+                <match var-id="strp-byte-type" hex-value="0003" convert-endianness="true">
+                  <field id="dummy" limit="2" store-var="strp-byte" offset="strp-byte-offset" convert-endianness="true"/>
+                  <exec var-id="strp-byte-offset" add="2"/>
+                </match>
+                <match var-id="strp-byte-type" hex-value="0004" convert-endianness="true">
+                  <field id="dummy" limit="4" store-var="strp-byte" offset="strp-byte-offset" convert-endianness="true"/>
+                  <exec var-id="strp-byte-offset" add="4"/>
+                </match>
+                <match>
+                  <exec var-id="loop-strp" subtract="1"/>
+                </match>
+              </selection>
+              <match var-id="loop-strp" op="gt" num-value="0">
+                <field id="img-strp" limit="strp-byte" offset="strp-off" additional-color="val-offset-2" navigation="Strip"/>
+                <exec var-id="strp-off-count" subtract="1"/>
+                <exec var-id="strp-byte-count" subtract="1"/>
+              </match>
+            </match>
+          </match>
+          <match var-id="strp-off-count" op="eq" num-value="0">
+            <exec var-id="loop-strp" subtract="1"/>
+          </match>
+          <match var-id="strp-byte-count" op="eq" num-value="0">
+            <exec var-id="loop-strp" subtract="1"/>
+          </match>
+        </loop>
+      </match>
+    </match>
+    <print tab="ASCII tags" insert-tab="true"/>
+    <print tab="Exif tags" insert-tab="true"/>
+    <print tab="Exif ASCII tags" insert-tab="true"/>
+    <print tab="GPSInfo tags" insert-tab="true"/>
+    <print tab="GPSInfo ASCII tags" insert-tab="true"/>
+  </run>
+  <block-defs>
+    <block-def id="byte-tag">
+      <selection>
+        <match hex-value="0001" convert-endianness="true">
+          <field id="byte"/>
+        </match>
+        <match>
+          <field id="bad-type"/>
+        </match>
+      </selection>
+      <field id="tag-cnt" store-var="count" convert-endianness="true"/>
+    </block-def>
+    <block-def id="ascii-tag">
+      <selection>
+        <match hex-value="0002" convert-endianness="true">
+          <field id="ascii"/>
+        </match>
+        <match>
+          <field id="bad-type"/>
+        </match>
+      </selection>
+      <field id="tag-cnt" store-var="count" convert-endianness="true"/>
+    </block-def>
+    <block-def id="shrt-tag">
+      <selection>
+        <match hex-value="0003" convert-endianness="true">
+          <field id="shrt"/>
+        </match>
+        <match>
+          <field id="bad-type"/>
+        </match>
+      </selection>
+      <field id="tag-cnt" store-var="count" convert-endianness="true"/>
+    </block-def>
+    <block-def id="long-tag">
+      <selection>
+        <match hex-value="0004" convert-endianness="true">
+          <field id="long"/>
+        </match>
+        <match>
+          <field id="bad-type"/>
+        </match>
+      </selection>
+      <field id="tag-cnt" store-var="count" convert-endianness="true"/>
+    </block-def>
+    <block-def id="shrt-long-tag">
+      <selection>
+        <match hex-value="0003" convert-endianness="true">
+          <field id="shrt" store-var="shrt-long"/>
+        </match>
+        <match hex-value="0004" convert-endianness="true">
+          <field id="long" store-var="shrt-long"/>
+        </match>
+        <match>
+          <field id="bad-type" store-var="shrt-long"/>
+        </match>
+      </selection>
+      <field id="tag-cnt" store-var="count" convert-endianness="true"/>
+    </block-def>
+    <block-def id="rtnl-tag">
+      <selection>
+        <match hex-value="0005" convert-endianness="true">
+          <field id="rtnl"/>
+        </match>
+        <match>
+          <field id="bad-type"/>
+        </match>
+      </selection>
+      <field id="tag-cnt" store-var="count" convert-endianness="true"/>
+    </block-def>
+    <block-def id="undef-tag">
+      <selection>
+        <match hex-value="0007" convert-endianness="true">
+          <field id="undef"/>
+        </match>
+        <match>
+          <field id="bad-type"/>
+        </match>
+      </selection>
+      <field id="tag-cnt" store-var="count" convert-endianness="true"/>
+    </block-def>
+    <block-def id="srtnl-tag">
+      <selection>
+        <match hex-value="000A" convert-endianness="true">
+          <field id="srtnl"/>
+        </match>
+        <match>
+          <field id="bad-type"/>
+        </match>
+      </selection>
+      <field id="tag-cnt" store-var="count" convert-endianness="true"/>
+    </block-def>
+    <block-def id="read-rtnl">
+      <field id="dummy" limit="4" store-var="rtnl-val" convert-endianness="true" offset="tag-offset"/>
+      <exec var-id="tag-offset" add="4"/>
+      <field id="dummy" limit="4" store-var="rtnl-div" convert-endianness="true" offset="tag-offset"/>
+      <exec var-id="tag-offset" add="4"/>
+    </block-def>
+    <block-def id="rtnl-val">
+      <block id="read-rtnl"/>
+      <exec var-id="rtnl-val" divide="rtnl-div"/>
+    </block-def>
+    <block-def id="srtnl-val">
+      <block id="read-rtnl"/>
+      <exec var-id="rtnl-val" divide="rtnl-div" signed="true"/>
+    </block-def>
+    <block-def id="tiff-tags">
+      <loop until-set="ifd-entries" num-value="0">
+        <selection>
+          <match hex-value="00FE" convert-endianness="true">
+            <field id="tag-00FE"/>
+            <block id="long-tag"/>
+            <field id="data-00FE" store-var="00FE-flags" convert-endianness="true"/>
+            <match var-id="00FE-flags" op="bit" num-value="0">
+              <field id="data-00FE-1"/>
+            </match>
+            <match var-id="00FE-flags" op="bit" num-value="1">
+              <field id="data-00FE-2"/>
+            </match>
+            <match var-id="00FE-flags" op="bit" num-value="2">
+              <field id="data-00FE-3"/>
+            </match>
+          </match>
+          <match hex-value="00FF" convert-endianness="true">
+            <field id="tag-00FF"/>
+            <block id="shrt-tag"/>
+            <field id="data-00FF"/>
+            <field id="unused-data" limit="2"/>
+          </match>
+          <match hex-value="0100" convert-endianness="true">
+            <field id="tag-0100"/>
+            <block id="shrt-long-tag"/>
+            <selection>
+              <match var-id="shrt-long" hex-value="0003" convert-endianness="true">
+                <field id="data-0100" limit="2"/>
+                <field id="unused-data" limit="2"/>
+              </match>
+              <match var-id="shrt-long" hex-value="0004" convert-endianness="true">
+                <field id="data-0100" limit="4"/>
+              </match>
+              <match>
+                <field id="bad-data"/>
+              </match>
+            </selection>
+          </match>
+          <match hex-value="0101" convert-endianness="true">
+            <field id="tag-0101"/>
+            <block id="shrt-long-tag"/>
+            <selection>
+              <match var-id="shrt-long" hex-value="0003" convert-endianness="true">
+                <field id="data-0101" limit="2"/>
+                <field id="unused-data" limit="2"/>
+              </match>
+              <match var-id="shrt-long" hex-value="0004" convert-endianness="true">
+                <field id="data-0101" limit="4"/>
+              </match>
+              <match>
+                <field id="bad-data"/>
+              </match>
+            </selection>
+          </match>
+          <match hex-value="0102" convert-endianness="true">
+            <field id="tag-0102"/>
+            <block id="shrt-tag"/>
+            <selection>
+              <match var-id="count" op="gt" num-value="2">
+                <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+                <loop until-set="count" num-value="0">
+                  <field id="data-0102" offset="tag-offset" additional-color="val-offset-2"/>
+                  <exec var-id="tag-offset" add="2"/>
+                  <exec var-id="count" subtract="1"/>
+                </loop>
+              </match>
+              <match var-id="count" op="eq" num-value="2">
+                <field id="data-0102"/>
+                <field id="data-0102"/>
+              </match>
+              <match>
+                <field id="data-0102"/>
+                <field id="unused-data" limit="2"/>
+              </match>
+            </selection>
+          </match>
+          <match hex-value="0103" convert-endianness="true">
+            <field id="tag-0103"/>
+            <block id="shrt-tag"/>
+            <field id="data-0103"/>
+            <field id="unused-data" limit="2"/>
+          </match>
+          <match hex-value="0106" convert-endianness="true">
+            <field id="tag-0106"/>
+            <block id="shrt-tag"/>
+            <field id="data-0106"/>
+            <field id="unused-data" limit="2"/>
+          </match>
+          <match hex-value="0107" convert-endianness="true">
+            <field id="tag-0107"/>
+            <block id="shrt-tag"/>
+            <field id="data-0107"/>
+            <field id="unused-data" limit="2"/>
+          </match>
+          <match hex-value="0108" convert-endianness="true">
+            <field id="tag-0108"/>
+            <block id="shrt-tag"/>
+            <field id="data-0108"/>
+            <field id="unused-data" limit="2"/>
+          </match>
+          <match hex-value="0109" convert-endianness="true">
+            <field id="tag-0109"/>
+            <block id="shrt-tag"/>
+            <field id="data-0109"/>
+            <field id="unused-data" limit="2"/>
+          </match>
+          <match hex-value="010A" convert-endianness="true">
+            <field id="tag-010A"/>
+            <block id="shrt-tag"/>
+            <field id="data-010A"/>
+            <field id="unused-data" limit="2"/>
+          </match>
+          <match hex-value="010D" convert-endianness="true">
+            <field id="tag-010D"/>
+            <block id="ascii-tag"/>
+            <selection>
+              <match var-id="count" op="gt" num-value="4">
+                <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+                <field id="data-010D" limit="count" tab="ASCII tags" offset="tag-offset" additional-color="val-offset-2"/>
+              </match>
+              <match>
+                <exec var-id="tag-unused" set="4" subtract="count"/>
+                <field id="data-010D" limit="count" tab="ASCII tags"/>
+                <field id="unused-data" limit="tag-unused"/>
+              </match>
+            </selection>
+          </match>
+          <match hex-value="010E" convert-endianness="true">
+            <field id="tag-010E"/>
+            <block id="ascii-tag"/>
+            <selection>
+              <match var-id="count" op="gt" num-value="4">
+                <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+                <field id="data-010E" limit="count" tab="ASCII tags" offset="tag-offset" additional-color="val-offset-2"/>
+              </match>
+              <match>
+                <exec var-id="tag-unused" set="4" subtract="count"/>
+                <field id="data-010E" limit="count" tab="ASCII tags"/>
+                <field id="unused-data" limit="tag-unused"/>
+              </match>
+            </selection>
+          </match>
+          <match hex-value="010F" convert-endianness="true">
+            <field id="tag-010F"/>
+            <block id="ascii-tag"/>
+            <selection>
+              <match var-id="count" op="gt" num-value="4">
+                <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+                <field id="data-010F" limit="count" tab="ASCII tags" offset="tag-offset" additional-color="val-offset-2"/>
+              </match>
+              <match>
+                <exec var-id="tag-unused" set="4" subtract="count"/>
+                <field id="data-010F" limit="count" tab="ASCII tags"/>
+                <field id="unused-data" limit="tag-unused"/>
+              </match>
+            </selection>
+          </match>
+          <match hex-value="0110" convert-endianness="true">
+            <field id="tag-0110"/>
+            <block id="ascii-tag"/>
+            <selection>
+              <match var-id="count" op="gt" num-value="4">
+                <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+                <field id="data-0110" limit="count" tab="ASCII tags" offset="tag-offset" additional-color="val-offset-2"/>
+              </match>
+              <match>
+                <exec var-id="tag-unused" set="4" subtract="count"/>
+                <field id="data-0110" limit="count" tab="ASCII tags"/>
+                <field id="unused-data" limit="tag-unused"/>
+              </match>
+            </selection>
+          </match>
+          <match hex-value="0111" convert-endianness="true">
+            <field id="tag-0111"/>
+            <selection>
+              <match hex-value="0003" convert-endianness="true">
+                <field id="shrt" store-var="strp-off-type"/>
+                <field id="tag-cnt" store-var="strp-off-count" convert-endianness="true"/>
+                <selection>
+                  <match var-id="strp-off-count" op="gt" num-value="2">
+                    <field id="tag-offset" store-var="strp-off-offset" convert-endianness="true"/>
+                    <exec var-id="count" set="strp-off-count"/>
+                    <exec var-id="tag-offset" set="strp-off-offset"/>
+                    <loop until-set="count" num-value="0">
+                      <field id="data-0111" limit="2" offset="tag-offset" additional-color="val-offset-2"/>
+                      <exec var-id="tag-offset" add="2"/>
+                      <exec var-id="count" subtract="1"/>
+                    </loop>
+                  </match>
+                  <match var-id="strp-off-count" op="eq" num-value="2">
+                    <exec var-id="strp-off-offset" set="index"/>
+                    <field id="data-0111" limit="2"/>
+                    <field id="data-0111" limit="2"/>
+                  </match>
+                  <match>
+                    <exec var-id="strp-off-offset" set="index"/>
+                    <field id="data-0111" limit="2"/>
+                    <field id="unused-data" limit="2"/>
+                  </match>
+                </selection>
+              </match>
+              <match hex-value="0004" convert-endianness="true">
+                <field id="long" store-var="strp-off-type"/>
+                <field id="tag-cnt" store-var="strp-off-count" convert-endianness="true"/>
+                <selection>
+                  <match var-id="strp-off-count" op="gt" num-value="1">
+                    <field id="tag-offset" store-var="strp-off-offset" convert-endianness="true"/>
+                    <exec var-id="count" set="strp-off-count"/>
+                    <exec var-id="tag-offset" set="strp-off-offset"/>
+                    <loop until-set="count" num-value="0">
+                      <field id="data-0111" limit="4" offset="tag-offset" additional-color="val-offset-2"/>
+                      <exec var-id="tag-offset" add="4"/>
+                      <exec var-id="count" subtract="1"/>
+                    </loop>
+                  </match>
+                  <match>
+                    <exec var-id="strp-off-offset" set="index"/>
+                    <field id="data-0111" limit="4"/>
+                  </match>
+                </selection>
+              </match>
+              <match>
+                <field id="bad-type"/>
+                <field id="tag-cnt"/>
+                <field id="bad-data"/>
+              </match>
+            </selection>
+          </match>
+          <match hex-value="0112" convert-endianness="true">
+            <field id="tag-0112"/>
+            <block id="shrt-tag"/>
+            <field id="data-0112"/>
+            <field id="unused-data" limit="2"/>
+          </match>
+          <match hex-value="0115" convert-endianness="true">
+            <field id="tag-0115"/>
+            <block id="shrt-tag"/>
+            <field id="data-0115"/>
+            <field id="unused-data" limit="2"/>
+          </match>
+          <match hex-value="0116" convert-endianness="true">
+            <field id="tag-0116"/>
+            <block id="shrt-long-tag"/>
+            <selection>
+              <match var-id="shrt-long" hex-value="0003" convert-endianness="true">
+                <field id="data-0116" limit="2"/>
+                <field id="unused-data" limit="2"/>
+              </match>
+              <match var-id="shrt-long" hex-value="0004" convert-endianness="true">
+                <field id="data-0116" limit="4"/>
+              </match>
+              <match>
+                <field id="bad-data"/>
+              </match>
+            </selection>
+          </match>
+          <match hex-value="0117" convert-endianness="true">
+            <field id="tag-0117"/>
+            <selection>
+              <match hex-value="0003" convert-endianness="true">
+                <field id="shrt" store-var="strp-byte-type"/>
+                <field id="tag-cnt" store-var="strp-byte-count" convert-endianness="true"/>
+                <selection>
+                  <match var-id="strp-byte-count" op="gt" num-value="2">
+                    <field id="tag-offset" store-var="strp-byte-offset" convert-endianness="true"/>
+                    <exec var-id="count" set="strp-byte-count"/>
+                    <exec var-id="tag-offset" set="strp-byte-offset"/>
+                    <loop until-set="count" num-value="0">
+                      <field id="data-0117" limit="2" offset="tag-offset" additional-color="val-offset-2"/>
+                      <exec var-id="tag-offset" add="2"/>
+                      <exec var-id="count" subtract="1"/>
+                    </loop>
+                  </match>
+                  <match var-id="strp-byte-count" op="eq" num-value="2">
+                    <exec var-id="strp-byte-offset" set="index"/>
+                    <field id="data-0117" limit="2"/>
+                    <field id="data-0117" limit="2"/>
+                  </match>
+                  <match>
+                    <exec var-id="strp-byte-offset" set="index"/>
+                    <field id="data-0117" limit="2"/>
+                    <field id="unused-data" limit="2"/>
+                  </match>
+                </selection>
+              </match>
+              <match hex-value="0004" convert-endianness="true">
+                <field id="long" store-var="strp-byte-type"/>
+                <field id="tag-cnt" store-var="strp-byte-count" convert-endianness="true"/>
+                <selection>
+                  <match var-id="strp-byte-count" op="gt" num-value="1">
+                    <field id="tag-offset" store-var="strp-byte-offset" convert-endianness="true"/>
+                    <exec var-id="count" set="strp-byte-count"/>
+                    <exec var-id="tag-offset" set="strp-byte-offset"/>
+                    <loop until-set="count" num-value="0">
+                      <field id="data-0117" limit="4" offset="tag-offset" additional-color="val-offset-2"/>
+                      <exec var-id="tag-offset" add="4"/>
+                      <exec var-id="count" subtract="1"/>
+                    </loop>
+                  </match>
+                  <match>
+                    <exec var-id="strp-byte-offset" set="index"/>
+                    <field id="data-0117" limit="4"/>
+                  </match>
+                </selection>
+              </match>
+              <match>
+                <field id="bad-type"/>
+                <field id="tag-cnt"/>
+                <field id="bad-data"/>
+              </match>
+            </selection>
+          </match>
+          <match hex-value="0118" convert-endianness="true">
+            <field id="tag-0118"/>
+            <block id="shrt-tag"/>
+            <selection>
+              <match var-id="count" op="gt" num-value="2">
+                <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+                <loop until-set="count" num-value="0">
+                  <field id="data-0118" offset="tag-offset" additional-color="val-offset-2"/>
+                  <exec var-id="tag-offset" add="2"/>
+                  <exec var-id="count" subtract="1"/>
+                </loop>
+              </match>
+              <match var-id="count" op="eq" num-value="2">
+                <field id="data-0118"/>
+                <field id="data-0118"/>
+              </match>
+              <match>
+                <field id="data-0118"/>
+                <field id="unused-data" limit="2"/>
+              </match>
+            </selection>
+          </match>
+          <match hex-value="0119" convert-endianness="true">
+            <field id="tag-0119"/>
+            <block id="shrt-tag"/>
+            <selection>
+              <match var-id="count" op="gt" num-value="2">
+                <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+                <loop until-set="count" num-value="0">
+                  <field id="data-0119" offset="tag-offset" additional-color="val-offset-2"/>
+                  <exec var-id="tag-offset" add="2"/>
+                  <exec var-id="count" subtract="1"/>
+                </loop>
+              </match>
+              <match var-id="count" op="eq" num-value="2">
+                <field id="data-0119"/>
+                <field id="data-0119"/>
+              </match>
+              <match>
+                <field id="data-0119"/>
+                <field id="unused-data" limit="2"/>
+              </match>
+            </selection>
+          </match>
+          <match hex-value="011A" convert-endianness="true">
+            <field id="tag-011A"/>
+            <block id="rtnl-tag"/>
+            <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+            <field id="data-011A" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="XResolution" var-id="rtnl-val" tooltip="Number of pixels per ResolutionUnit in the ImageWidth direction"/>
+          </match>
+          <match hex-value="011B" convert-endianness="true">
+            <field id="tag-011B"/>
+            <block id="rtnl-tag"/>
+            <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+            <field id="data-011B" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="YResolution" var-id="rtnl-val" tooltip="Number of pixels per ResolutionUnit in the ImageLength direction"/>
+          </match>
+          <match hex-value="011C" convert-endianness="true">
+            <field id="tag-011C"/>
+            <block id="shrt-tag"/>
+            <field id="data-011C"/>
+            <field id="unused-data" limit="2"/>
+          </match>
+          <match hex-value="011D" convert-endianness="true">
+            <field id="tag-011D"/>
+            <block id="ascii-tag"/>
+            <selection>
+              <match var-id="count" op="gt" num-value="4">
+                <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+                <field id="data-011D" limit="count" tab="ASCII tags" offset="tag-offset" additional-color="val-offset-2"/>
+              </match>
+              <match>
+                <exec var-id="tag-unused" set="4" subtract="count"/>
+                <field id="data-011D" limit="count" tab="ASCII tags"/>
+                <field id="unused-data" limit="tag-unused"/>
+              </match>
+            </selection>
+          </match>
+          <match hex-value="011E" convert-endianness="true">
+            <field id="tag-011E"/>
+            <block id="rtnl-tag"/>
+            <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+            <field id="data-011E" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="XPosition" var-id="rtnl-val" tooltip="The X offset in ResolutionUnits of the left side of the image"/>
+          </match>
+          <match hex-value="011F" convert-endianness="true">
+            <field id="tag-011F"/>
+            <block id="rtnl-tag"/>
+            <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+            <field id="data-011F" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="YPosition" var-id="rtnl-val" tooltip="The Y offset in ResolutionUnits of the top of the image"/>
+          </match>
+          <match hex-value="0128" convert-endianness="true">
+            <field id="tag-0128"/>
+            <block id="shrt-tag"/>
+            <field id="data-0128"/>
+            <field id="unused-data" limit="2"/>
+          </match>
+          <match hex-value="0129" convert-endianness="true">
+            <field id="tag-0129"/>
+            <block id="shrt-tag"/>
+            <field id="data-0129-1"/>
+            <field id="data-0129-2"/>
+          </match>
+          <match hex-value="0131" convert-endianness="true">
+            <field id="tag-0131"/>
+            <block id="ascii-tag"/>
+            <selection>
+              <match var-id="count" op="gt" num-value="4">
+                <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+                <field id="data-0131" limit="count" tab="ASCII tags" offset="tag-offset" additional-color="val-offset-2"/>
+              </match>
+              <match>
+                <exec var-id="tag-unused" set="4" subtract="count"/>
+                <field id="data-0131" limit="count" tab="ASCII tags"/>
+                <field id="unused-data" limit="tag-unused"/>
+              </match>
+            </selection>
+          </match>
+          <match hex-value="0132" convert-endianness="true">
+            <field id="tag-0132"/>
+            <block id="ascii-tag"/>
+            <selection>
+              <match var-id="count" op="gt" num-value="4">
+                <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+                <field id="data-0132" limit="count" tab="ASCII tags" offset="tag-offset" additional-color="val-offset-2"/>
+              </match>
+              <match>
+                <exec var-id="tag-unused" set="4" subtract="count"/>
+                <field id="data-0132" limit="count" tab="ASCII tags"/>
+                <field id="unused-data" limit="tag-unused"/>
+              </match>
+            </selection>
+          </match>
+          <match hex-value="013B" convert-endianness="true">
+            <field id="tag-013B"/>
+            <block id="ascii-tag"/>
+            <selection>
+              <match var-id="count" op="gt" num-value="4">
+                <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+                <field id="data-013B" limit="count" tab="ASCII tags" offset="tag-offset" additional-color="val-offset-2"/>
+              </match>
+              <match>
+                <exec var-id="tag-unused" set="4" subtract="count"/>
+                <field id="data-013B" limit="count" tab="ASCII tags"/>
+                <field id="unused-data" limit="tag-unused"/>
+              </match>
+            </selection>
+          </match>
+          <match hex-value="013C" convert-endianness="true">
+            <field id="tag-013C"/>
+            <block id="ascii-tag"/>
+            <selection>
+              <match var-id="count" op="gt" num-value="4">
+                <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+                <field id="data-013C" limit="count" tab="ASCII tags" offset="tag-offset" additional-color="val-offset-2"/>
+              </match>
+              <match>
+                <exec var-id="tag-unused" set="4" subtract="count"/>
+                <field id="data-013C" limit="count" tab="ASCII tags"/>
+                <field id="unused-data" limit="tag-unused"/>
+              </match>
+            </selection>
+          </match>
+          <match hex-value="013D" convert-endianness="true">
+            <field id="tag-013D"/>
+            <block id="shrt-tag"/>
+            <field id="data-013D"/>
+            <field id="unused-data" limit="2"/>
+          </match>
+          <match hex-value="013E" convert-endianness="true">
+            <field id="tag-013E"/>
+            <block id="rtnl-tag"/>
+            <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+            <field id="data-013E-1" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="WhitePoint (x)" var-id="rtnl-val" tooltip="The values are described using the 1931 CIE xy chromaticity diagram"/>
+            <field id="data-013E-2" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="WhitePoint (y)" var-id="rtnl-val" tooltip="The values are described using the 1931 CIE xy chromaticity diagram"/>
+          </match>
+          <match hex-value="013F" convert-endianness="true">
+            <field id="tag-013F"/>
+            <block id="rtnl-tag"/>
+            <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+            <field id="data-013F-1" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="PrimaryChromaticities (Red x)" var-id="rtnl-val" tooltip="The values are described using the 1931 CIE xy chromaticity diagram"/>
+            <field id="data-013F-2" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="PrimaryChromaticities (Red y)" var-id="rtnl-val" tooltip="The values are described using the 1931 CIE xy chromaticity diagram"/>
+            <field id="data-013F-3" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="PrimaryChromaticities (Green x)" var-id="rtnl-val" tooltip="The values are described using the 1931 CIE xy chromaticity diagram"/>
+            <field id="data-013F-4" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="PrimaryChromaticities (Green y)" var-id="rtnl-val" tooltip="The values are described using the 1931 CIE xy chromaticity diagram"/>
+            <field id="data-013F-5" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="PrimaryChromaticities (Blue x)" var-id="rtnl-val" tooltip="The values are described using the 1931 CIE xy chromaticity diagram"/>
+            <field id="data-013F-6" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="PrimaryChromaticities (Blue y)" var-id="rtnl-val" tooltip="The values are described using the 1931 CIE xy chromaticity diagram"/>
+          </match>
+          <match hex-value="0201" convert-endianness="true">
+            <field id="tag-0201"/>
+            <block id="long-tag"/>
+            <field id="data-0201" store-var="jpeg-offset" convert-endianness="true"/>
+          </match>
+          <match hex-value="0202" convert-endianness="true">
+            <field id="tag-0202"/>
+            <block id="long-tag"/>
+            <field id="data-0202" store-var="jpeg-len" convert-endianness="true"/>
+          </match>
+          <match hex-value="0211" convert-endianness="true">
+            <field id="tag-0211"/>
+            <block id="rtnl-tag"/>
+            <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+            <field id="data-0211-1" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="YCbCrCoefficients (LumaRed)" var-id="rtnl-val" tooltip="Coefficients used to compute luminance Y"/>
+            <field id="data-0211-2" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="YCbCrCoefficients (LumaGreen)" var-id="rtnl-val" tooltip="Coefficients used to compute luminance Y"/>
+            <field id="data-0211-3" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="YCbCrCoefficients (LumaBlue)" var-id="rtnl-val" tooltip="Coefficients used to compute luminance Y"/>
+          </match>
+          <match hex-value="0212" convert-endianness="true">
+            <field id="tag-0212"/>
+            <block id="shrt-tag"/>
+            <field id="data-0212-1"/>
+            <field id="data-0212-2"/>
+          </match>
+          <match hex-value="0213" convert-endianness="true">
+            <field id="tag-0213"/>
+            <block id="shrt-tag"/>
+            <field id="data-0213"/>
+            <field id="unused-data" limit="2"/>
+          </match>
+          <match hex-value="0214" convert-endianness="true">
+            <field id="tag-0214"/>
+            <block id="rtnl-tag"/>
+            <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+            <field id="data-0214-1" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="ReferenceBlackWhite footroom (component 1)" var-id="rtnl-val" tooltip="Footroom for component 1"/>
+            <field id="data-0214-2" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="ReferenceBlackWhite headroom (component 1)" var-id="rtnl-val" tooltip="Headroom for component 1"/>
+            <field id="data-0214-3" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="ReferenceBlackWhite footroom (component 2)" var-id="rtnl-val" tooltip="Footroom for component 2"/>
+            <field id="data-0214-4" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="ReferenceBlackWhite headroom (component 2)" var-id="rtnl-val" tooltip="Headroom for component 2"/>
+            <field id="data-0214-5" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="ReferenceBlackWhite footroom (component 3)" var-id="rtnl-val" tooltip="Footroom for component 3"/>
+            <field id="data-0214-6" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="ReferenceBlackWhite headroom (component 3)" var-id="rtnl-val" tooltip="Headroom for component 3"/>
+          </match>
+          <match hex-value="8298" convert-endianness="true">
+            <field id="tag-8298"/>
+            <block id="ascii-tag"/>
+            <selection>
+              <match var-id="count" op="gt" num-value="4">
+                <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+                <field id="data-8298" limit="count" tab="ASCII tags" offset="tag-offset" additional-color="val-offset-2"/>
+              </match>
+              <match>
+                <exec var-id="tag-unused" set="4" subtract="count"/>
+                <field id="data-8298" limit="count" tab="ASCII tags"/>
+                <field id="unused-data" limit="tag-unused"/>
+              </match>
+            </selection>
+          </match>
+          <match hex-value="8769" convert-endianness="true">
+            <field id="tag-8769"/>
+            <block id="long-tag"/>
+            <field id="data-8769" store-var="ifd-offset" convert-endianness="true" tab="Exif tags" section="Exif-specific tags"/>
+            <exec var-id="save" set="index"/>
+            <exec var-id="index" set="ifd-offset"/>
+            <field id="ifd-ent" store-var="exf-ifd-entries" convert-endianness="true" navigation="Exif IFD"/>
+            <exec var-id="exf-stop" set="0"/>
+            <loop until-set="exf-stop" num-value="1">
+              <block id="exf-tags"/>
+              <selection>
+                <match hex-value="00000000">
+                  <field id="ifd-end"/>
+                  <exec var-id="exf-stop" set="1"/>
+                </match>
+                <match>
+                  <field id="ifd-offset" store-var="ifd-offset" convert-endianness="true"/>
+                  <exec var-id="index" set="ifd-offset"/>
+                  <field id="ifd-ent" store-var="exf-ifd-entries" convert-endianness="true" navigation="Exif IFD"/>
+                </match>
+              </selection>
+            </loop>
+            <exec var-id="index" set="save"/>
+          </match>
+          <match hex-value="8825" convert-endianness="true">
+            <field id="tag-8825"/>
+            <block id="long-tag"/>
+            <field id="data-8825" store-var="ifd-offset" convert-endianness="true" tab="GPSInfo tags" section="Exif GPSInfo-specific tags"/>
+            <exec var-id="save" set="index"/>
+            <exec var-id="index" set="ifd-offset"/>
+            <field id="ifd-ent" store-var="gps-ifd-entries" convert-endianness="true" navigation="GPSInfo IFD"/>
+            <exec var-id="gps-stop" set="0"/>
+            <loop until-set="gps-stop" num-value="1">
+              <block id="gpsinfo-tags"/>
+              <selection>
+                <match hex-value="00000000">
+                  <field id="ifd-end"/>
+                  <exec var-id="gps-stop" set="1"/>
+                </match>
+                <match>
+                  <field id="ifd-offset" store-var="ifd-offset" convert-endianness="true"/>
+                  <exec var-id="index" set="ifd-offset"/>
+                  <field id="ifd-ent" store-var="gps-ifd-entries" convert-endianness="true" navigation="GPSInfo IFD"/>
+                </match>
+              </selection>
+            </loop>
+            <exec var-id="index" set="save"/>
+          </match>
+          <match>
+            <field id="tag-error"/>
+            <field id="bad-type"/>
+            <field id="tag-cnt"/>
+            <field id="bad-data"/>
+          </match>
+        </selection>
+        <exec var-id="ifd-entries" subtract="1"/>
+      </loop>
+    </block-def>
+    <block-def id="exf-tags">
+      <loop until-set="exf-ifd-entries" num-value="0">
+        <selection>
+          <match hex-value="829A" convert-endianness="true">
+            <field id="tag-exf-829A"/>
+            <block id="rtnl-tag"/>
+            <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+            <field id="data-exf-829A" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="ExposureTime" var-id="rtnl-val" tooltip="Exposure time, given in seconds" tab="Exif tags"/>
+          </match>
+          <match hex-value="829D" convert-endianness="true">
+            <field id="tag-exf-829D"/>
+            <block id="rtnl-tag"/>
+            <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+            <field id="data-exf-829D" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="FNumber" var-id="rtnl-val" tooltip="The focal ratio" tab="Exif tags"/>
+          </match>
+          <match hex-value="8822" convert-endianness="true">
+            <field id="tag-exf-8822"/>
+            <block id="shrt-tag"/>
+            <field id="data-exf-8822" tab="Exif tags"/>
+            <field id="unused-data" limit="2"/>
+          </match>
+          <match hex-value="8824" convert-endianness="true">
+            <field id="tag-exf-8824"/>
+            <block id="ascii-tag"/>
+            <selection>
+              <match var-id="count" op="gt" num-value="4">
+                <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+                <field id="data-exf-8824" limit="count" tab="Exif ASCII tags" offset="tag-offset" additional-color="val-offset-2"/>
+              </match>
+              <match>
+                <exec var-id="tag-unused" set="4" subtract="count"/>
+                <field id="data-exf-8824" limit="count" tab="Exif ASCII tags"/>
+                <field id="unused-data" limit="tag-unused"/>
+              </match>
+            </selection>
+          </match>
+          <match hex-value="8827" convert-endianness="true">
+            <field id="tag-exf-8827"/>
+            <block id="shrt-tag"/>
+            <field id="data-exf-8827" tab="Exif tags"/>
+            <field id="unused-data" limit="2"/>
+          </match>
+          <match hex-value="8830" convert-endianness="true">
+            <field id="tag-exf-8830"/>
+            <block id="shrt-tag"/>
+            <field id="data-exf-8830" tab="Exif tags"/>
+            <field id="unused-data" limit="2"/>
+          </match>
+          <match hex-value="8831" convert-endianness="true">
+            <field id="tag-exf-8831"/>
+            <block id="long-tag"/>
+            <field id="data-exf-8831" tab="Exif tags"/>
+          </match>
+          <match hex-value="8832" convert-endianness="true">
+            <field id="tag-exf-8832"/>
+            <block id="long-tag"/>
+            <field id="data-exf-8832" tab="Exif tags"/>
+          </match>
+          <match hex-value="8833" convert-endianness="true">
+            <field id="tag-exf-8833"/>
+            <block id="long-tag"/>
+            <field id="data-exf-8833" tab="Exif tags"/>
+          </match>
+          <match hex-value="8834" convert-endianness="true">
+            <field id="tag-exf-8834"/>
+            <block id="long-tag"/>
+            <field id="data-exf-8834" tab="Exif tags"/>
+          </match>
+          <match hex-value="8835" convert-endianness="true">
+            <field id="tag-exf-8835"/>
+            <block id="long-tag"/>
+            <field id="data-exf-8835" tab="Exif tags"/>
+          </match>
+          <match hex-value="9000" convert-endianness="true">
+            <field id="tag-exf-9000"/>
+            <block id="undef-tag"/>
+            <field id="data-exf-9000" tab="Exif tags"/>
+          </match>
+          <match hex-value="9003" convert-endianness="true">
+            <field id="tag-exf-9003"/>
+            <block id="ascii-tag"/>
+            <selection>
+              <match var-id="count" op="gt" num-value="4">
+                <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+                <field id="data-exf-9003" limit="count" tab="Exif ASCII tags" offset="tag-offset" additional-color="val-offset-2"/>
+              </match>
+              <match>
+                <exec var-id="tag-unused" set="4" subtract="count"/>
+                <field id="data-exf-9003" limit="count" tab="Exif ASCII tags"/>
+                <field id="unused-data" limit="tag-unused"/>
+              </match>
+            </selection>
+          </match>
+          <match hex-value="9004" convert-endianness="true">
+            <field id="tag-exf-9004"/>
+            <block id="ascii-tag"/>
+            <selection>
+              <match var-id="count" op="gt" num-value="4">
+                <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+                <field id="data-exf-9004" limit="count" tab="Exif ASCII tags" offset="tag-offset" additional-color="val-offset-2"/>
+              </match>
+              <match>
+                <exec var-id="tag-unused" set="4" subtract="count"/>
+                <field id="data-exf-9004" limit="count" tab="Exif ASCII tags"/>
+                <field id="unused-data" limit="tag-unused"/>
+              </match>
+            </selection>
+          </match>
+          <match hex-value="9101" convert-endianness="true">
+            <field id="tag-exf-9101"/>
+            <block id="undef-tag"/>
+            <field id="data-exf-9101" tab="Exif tags"/>
+          </match>
+          <match hex-value="9102" convert-endianness="true">
+            <field id="tag-exf-9102"/>
+            <block id="rtnl-tag"/>
+            <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+            <field id="data-exf-9102" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="CompressedBitsPerPixel" var-id="rtnl-val" tooltip="Information specific to compressed data" tab="Exif tags"/>
+          </match>
+          <match hex-value="9201" convert-endianness="true">
+            <field id="tag-exf-9201"/>
+            <block id="srtnl-tag"/>
+            <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+            <field id="data-exf-9201" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="srtnl-val"/>
+            <print line="ShutterSpeedValue" var-id="rtnl-val" tooltip="The shutter speed, using the APEX (Additive System of Photographic Exposure) value" tab="Exif tags"/>
+          </match>
+          <match hex-value="9202" convert-endianness="true">
+            <field id="tag-exf-9202"/>
+            <block id="rtnl-tag"/>
+            <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+            <field id="data-exf-9202" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="ApertureValue" var-id="rtnl-val" tooltip="The lens aperture, using the APEX (Additive System of Photographic Exposure) value" tab="Exif tags"/>
+          </match>
+          <match hex-value="9203" convert-endianness="true">
+            <field id="tag-exf-9203"/>
+            <block id="srtnl-tag"/>
+            <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+            <field id="data-exf-9203" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="srtnl-val"/>
+            <print line="BrightnessValue" var-id="rtnl-val" tooltip="The brigthness value, using the APEX (Additive System of Photographic Exposure) value" tab="Exif tags"/>
+          </match>
+          <match hex-value="9204" convert-endianness="true">
+            <field id="tag-exf-9204"/>
+            <block id="srtnl-tag"/>
+            <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+            <field id="data-exf-9204" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="srtnl-val"/>
+            <print line="ExposureBiasValue" var-id="rtnl-val" tooltip="The exposure bias, using the APEX (Additive System of Photographic Exposure) value" tab="Exif tags"/>
+          </match>
+          <match hex-value="9205" convert-endianness="true">
+            <field id="tag-exf-9205"/>
+            <block id="rtnl-tag"/>
+            <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+            <field id="data-exf-9205" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="MaxApertureValue" var-id="rtnl-val" tooltip="The smallest F number of the lens, using the APEX (Additive System of Photographic Exposure) value" tab="Exif tags"/>
+          </match>
+          <match hex-value="9206" convert-endianness="true">
+            <field id="tag-exf-9206"/>
+            <block id="rtnl-tag"/>
+            <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+            <field id="data-exf-9206" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="SubjectDistance" var-id="rtnl-val" tooltip="The distance to the subject, in meters" tab="Exif tags"/>
+          </match>
+          <match hex-value="9207" convert-endianness="true">
+            <field id="tag-exf-9207"/>
+            <block id="shrt-tag"/>
+            <field id="data-exf-9207" tab="Exif tags"/>
+            <field id="unused-data" limit="2"/>
+          </match>
+          <match hex-value="9208" convert-endianness="true">
+            <field id="tag-exf-9208"/>
+            <block id="shrt-tag"/>
+            <field id="data-exf-9208" tab="Exif tags"/>
+            <field id="unused-data" limit="2"/>
+          </match>
+          <match hex-value="9209" convert-endianness="true">
+            <field id="tag-exf-9209"/>
+            <block id="shrt-tag"/>
+            <field id="data-exf-9209-1" tab="Exif tags"/>
+            <field id="data-exf-9209-2" tab="Exif tags"/>
+            <field id="data-exf-9209-3" tab="Exif tags"/>
+            <field id="data-exf-9209-4" tab="Exif tags"/>
+            <field id="data-exf-9209-5" tab="Exif tags"/>
+            <field id="data-exf-9209"/>
+            <field id="unused-data" limit="2"/>
+          </match>
+          <match hex-value="920A" convert-endianness="true">
+            <field id="tag-exf-920A"/>
+            <block id="rtnl-tag"/>
+            <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+            <field id="data-exf-920A" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="srtnl-val"/>
+            <print line="FocalLength" var-id="rtnl-val" tooltip="Focal length of the lens, in milimeters" tab="Exif tags"/>
+          </match>
+          <match hex-value="927C" convert-endianness="true">
+            <field id="tag-exf-927C"/>
+            <block id="undef-tag"/>
+            <selection>
+              <match var-id="count" op="gt" num-value="4">
+                <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+                <field id="data-exf-927C" limit="count" tab="Exif ASCII tags" offset="tag-offset" additional-color="val-offset-2"/>
+              </match>
+              <match>
+                <exec var-id="tag-unused" set="4" subtract="count"/>
+                <field id="data-exf-927C" limit="count" tab="Exif ASCII tags"/>
+                <field id="unused-data" limit="tag-unused"/>
+              </match>
+            </selection>
+          </match>
+          <match hex-value="9286" convert-endianness="true">
+            <field id="tag-exf-9286"/>
+            <block id="undef-tag"/>
+            <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+            <field id="data-exf-9286-1" limit="count" tab="Exif tags" offset="tag-offset" additional-color="val-offset-2"/>
+            <exec var-id="tag-offset" add="8"/>
+            <field id="data-exf-9286-2" limit="count" tab="Exif ASCII tags" offset="tag-offset" additional-color="val-offset-2"/>
+          </match>
+          <match hex-value="9290" convert-endianness="true">
+            <field id="tag-exf-9290"/>
+            <block id="ascii-tag"/>
+            <selection>
+              <match var-id="count" op="gt" num-value="4">
+                <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+                <field id="data-exf-9290" limit="count" tab="Exif ASCII tags" offset="tag-offset" additional-color="val-offset-2"/>
+              </match>
+              <match>
+                <exec var-id="tag-unused" set="4" subtract="count"/>
+                <field id="data-exf-9290" limit="count" tab="Exif ASCII tags"/>
+                <field id="unused-data" limit="tag-unused"/>
+              </match>
+            </selection>
+          </match>
+          <match hex-value="9291" convert-endianness="true">
+            <field id="tag-exf-9291"/>
+            <block id="ascii-tag"/>
+            <selection>
+              <match var-id="count" op="gt" num-value="4">
+                <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+                <field id="data-exf-9291" limit="count" tab="Exif ASCII tags" offset="tag-offset" additional-color="val-offset-2"/>
+              </match>
+              <match>
+                <exec var-id="tag-unused" set="4" subtract="count"/>
+                <field id="data-exf-9291" limit="count" tab="Exif ASCII tags"/>
+                <field id="unused-data" limit="tag-unused"/>
+              </match>
+            </selection>
+          </match>
+          <match hex-value="9292" convert-endianness="true">
+            <field id="tag-exf-9292"/>
+            <block id="ascii-tag"/>
+            <selection>
+              <match var-id="count" op="gt" num-value="4">
+                <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+                <field id="data-exf-9292" limit="count" tab="Exif ASCII tags" offset="tag-offset" additional-color="val-offset-2"/>
+              </match>
+              <match>
+                <exec var-id="tag-unused" set="4" subtract="count"/>
+                <field id="data-exf-9292" limit="count" tab="Exif ASCII tags"/>
+                <field id="unused-data" limit="tag-unused"/>
+              </match>
+            </selection>
+          </match>
+          <match hex-value="A000" convert-endianness="true">
+            <field id="tag-exf-A000"/>
+            <block id="undef-tag"/>
+            <field id="data-exf-A000" tab="Exif tags"/>
+          </match>
+          <match hex-value="A001" convert-endianness="true">
+            <field id="tag-exf-A001"/>
+            <block id="shrt-tag"/>
+            <field id="data-exf-A001" tab="Exif tags"/>
+            <field id="unused-data" limit="2"/>
+          </match>
+          <match hex-value="A002" convert-endianness="true">
+            <field id="tag-exf-A002"/>
+            <block id="shrt-long-tag"/>
+            <selection>
+              <match var-id="shrt-long" hex-value="0003" convert-endianness="true">
+                <field id="data-exf-A002" limit="2" tab="Exif tags"/>
+                <field id="unused-data" limit="2"/>
+              </match>
+              <match var-id="shrt-long" hex-value="0004" convert-endianness="true">
+                <field id="data-exf-A002" limit="4" tab="Exif tags"/>
+              </match>
+              <match>
+                <field id="bad-data"/>
+              </match>
+            </selection>
+          </match>
+          <match hex-value="A003" convert-endianness="true">
+            <field id="tag-exf-A003"/>
+            <block id="shrt-long-tag"/>
+            <selection>
+              <match var-id="shrt-long" hex-value="0003" convert-endianness="true">
+                <field id="data-exf-A003" limit="2" tab="Exif tags"/>
+                <field id="unused-data" limit="2"/>
+              </match>
+              <match var-id="shrt-long" hex-value="0004" convert-endianness="true">
+                <field id="data-exf-A003" limit="4" tab="Exif tags"/>
+              </match>
+              <match>
+                <field id="bad-data"/>
+              </match>
+            </selection>
+          </match>
+          <match hex-value="A004" convert-endianness="true">
+            <field id="tag-exf-A004"/>
+            <block id="ascii-tag"/>
+            <selection>
+              <match var-id="count" op="gt" num-value="4">
+                <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+                <field id="data-exf-A004" limit="count" tab="Exif ASCII tags" offset="tag-offset" additional-color="val-offset-2"/>
+              </match>
+              <match>
+                <exec var-id="tag-unused" set="4" subtract="count"/>
+                <field id="data-exf-A004" limit="count" tab="Exif ASCII tags"/>
+                <field id="unused-data" limit="tag-unused"/>
+              </match>
+            </selection>
+          </match>
+          <match hex-value="A210" convert-endianness="true">
+            <field id="tag-exf-A210"/>
+            <block id="shrt-tag"/>
+            <field id="data-exf-A210" tab="Exif tags"/>
+            <field id="unused-data" limit="2"/>
+          </match>
+          <match hex-value="A214" convert-endianness="true">
+            <field id="tag-exf-A214"/>
+            <block id="shrt-tag"/>
+            <field id="data-exf-A214" tab="Exif tags"/>
+            <field id="unused-data" limit="2"/>
+          </match>
+          <match hex-value="A215" convert-endianness="true">
+            <field id="tag-exf-A215"/>
+            <block id="rtnl-tag"/>
+            <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+            <field id="data-exf-A215" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="ExposureIndex" var-id="rtnl-val" tooltip="Indicates the exposure index selected on the camera or input device" tab="Exif tags"/>
+          </match>
+          <match hex-value="A217" convert-endianness="true">
+            <field id="tag-exf-A217"/>
+            <block id="shrt-tag"/>
+            <field id="data-exf-A217" tab="Exif tags"/>
+            <field id="unused-data" limit="2"/>
+          </match>
+          <match hex-value="A300" convert-endianness="true">
+            <field id="tag-exf-A300"/>
+            <block id="undef-tag"/>
+            <field id="data-exf-A300" tab="Exif tags"/>
+            <field id="unused-data" limit="3"/>
+          </match>
+          <match hex-value="A301" convert-endianness="true">
+            <field id="tag-exf-A301"/>
+            <block id="undef-tag"/>
+            <field id="data-exf-A301" tab="Exif tags"/>
+            <field id="unused-data" limit="3"/>
+          </match>
+          <match hex-value="A302" convert-endianness="true">
+            <field id="tag-exf-A302"/>
+            <block id="undef-tag"/>
+            <selection>
+              <match var-id="count" op="gt" num-value="4">
+                <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+                <field id="data-exf-A302" limit="count" offset="tag-offset" additional-color="val-offset-2"/>
+              </match>
+              <match>
+                <exec var-id="tag-unused" set="4" subtract="count"/>
+                <field id="data-exf-A302" limit="count"/>
+                <field id="unused-data" limit="tag-unused"/>
+              </match>
+            </selection>
+          </match>
+          <match hex-value="A401" convert-endianness="true">
+            <field id="tag-exf-A401"/>
+            <block id="shrt-tag"/>
+            <field id="data-exf-A401" tab="Exif tags"/>
+            <field id="unused-data" limit="2"/>
+          </match>
+          <match hex-value="A402" convert-endianness="true">
+            <field id="tag-exf-A402"/>
+            <block id="shrt-tag"/>
+            <field id="data-exf-A402" tab="Exif tags"/>
+            <field id="unused-data" limit="2"/>
+          </match>
+          <match hex-value="A403" convert-endianness="true">
+            <field id="tag-exf-A403"/>
+            <block id="shrt-tag"/>
+            <field id="data-exf-A403" tab="Exif tags"/>
+            <field id="unused-data" limit="2"/>
+          </match>
+          <match hex-value="A404" convert-endianness="true">
+            <field id="tag-exf-A404"/>
+            <block id="rtnl-tag"/>
+            <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+            <field id="data-exf-A404" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="DigitalZoomRatio" var-id="rtnl-val" tooltip="Digital zoom ratio when the image was shot" tab="Exif tags"/>
+          </match>
+          <match hex-value="A405" convert-endianness="true">
+            <field id="tag-exf-A405"/>
+            <block id="shrt-tag"/>
+            <field id="data-exf-A405" tab="Exif tags"/>
+            <field id="unused-data" limit="2"/>
+          </match>
+          <match hex-value="A406" convert-endianness="true">
+            <field id="tag-exf-A406"/>
+            <block id="shrt-tag"/>
+            <field id="data-exf-A406" tab="Exif tags"/>
+            <field id="unused-data" limit="2"/>
+          </match>
+          <match hex-value="A407" convert-endianness="true">
+            <field id="tag-exf-A407"/>
+            <block id="shrt-tag"/>
+            <field id="data-exf-A407" tab="Exif tags"/>
+            <field id="unused-data" limit="2"/>
+          </match>
+          <match hex-value="A408" convert-endianness="true">
+            <field id="tag-exf-A408"/>
+            <block id="shrt-tag"/>
+            <field id="data-exf-A408" tab="Exif tags"/>
+            <field id="unused-data" limit="2"/>
+          </match>
+          <match hex-value="A409" convert-endianness="true">
+            <field id="tag-exf-A409"/>
+            <block id="shrt-tag"/>
+            <field id="data-exf-A409" tab="Exif tags"/>
+            <field id="unused-data" limit="2"/>
+          </match>
+          <match hex-value="A40A" convert-endianness="true">
+            <field id="tag-exf-A40A"/>
+            <block id="shrt-tag"/>
+            <field id="data-exf-A40A" tab="Exif tags"/>
+            <field id="unused-data" limit="2"/>
+          </match>
+          <match hex-value="A40C" convert-endianness="true">
+            <field id="tag-exf-A40C"/>
+            <block id="shrt-tag"/>
+            <field id="data-exf-A40C" tab="Exif tags"/>
+            <field id="unused-data" limit="2"/>
+          </match>
+          <match hex-value="A420" convert-endianness="true">
+            <field id="tag-exf-A420"/>
+            <block id="ascii-tag"/>
+            <selection>
+              <match var-id="count" op="gt" num-value="4">
+                <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+                <field id="data-exf-A420" limit="count" tab="Exif ASCII tags" offset="tag-offset" additional-color="val-offset-2"/>
+              </match>
+              <match>
+                <exec var-id="tag-unused" set="4" subtract="count"/>
+                <field id="data-exf-A420" limit="count" tab="Exif ASCII tags"/>
+                <field id="unused-data" limit="tag-unused"/>
+              </match>
+            </selection>
+          </match>
+          <match hex-value="A430" convert-endianness="true">
+            <field id="tag-exf-A430"/>
+            <block id="ascii-tag"/>
+            <selection>
+              <match var-id="count" op="gt" num-value="4">
+                <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+                <field id="data-exf-A430" limit="count" tab="Exif ASCII tags" offset="tag-offset" additional-color="val-offset-2"/>
+              </match>
+              <match>
+                <exec var-id="tag-unused" set="4" subtract="count"/>
+                <field id="data-exf-A430" limit="count" tab="Exif ASCII tags"/>
+                <field id="unused-data" limit="tag-unused"/>
+              </match>
+            </selection>
+          </match>
+          <match hex-value="A431" convert-endianness="true">
+            <field id="tag-exf-A431"/>
+            <block id="ascii-tag"/>
+            <selection>
+              <match var-id="count" op="gt" num-value="4">
+                <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+                <field id="data-exf-A431" limit="count" tab="Exif ASCII tags" offset="tag-offset" additional-color="val-offset-2"/>
+              </match>
+              <match>
+                <exec var-id="tag-unused" set="4" subtract="count"/>
+                <field id="data-exf-A431" limit="count" tab="Exif ASCII tags"/>
+                <field id="unused-data" limit="tag-unused"/>
+              </match>
+            </selection>
+          </match>
+          <match hex-value="A432" convert-endianness="true">
+            <field id="tag-exf-A432"/>
+            <block id="rtnl-tag"/>
+            <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+            <field id="data-exf-A432-1" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="LensSpecification (Minimum focal length)" var-id="rtnl-val" tooltip="Minimum focal length in milimeters" tab="Exif tags"/>
+            <field id="data-exf-A432-2" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="LensSpecification (Maximum focal length)" var-id="rtnl-val" tooltip="Maximum focal length in milimeters" tab="Exif tags"/>
+            <field id="data-exf-A432-3" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="LensSpecification (Minimum F number in the minimum focal length)" var-id="rtnl-val" tooltip="Unknown minimum F number = 0/0" tab="Exif tags"/>
+            <field id="data-exf-A432-4" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="LensSpecification (Minimum F number in the maximum focal length)" var-id="rtnl-val" tooltip="Unknown minimum F number = 0/0" tab="Exif tags"/>
+          </match>
+          <match hex-value="A433" convert-endianness="true">
+            <field id="tag-exf-A433"/>
+            <block id="ascii-tag"/>
+            <selection>
+              <match var-id="count" op="gt" num-value="4">
+                <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+                <field id="data-exf-A433" limit="count" tab="Exif ASCII tags" offset="tag-offset" additional-color="val-offset-2"/>
+              </match>
+              <match>
+                <exec var-id="tag-unused" set="4" subtract="count"/>
+                <field id="data-exf-A433" limit="count" tab="Exif ASCII tags"/>
+                <field id="unused-data" limit="tag-unused"/>
+              </match>
+            </selection>
+          </match>
+          <match hex-value="A434" convert-endianness="true">
+            <field id="tag-exf-A434"/>
+            <block id="ascii-tag"/>
+            <selection>
+              <match var-id="count" op="gt" num-value="4">
+                <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+                <field id="data-exf-A434" limit="count" tab="Exif ASCII tags" offset="tag-offset" additional-color="val-offset-2"/>
+              </match>
+              <match>
+                <exec var-id="tag-unused" set="4" subtract="count"/>
+                <field id="data-exf-A434" limit="count" tab="Exif ASCII tags"/>
+                <field id="unused-data" limit="tag-unused"/>
+              </match>
+            </selection>
+          </match>
+          <match hex-value="A435" convert-endianness="true">
+            <field id="tag-exf-A435"/>
+            <block id="ascii-tag"/>
+            <selection>
+              <match var-id="count" op="gt" num-value="4">
+                <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+                <field id="data-exf-A435" limit="count" tab="Exif ASCII tags" offset="tag-offset" additional-color="val-offset-2"/>
+              </match>
+              <match>
+                <exec var-id="tag-unused" set="4" subtract="count"/>
+                <field id="data-exf-A435" limit="count" tab="Exif ASCII tags"/>
+                <field id="unused-data" limit="tag-unused"/>
+              </match>
+            </selection>
+          </match>
+          <match hex-value="A500" convert-endianness="true">
+            <field id="tag-exf-A500"/>
+            <block id="rtnl-tag"/>
+            <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+            <field id="data-exf-A500" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="Gamma" var-id="rtnl-val" tooltip="Value of coefficient gamma" tab="Exif tags"/>
+          </match>
+          <match>
+            <field id="tag-error"/>
+            <field id="bad-type"/>
+            <field id="tag-cnt"/>
+            <field id="bad-data"/>
+          </match>
+        </selection>
+        <exec var-id="exf-ifd-entries" subtract="1"/>
+      </loop>
+    </block-def>
+    <block-def id="gpsinfo-tags">
+      <loop until-set="gps-ifd-entries" num-value="0">
+        <selection>
+          <match hex-value="0000" convert-endianness="true">
+            <field id="tag-gps-0000"/>
+            <block id="byte-tag"/>
+            <field id="data-gps-0000" tab="GPSInfo tags"/>
+          </match>
+          <match hex-value="0001" convert-endianness="true">
+            <field id="tag-gps-0001"/>
+            <block id="ascii-tag"/>
+            <selection>
+              <match var-id="count" op="gt" num-value="4">
+                <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+                <field id="data-gps-0001" limit="count" tab="GPSInfo ASCII tags" offset="tag-offset" additional-color="val-offset-2"/>
+              </match>
+              <match>
+                <exec var-id="tag-unused" set="4" subtract="count"/>
+                <field id="data-gps-0001" limit="count" tab="GPSInfo ASCII tags"/>
+                <field id="unused-data" limit="tag-unused"/>
+              </match>
+            </selection>
+          </match>
+          <match hex-value="0002" convert-endianness="true">
+            <field id="tag-gps-0002"/>
+            <block id="rtnl-tag"/>
+            <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+            <field id="data-gps-0002-1" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="GPSLatitude (degrees)" var-id="rtnl-val" tab="GPSInfo tags"/>
+            <field id="data-gps-0002-2" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="GPSLatitude (minutes)" var-id="rtnl-val" tab="GPSInfo tags"/>
+            <field id="data-gps-0002-3" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="GPSLatitude (seconds)" var-id="rtnl-val" tab="GPSInfo tags"/>
+          </match>
+          <match hex-value="0003" convert-endianness="true">
+            <field id="tag-gps-0003"/>
+            <block id="ascii-tag"/>
+            <selection>
+              <match var-id="count" op="gt" num-value="4">
+                <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+                <field id="data-gps-0003" limit="count" tab="GPSInfo ASCII tags" offset="tag-offset" additional-color="val-offset-2"/>
+              </match>
+              <match>
+                <exec var-id="tag-unused" set="4" subtract="count"/>
+                <field id="data-gps-0003" limit="count" tab="GPSInfo ASCII tags"/>
+                <field id="unused-data" limit="tag-unused"/>
+              </match>
+            </selection>
+          </match>
+          <match hex-value="0004" convert-endianness="true">
+            <field id="tag-gps-0004"/>
+            <block id="rtnl-tag"/>
+            <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+            <field id="data-gps-0004-1" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="GPSLongitude (degrees)" var-id="rtnl-val" tab="GPSInfo tags"/>
+            <field id="data-gps-0004-2" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="GPSLongitude (minutes)" var-id="rtnl-val" tab="GPSInfo tags"/>
+            <field id="data-gps-0004-3" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="GPSLongitude (seconds)" var-id="rtnl-val" tab="GPSInfo tags"/>
+          </match>
+          <match hex-value="0005" convert-endianness="true">
+            <field id="tag-gps-0005"/>
+            <block id="byte-tag"/>
+            <field id="data-gps-0005" tab="GPSInfo tags"/>
+            <field id="unused-data" limit="3"/>
+          </match>
+          <match hex-value="0006" convert-endianness="true">
+            <field id="tag-gps-0006"/>
+            <block id="rtnl-tag"/>
+            <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+            <field id="data-gps-0006" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="GPSAltitude" var-id="rtnl-val" tooltip="Indicates the altitude based on the reference in GPSAltitudeRef" tab="GPSInfo tags"/>
+          </match>
+          <match hex-value="0007" convert-endianness="true">
+            <field id="tag-gps-0007"/>
+            <block id="rtnl-tag"/>
+            <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+            <field id="data-gps-0007-1" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="GPSTimeStamp (hour)" var-id="rtnl-val" tooltip="Indicates the time as UTC (Coordinated Universal Time)" tab="GPSInfo tags"/>
+            <field id="data-gps-0007-2" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="GPSTimeStamp (minutes)" var-id="rtnl-val" tooltip="Indicates the time as UTC (Coordinated Universal Time)" tab="GPSInfo tags"/>
+            <field id="data-gps-0007-3" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="GPSTimeStamp (seconds)" var-id="rtnl-val" tooltip="Indicates the time as UTC (Coordinated Universal Time)" tab="GPSInfo tags"/>
+          </match>
+          <match hex-value="0008" convert-endianness="true">
+            <field id="tag-gps-0008"/>
+            <block id="ascii-tag"/>
+            <selection>
+              <match var-id="count" op="gt" num-value="4">
+                <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+                <field id="data-gps-0008" limit="count" tab="GPSInfo ASCII tags" offset="tag-offset" additional-color="val-offset-2"/>
+              </match>
+              <match>
+                <exec var-id="tag-unused" set="4" subtract="count"/>
+                <field id="data-gps-0008" limit="count" tab="GPSInfo ASCII tags"/>
+                <field id="unused-data" limit="tag-unused"/>
+              </match>
+            </selection>
+          </match>
+          <match hex-value="0009" convert-endianness="true">
+            <field id="tag-gps-0009"/>
+            <block id="ascii-tag"/>
+            <selection>
+              <match var-id="count" op="gt" num-value="4">
+                <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+                <field id="data-gps-0009" limit="count" tab="GPSInfo ASCII tags" offset="tag-offset" additional-color="val-offset-2"/>
+              </match>
+              <match>
+                <exec var-id="tag-unused" set="4" subtract="count"/>
+                <field id="data-gps-0009" limit="count" tab="GPSInfo ASCII tags"/>
+                <field id="unused-data" limit="tag-unused"/>
+              </match>
+            </selection>
+          </match>
+          <match hex-value="000A" convert-endianness="true">
+            <field id="tag-gps-000A"/>
+            <block id="ascii-tag"/>
+            <selection>
+              <match var-id="count" op="gt" num-value="4">
+                <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+                <field id="data-gps-000A" limit="count" tab="GPSInfo ASCII tags" offset="tag-offset" additional-color="val-offset-2"/>
+              </match>
+              <match>
+                <exec var-id="tag-unused" set="4" subtract="count"/>
+                <field id="data-gps-000A" limit="count" tab="GPSInfo ASCII tags"/>
+                <field id="unused-data" limit="tag-unused"/>
+              </match>
+            </selection>
+          </match>
+          <match hex-value="000B" convert-endianness="true">
+            <field id="tag-gps-000B"/>
+            <block id="rtnl-tag"/>
+            <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+            <field id="data-gps-000B" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="GPSDOP" var-id="rtnl-val" tooltip="Indicates the GPS DOP (data degree of precision)" tab="GPSInfo tags"/>
+          </match>
+          <match hex-value="000C" convert-endianness="true">
+            <field id="tag-gps-000C"/>
+            <block id="ascii-tag"/>
+            <selection>
+              <match var-id="count" op="gt" num-value="4">
+                <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+                <field id="data-gps-000C" limit="count" tab="GPSInfo ASCII tags" offset="tag-offset" additional-color="val-offset-2"/>
+              </match>
+              <match>
+                <exec var-id="tag-unused" set="4" subtract="count"/>
+                <field id="data-gps-000C" limit="count" tab="GPSInfo ASCII tags"/>
+                <field id="unused-data" limit="tag-unused"/>
+              </match>
+            </selection>
+          </match>
+          <match hex-value="000D" convert-endianness="true">
+            <field id="tag-gps-000D"/>
+            <block id="rtnl-tag"/>
+            <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+            <field id="data-gps-000D" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="GPSSpeed" var-id="rtnl-val" tooltip="Indicates the speed of GPS receiver movement" tab="GPSInfo tags"/>
+          </match>
+          <match hex-value="000E" convert-endianness="true">
+            <field id="tag-gps-000E"/>
+            <block id="ascii-tag"/>
+            <selection>
+              <match var-id="count" op="gt" num-value="4">
+                <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+                <field id="data-gps-000E" limit="count" tab="GPSInfo ASCII tags" offset="tag-offset" additional-color="val-offset-2"/>
+              </match>
+              <match>
+                <exec var-id="tag-unused" set="4" subtract="count"/>
+                <field id="data-gps-000E" limit="count" tab="GPSInfo ASCII tags"/>
+                <field id="unused-data" limit="tag-unused"/>
+              </match>
+            </selection>
+          </match>
+          <match hex-value="000F" convert-endianness="true">
+            <field id="tag-gps-000F"/>
+            <block id="rtnl-tag"/>
+            <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+            <field id="data-gps-000F" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="GPSTrack" var-id="rtnl-val" tooltip="Indicates the direction of GPS receiver movement" tab="GPSInfo tags"/>
+          </match>
+          <match hex-value="0010" convert-endianness="true">
+            <field id="tag-gps-0010"/>
+            <block id="ascii-tag"/>
+            <selection>
+              <match var-id="count" op="gt" num-value="4">
+                <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+                <field id="data-gps-0010" limit="count" tab="GPSInfo ASCII tags" offset="tag-offset" additional-color="val-offset-2"/>
+              </match>
+              <match>
+                <exec var-id="tag-unused" set="4" subtract="count"/>
+                <field id="data-gps-0010" limit="count" tab="GPSInfo ASCII tags"/>
+                <field id="unused-data" limit="tag-unused"/>
+              </match>
+            </selection>
+          </match>
+          <match hex-value="0011" convert-endianness="true">
+            <field id="tag-gps-0011"/>
+            <block id="rtnl-tag"/>
+            <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+            <field id="data-gps-0011" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="GPSImgDirection" var-id="rtnl-val" tooltip="Indicates the reference for giving the direction of the image when it is captured" tab="GPSInfo tags"/>
+          </match>
+          <match hex-value="0012" convert-endianness="true">
+            <field id="tag-gps-0012"/>
+            <block id="ascii-tag"/>
+            <selection>
+              <match var-id="count" op="gt" num-value="4">
+                <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+                <field id="data-gps-0012" limit="count" tab="GPSInfo ASCII tags" offset="tag-offset" additional-color="val-offset-2"/>
+              </match>
+              <match>
+                <exec var-id="tag-unused" set="4" subtract="count"/>
+                <field id="data-gps-0012" limit="count" tab="GPSInfo ASCII tags"/>
+                <field id="unused-data" limit="tag-unused"/>
+              </match>
+            </selection>
+          </match>
+          <match hex-value="0013" convert-endianness="true">
+            <field id="tag-gps-0013"/>
+            <block id="ascii-tag"/>
+            <selection>
+              <match var-id="count" op="gt" num-value="4">
+                <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+                <field id="data-gps-0013" limit="count" tab="GPSInfo ASCII tags" offset="tag-offset" additional-color="val-offset-2"/>
+              </match>
+              <match>
+                <exec var-id="tag-unused" set="4" subtract="count"/>
+                <field id="data-gps-0013" limit="count" tab="GPSInfo ASCII tags"/>
+                <field id="unused-data" limit="tag-unused"/>
+              </match>
+            </selection>
+          </match>
+          <match hex-value="0014" convert-endianness="true">
+            <field id="tag-gps-0014"/>
+            <block id="rtnl-tag"/>
+            <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+            <field id="data-gps-0014-1" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="GPSDestLatitude (degrees)" var-id="rtnl-val" tab="GPSInfo tags"/>
+            <field id="data-gps-0014-2" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="GPSDestLatitude (minutes)" var-id="rtnl-val" tab="GPSInfo tags"/>
+            <field id="data-gps-0014-3" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="GPSDestLatitude (seconds)" var-id="rtnl-val" tab="GPSInfo tags"/>
+          </match>
+          <match hex-value="0015" convert-endianness="true">
+            <field id="tag-gps-0015"/>
+            <block id="ascii-tag"/>
+            <selection>
+              <match var-id="count" op="gt" num-value="4">
+                <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+                <field id="data-gps-0015" limit="count" tab="GPSInfo ASCII tags" offset="tag-offset" additional-color="val-offset-2"/>
+              </match>
+              <match>
+                <exec var-id="tag-unused" set="4" subtract="count"/>
+                <field id="data-gps-0015" limit="count" tab="GPSInfo ASCII tags"/>
+                <field id="unused-data" limit="tag-unused"/>
+              </match>
+            </selection>
+          </match>
+          <match hex-value="0016" convert-endianness="true">
+            <field id="tag-gps-0016"/>
+            <block id="rtnl-tag"/>
+            <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+            <field id="data-gps-0016-1" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="GPSDestLongitude (degrees)" var-id="rtnl-val" tab="GPSInfo tags"/>
+            <field id="data-gps-0016-2" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="GPSDestLongitude (minutes)" var-id="rtnl-val" tab="GPSInfo tags"/>
+            <field id="data-gps-0016-3" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="GPSDestLongitude (seconds)" var-id="rtnl-val" tab="GPSInfo tags"/>
+          </match>
+          <match hex-value="0017" convert-endianness="true">
+            <field id="tag-gps-0017"/>
+            <block id="ascii-tag"/>
+            <selection>
+              <match var-id="count" op="gt" num-value="4">
+                <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+                <field id="data-gps-0017" limit="count" tab="GPSInfo ASCII tags" offset="tag-offset" additional-color="val-offset-2"/>
+              </match>
+              <match>
+                <exec var-id="tag-unused" set="4" subtract="count"/>
+                <field id="data-gps-0017" limit="count" tab="GPSInfo ASCII tags"/>
+                <field id="unused-data" limit="tag-unused"/>
+              </match>
+            </selection>
+          </match>
+          <match hex-value="0018" convert-endianness="true">
+            <field id="tag-gps-0018"/>
+            <block id="rtnl-tag"/>
+            <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+            <field id="data-gps-0018" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="GPSDestBearing" var-id="rtnl-val" tooltip="Indicates the bearing to the destination point" tab="GPSInfo tags"/>
+          </match>
+          <match hex-value="0019" convert-endianness="true">
+            <field id="tag-gps-0019"/>
+            <block id="ascii-tag"/>
+            <selection>
+              <match var-id="count" op="gt" num-value="4">
+                <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+                <field id="data-gps-0019" limit="count" tab="GPSInfo ASCII tags" offset="tag-offset" additional-color="val-offset-2"/>
+              </match>
+              <match>
+                <exec var-id="tag-unused" set="4" subtract="count"/>
+                <field id="data-gps-0019" limit="count" tab="GPSInfo ASCII tags"/>
+                <field id="unused-data" limit="tag-unused"/>
+              </match>
+            </selection>
+          </match>
+          <match hex-value="001A" convert-endianness="true">
+            <field id="tag-gps-001A"/>
+            <block id="rtnl-tag"/>
+            <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+            <field id="data-gps-001A" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="GPSDestBearing" var-id="rtnl-val" tooltip="Indicates the distance to the destination point" tab="GPSInfo tags"/>
+          </match>
+          <match hex-value="001B" convert-endianness="true">
+            <field id="tag-gps-001B"/>
+            <block id="undef-tag"/>
+            <selection>
+              <match var-id="count" op="gt" num-value="4">
+                <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+                <field id="data-gps-001B" limit="count" tab="GPSInfo ASCII tags" offset="tag-offset" additional-color="val-offset-2"/>
+              </match>
+              <match>
+                <exec var-id="tag-unused" set="4" subtract="count"/>
+                <field id="data-gps-001B" limit="count" tab="GPSInfo ASCII tags"/>
+                <field id="unused-data" limit="tag-unused"/>
+              </match>
+            </selection>
+          </match>
+          <match hex-value="001C" convert-endianness="true">
+            <field id="tag-gps-001C"/>
+            <block id="undef-tag"/>
+            <selection>
+              <match var-id="count" op="gt" num-value="4">
+                <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+                <field id="data-gps-001C" limit="count" tab="GPSInfo ASCII tags" offset="tag-offset" additional-color="val-offset-2"/>
+              </match>
+              <match>
+                <exec var-id="tag-unused" set="4" subtract="count"/>
+                <field id="data-gps-001C" limit="count" tab="GPSInfo ASCII tags"/>
+                <field id="unused-data" limit="tag-unused"/>
+              </match>
+            </selection>
+          </match>
+          <match hex-value="001D" convert-endianness="true">
+            <field id="tag-gps-001D"/>
+            <block id="ascii-tag"/>
+            <selection>
+              <match var-id="count" op="gt" num-value="4">
+                <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+                <field id="data-gps-001D" limit="count" tab="GPSInfo ASCII tags" offset="tag-offset" additional-color="val-offset-2"/>
+              </match>
+              <match>
+                <exec var-id="tag-unused" set="4" subtract="count"/>
+                <field id="data-gps-001D" limit="count" tab="GPSInfo ASCII tags"/>
+                <field id="unused-data" limit="tag-unused"/>
+              </match>
+            </selection>
+          </match>
+          <match hex-value="001E" convert-endianness="true">
+            <field id="tag-gps-001E"/>
+            <block id="shrt-tag"/>
+            <field id="data-gps-001E" tab="GPSInfo tags"/>
+            <field id="unused-data" limit="3"/>
+          </match>
+          <match hex-value="001F" convert-endianness="true">
+            <field id="tag-gps-001F"/>
+            <block id="rtnl-tag"/>
+            <field id="tag-offset" store-var="tag-offset" convert-endianness="true"/>
+            <field id="data-gps-001F" offset="tag-offset" additional-color="val-offset-2"/>
+            <block id="rtnl-val"/>
+            <print line="GPSHPositioningError" var-id="rtnl-val" tooltip="Indicates horizontal positioning errors, in meters" tab="GPSInfo tags"/>
+          </match>
+          <match>
+            <field id="tag-error"/>
+            <field id="bad-type"/>
+            <field id="tag-cnt"/>
+            <field id="bad-data"/>
+          </match>
+        </selection>
+        <exec var-id="gps-ifd-entries" subtract="1"/>
+      </loop>
+    </block-def>
+  </block-defs>
+  <!-- TIFF fields -->
+  <field-defs>
+    <field-def id="endian" name="Endianness" color="tag-endian" size="2" print="option">
+      <options>
+        <option name="Little-endian" hex-value="4949"/>
+        <option name="Big-endian" hex-value="4D4D"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <field-def id="tiff-id" name="TIFF identifier" color="val-offset-1" size="2"/>
+    <field-def id="ifd-offset" name="IFD offset" color="ifd" size="4"/>
+    <field-def id="ifd-end" name="IFD end" color="ifd" size="4"/>
+    <field-def id="ifd-ent" name="Number of directory entries" color="ifd" size="2"/>
+    <field-def id="tag-cnt" name="Count" color="count" size="4"/>
+    <field-def id="tag-offset" name="Tag offset" color="val-offset-1" size="4"/>
+    <!-- Field types -->
+    <field-def id="byte" name="Field type: BYTE" color="field-type" size="2"/>
+    <field-def id="ascii" name="Field type: ASCII" color="field-type" size="2"/>
+    <field-def id="shrt" name="Field type: SHORT" color="field-type" size="2"/>
+    <field-def id="long" name="Field type: LONG" color="field-type" size="2"/>
+    <field-def id="rtnl" name="Field type: RATIONAL" color="field-type" size="2"/>
+    <field-def id="undef" name="Field type: UNDEFINED" color="field-type" size="2"/>
+    <field-def id="srtnl" name="Field type: SRATIONAL" color="field-type" size="2"/>
+    <field-def id="bad-type" name="Incorrect field type for this tag" color="error-2" size="2"/>
+    <!-- TIFF tags -->
+    <!-- Tag: NewSubfileType -->
+    <field-def id="tag-00FE" name="Tag: NewSubfileType" color="tag-endian" size="2"/>
+    <field-def id="data-00FE" name="NewSubfileType" color="val-offset-1" size="4"/>
+    <field-def id="data-00FE-1" name="Reducen resolution version of another image">
+      <print>Set</print>
+      <tooltip>Bit 0 of the NewSubfileType tag value</tooltip>
+    </field-def>
+    <field-def id="data-00FE-2" name="Single page of multi-page image">
+      <print>Set</print>
+      <tooltip>Bit 1 of the NewSubfileType tag value</tooltip>
+    </field-def>
+    <field-def id="data-00FE-3" name="Defines a transparency mask for another image">
+      <print>Set</print>
+      <tooltip>Bit 2 of the NewSubfileType tag value</tooltip>
+    </field-def>
+    <!-- Tag: SubfileType -->
+    <field-def id="tag-00FF" name="Tag: SubfileType" color="tag-endian" size="2"/>
+    <field-def id="data-00FF" name="SubfileType" color="val-offset-1" size="2" print="option">
+      <options convert-endianness="true">
+        <option name="Full-resolution image data" hex-value="0001"/>
+        <option name="Reduced-resolution image data" hex-value="0002"/>
+        <option name="A single page of a multi-page image" hex-value="0003"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <!-- Tag: ImageWidth -->
+    <field-def id="tag-0100" name="Tag: ImageWidth" color="tag-endian" size="2"/>
+    <field-def id="data-0100" name="ImageWidth" color="val-offset-1" size="available" tooltip="Number of columns in the image" print="uint"/>
+    <!-- Tag: ImageLength -->
+    <field-def id="tag-0101" name="Tag: ImageLength" color="tag-endian" size="2"/>
+    <field-def id="data-0101" name="ImageLength" color="val-offset-1" size="available" tooltip="Number of rows in the image" print="uint"/>
+    <!-- Tag: BitsPerSample -->
+    <field-def id="tag-0102" name="Tag: BitsPerSample" color="tag-endian" size="2"/>
+    <field-def id="data-0102" name="BitsPerSample" color="val-offset-1" size="2" tooltip="Bit depth for each component" print="uint"/>
+    <!-- Tag: Compression -->
+    <field-def id="tag-0103" name="Tag: Compression" color="tag-endian" size="2"/>
+    <field-def id="data-0103" name="Compression" color="val-offset-1" size="2" print="option">
+      <options convert-endianness="true">
+        <option name="No compression" hex-value="0001"/>
+        <option name="CCITT Group 3 1-Dimensional Modified Huffman RLE" hex-value="0002"/>
+        <option name="CCITT T.4 bi-level encoding" hex-value="0003"/>
+        <option name="CCITT T.6 bi-level encoding" hex-value="0004"/>
+        <option name="Lempel-Ziv-Welch (LZW)" hex-value="0005"/>
+        <option name="JPEG (TIFF 6.0 - obsolete)" hex-value="0006"/>
+        <option name="JPEG" hex-value="0007"/>
+        <option name="zlib-format DEFLATE" hex-value="0008"/>
+        <option name="PackBits compression" hex-value="8005"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <!-- Tag: PhotometricInterpretation -->
+    <field-def id="tag-0106" name="Tag: PhotometricInterpretation" color="tag-endian" size="2"/>
+    <field-def id="data-0106" name="PhotometricInterpretation" color="val-offset-1" size="2" print="option">
+      <options convert-endianness="true">
+        <option name="WhiteIsZero" hex-value="0000"/>
+        <option name="BlackIsZero" hex-value="0001"/>
+        <option name="RGB" hex-value="0002"/>
+        <option name="Palette color" hex-value="0003"/>
+        <option name="Transparency mask" hex-value="0004"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <!-- Tag: Threshholding -->
+    <field-def id="tag-0107" name="Tag: Threshholding" color="tag-endian" size="2"/>
+    <field-def id="data-0107" name="Threshholding" color="val-offset-1" size="2" print="option">
+      <options convert-endianness="true">
+        <option name="No dithering or halftoning has been applied to the image data" hex-value="0001"/>
+        <option name="An ordered dither or halftone technique has been applied to the image data" hex-value="0002"/>
+        <option name="A randomized process such as error diffusion has been applied to the image data" hex-value="0003"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <!-- Tag: CellWidth -->
+    <field-def id="tag-0108" name="Tag: CellWidth" color="tag-endian" size="2"/>
+    <field-def id="data-0108" name="CellWidth" color="val-offset-1" size="2" tooltip="The width of the dithering or halftoning matrix" print="uint"/>
+    <!-- Tag: CellLength -->
+    <field-def id="tag-0109" name="Tag: CellLength" color="tag-endian" size="2"/>
+    <field-def id="data-0109" name="CellLength" color="val-offset-1" size="2" tooltip="The length of the dithering or halftoning matrix" print="uint"/>
+    <!-- Tag: FillOrder -->
+    <field-def id="tag-010A" name="Tag: FillOrder" color="tag-endian" size="2"/>
+    <field-def id="data-010A" name="FillOrder" color="val-offset-1" size="2" print="option">
+      <options convert-endianness="true">
+        <option name="Higher-order bits" hex-value="0001"/>
+        <option name="Lower-order bits" hex-value="0002"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <!-- Tag: DocumentName -->
+    <field-def id="tag-010D" name="Tag: DocumentName" color="tag-endian" size="2"/>
+    <field-def id="data-010D" name="DocumentName" color="val-offset-1" size="available" print="text"/>
+    <!-- Tag: ImageDescription -->
+    <field-def id="tag-010E" name="Tag: ImageDescription" color="tag-endian" size="2"/>
+    <field-def id="data-010E" name="ImageDescription" color="val-offset-1" size="available" print="text"/>
+    <!-- Tag: Make -->
+    <field-def id="tag-010F" name="Tag: Make" color="tag-endian" size="2"/>
+    <field-def id="data-010F" name="Make" color="val-offset-1" size="available" print="text"/>
+    <!-- Tag: Model -->
+    <field-def id="tag-0110" name="Tag: Model" color="tag-endian" size="2"/>
+    <field-def id="data-0110" name="Model" color="val-offset-1" size="available" print="text"/>
+    <!-- Tag: StipOffsets -->
+    <field-def id="tag-0111" name="Tag: StipOffsets" color="tag-endian" size="2"/>
+    <field-def id="data-0111" name="StipOffsets" color="val-offset-1" size="available"/>
+    <!-- Tag: Orientation -->
+    <field-def id="tag-0112" name="Tag: Orientation" color="tag-endian" size="2"/>
+    <field-def id="data-0112" name="Orientation" color="val-offset-1" size="2" print="option">
+      <options convert-endianness="true">
+        <option name="Top-left" hex-value="0001"/>
+        <option name="Top-right" hex-value="0002"/>
+        <option name="Bottom-right" hex-value="0003"/>
+        <option name="Bottom-left" hex-value="0004"/>
+        <option name="Left-top" hex-value="0005"/>
+        <option name="Right-top" hex-value="0006"/>
+        <option name="Right-bottom" hex-value="0007"/>
+        <option name="Left-bottom" hex-value="0008"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <!-- Tag: SamplesPerPixel -->
+    <field-def id="tag-0115" name="Tag: SamplesPerPixel" color="tag-endian" size="2"/>
+    <field-def id="data-0115" name="SamplesPerPixel" color="val-offset-1" size="2" tooltip="Number of components per pixel" print="uint"/>
+    <!-- Tag: RowsPerStrip -->
+    <field-def id="tag-0116" name="Tag: RowsPerStrip" color="tag-endian" size="2"/>
+    <field-def id="data-0116" name="RowsPerStrip" color="val-offset-1" size="available" tooltip="Number of columns in the image" print="uint"/>
+    <!-- Tag: StripByteCounts -->
+    <field-def id="tag-0117" name="Tag: StripByteCounts" color="tag-endian" size="2"/>
+    <field-def id="data-0117" name="StripByteCounts" color="val-offset-1" size="available"/>
+    <!-- Tag: MinSampleValue -->
+    <field-def id="tag-0118" name="Tag: MinSampleValue" color="tag-endian" size="2"/>
+    <field-def id="data-0118" name="MinSampleValue" color="val-offset-1" size="2"/>
+    <!-- Tag: MaxSampleValue -->
+    <field-def id="tag-0119" name="Tag: MaxSampleValue" color="tag-endian" size="2"/>
+    <field-def id="data-0119" name="MaxSampleValue" color="val-offset-1" size="2"/>
+    <!-- Tag: XResolution -->
+    <field-def id="tag-011A" name="Tag: XResolution" color="tag-endian" size="2"/>
+    <field-def id="data-011A" name="XResolution" color="val-offset-1" size="8"/>
+    <!-- Tag: YResolution -->
+    <field-def id="tag-011B" name="Tag: YResolution" color="tag-endian" size="2"/>
+    <field-def id="data-011B" name="YResolution" color="val-offset-1" size="8"/>
+    <!-- Tag: PlanarConfiguration -->
+    <field-def id="tag-011C" name="Tag: PlanarConfiguration" color="tag-endian" size="2"/>
+    <field-def id="data-011C" name="PlanarConfiguration" color="val-offset-1" size="2" print="option">
+      <options convert-endianness="true">
+        <option name="Chunky format" hex-value="0001"/>
+        <option name="Planar format" hex-value="0002"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <!-- Tag: PageName -->
+    <field-def id="tag-011D" name="Tag: PageName" color="tag-endian" size="2"/>
+    <field-def id="data-011D" name="PageName" color="val-offset-1" size="available" print="text"/>
+    <!-- Tag: XPosition -->
+    <field-def id="tag-011E" name="Tag: XPosition" color="tag-endian" size="2"/>
+    <field-def id="data-011E" name="XPosition" color="val-offset-1" size="8"/>
+    <!-- Tag: YPosition -->
+    <field-def id="tag-011F" name="Tag: YPosition" color="tag-endian" size="2"/>
+    <field-def id="data-011F" name="YPosition" color="val-offset-1" size="8"/>
+    <!-- Tag: ResolutionUnit -->
+    <field-def id="tag-0128" name="Tag: ResolutionUnit" color="tag-endian" size="2"/>
+    <field-def id="data-0128" name="ResolutionUnit" color="val-offset-1" size="2" print="option">
+      <options convert-endianness="true">
+        <option name="No unit" hex-value="0001"/>
+        <option name="Inch" hex-value="0002"/>
+        <option name="Centimeter" hex-value="0003"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <!-- Tag: PageNumber -->
+    <field-def id="tag-0129" name="Tag: PageNumber" color="tag-endian" size="2"/>
+    <field-def id="data-0129-1" name="PageNumber (page number)" color="val-offset-1" size="2" tooltip="Page numbers start at 0" print="uint"/>
+    <field-def id="data-0129-2" name="PageNumber (total pages)" color="val-offset-1" size="2" tooltip="Total = 0 if it is unknown" print="uint"/>
+    <!-- Tag: Software -->
+    <field-def id="tag-0131" name="Tag: Software" color="tag-endian" size="2"/>
+    <field-def id="data-0131" name="Software" color="val-offset-1" size="available" print="text"/>
+    <!-- Tag: DateTime -->
+    <field-def id="tag-0132" name="Tag: DateTime" color="tag-endian" size="2"/>
+    <field-def id="data-0132" name="DateTime" color="val-offset-1" size="available" print="text"/>
+    <!-- Tag: Artist -->
+    <field-def id="tag-013B" name="Tag: Artist" color="tag-endian" size="2"/>
+    <field-def id="data-013B" name="Artist" color="val-offset-1" size="available" print="text"/>
+    <!-- Tag: HostComputer -->
+    <field-def id="tag-013C" name="Tag: HostComputer" color="tag-endian" size="2"/>
+    <field-def id="data-013C" name="HostComputer" color="val-offset-1" size="available" print="text"/>
+    <!-- Tag: Predictor -->
+    <field-def id="tag-013D" name="Tag: Predictor" color="tag-endian" size="2"/>
+    <field-def id="data-013D" name="Predictor" color="val-offset-1" size="2" print="option">
+      <options convert-endianness="true">
+        <option name="No prediction scheme used before coding" hex-value="0001"/>
+        <option name="Horizontal differencing" hex-value="0002"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <!-- Tag: WhitePoint -->
+    <field-def id="tag-013E" name="Tag: WhitePoint" color="tag-endian" size="2"/>
+    <field-def id="data-013E-1" name="WhitePoint (x)" color="val-offset-1" size="8"/>
+    <field-def id="data-013E-2" name="WhitePoint (y)" color="val-offset-1" size="8"/>
+    <!-- Tag: PrimaryChromaticities -->
+    <field-def id="tag-013F" name="Tag: PrimaryChromaticities" color="tag-endian" size="2"/>
+    <field-def id="data-013F-1" name="PrimaryChromaticities (Red x)" color="val-offset-1" size="8"/>
+    <field-def id="data-013F-2" name="PrimaryChromaticities (Red y)" color="val-offset-1" size="8"/>
+    <field-def id="data-013F-3" name="PrimaryChromaticities (Green x)" color="val-offset-1" size="8"/>
+    <field-def id="data-013F-4" name="PrimaryChromaticities (Green y)" color="val-offset-1" size="8"/>
+    <field-def id="data-013F-5" name="PrimaryChromaticities (Blue x)" color="val-offset-1" size="8"/>
+    <field-def id="data-013F-6" name="PrimaryChromaticities (Blue y)" color="val-offset-1" size="8"/>
+    <!-- Tag: JPEGInterchangeFormat -->
+    <field-def id="tag-0201" name="Tag: JPEGInterchangeFormat" color="tag-endian" size="2"/>
+    <field-def id="data-0201" name="JPEGInterchangeFormat" color="val-offset-1" size="4"/>
+    <!-- Tag: JPEGInterchangeFormatLength -->
+    <field-def id="tag-0202" name="Tag: JPEGInterchangeFormatLength" color="tag-endian" size="2"/>
+    <field-def id="data-0202" name="JPEGInterchangeFormatLength" color="val-offset-1" size="4"/>
+    <!-- Tag: YCbCrCoefficients -->
+    <field-def id="tag-0211" name="Tag: YCbCrCoefficients" color="tag-endian" size="2"/>
+    <field-def id="data-0211-1" name="YCbCrCoefficients (LumaRed)" color="val-offset-1" size="8"/>
+    <field-def id="data-0211-2" name="YCbCrCoefficients (LumaGreen)" color="val-offset-1" size="8"/>
+    <field-def id="data-0211-3" name="YCbCrCoefficients (LumaBlue)" color="val-offset-1" size="8"/>
+    <!-- Tag: YCbCrSubSampling -->
+    <field-def id="tag-0212" name="Tag: YCbCrSubSampling" color="tag-endian" size="2"/>
+    <field-def id="data-0212-1" name="YCbCrSubSamplingHoriz" color="val-offset-1" size="2" print="option">
+      <options convert-endianness="true">
+        <option name="Chroma image ImageWidth = Luma image ImageWidth" hex-value="0001"/>
+        <option name="Chroma image ImageWidth = 1/2 Luma image ImageWidth" hex-value="0002"/>
+        <option name="Chroma image ImageWidth = 1/4 Luma image ImageWidth" hex-value="0004"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <field-def id="data-0212-2" name="YCbCrSubSamplingVert" color="val-offset-1" size="2" print="option">
+      <options convert-endianness="true">
+        <option name="Chroma image ImageLength = Luma image ImageLength" hex-value="0001"/>
+        <option name="Chroma image ImageLength = 1/2 Luma image ImageLength" hex-value="0002"/>
+        <option name="Chroma image ImageLength = 1/4 Luma image ImageLength" hex-value="0004"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <!-- Tag: YCbCrPositioning -->
+    <field-def id="tag-0213" name="Tag: YCbCrPositioning" color="tag-endian" size="2"/>
+    <field-def id="data-0213" name="YCbCrPositioning" color="val-offset-1" size="2" print="option">
+      <options convert-endianness="true">
+        <option name="Centered" hex-value="0001"/>
+        <option name="Cosited" hex-value="0002"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <!-- Tag: ReferenceBlackWhite -->
+    <field-def id="tag-0214" name="Tag: ReferenceBlackWhite" color="tag-endian" size="2"/>
+    <field-def id="data-0214-1" name="ReferenceBlackWhite footroom (component 1)" color="val-offset-1" size="8"/>
+    <field-def id="data-0214-2" name="ReferenceBlackWhite headroom (component 1)" color="val-offset-1" size="8"/>
+    <field-def id="data-0214-3" name="ReferenceBlackWhite footroom (component 2)" color="val-offset-1" size="8"/>
+    <field-def id="data-0214-4" name="ReferenceBlackWhite headroom (component 2)" color="val-offset-1" size="8"/>
+    <field-def id="data-0214-5" name="ReferenceBlackWhite footroom (component 3)" color="val-offset-1" size="8"/>
+    <field-def id="data-0214-6" name="ReferenceBlackWhite headroom (component 3)" color="val-offset-1" size="8"/>
+    <!-- Tag: Copyright -->
+    <field-def id="tag-8298" name="Tag: Copyright" color="tag-endian" size="2"/>
+    <field-def id="data-8298" name="Copyright" color="val-offset-1" size="available" print="text"/>
+    <!-- Tag: ExifIFD -->
+    <field-def id="tag-8769" name="Tag: ExifIFD" color="tag-endian" size="2"/>
+    <field-def id="data-8769" name="ExifIFD" color="val-offset-1" size="4"/>
+    <!-- Tag: GPSInfoIFD -->
+    <field-def id="tag-8825" name="Tag: GPSInfoIFD" color="tag-endian" size="2"/>
+    <field-def id="data-8825" name="GPSInfoIFD" color="val-offset-1" size="4"/>
+    <!-- Exif tags -->
+    <!-- Tag: ExposureTime -->
+    <field-def id="tag-exf-829A" name="Tag: ExposureTime" color="tag-endian" size="2"/>
+    <field-def id="data-exf-829A" name="ExposureTime" color="val-offset-1" size="8"/>
+    <!-- Tag: FNumber -->
+    <field-def id="tag-exf-829D" name="Tag: FNumber" color="tag-endian" size="2"/>
+    <field-def id="data-exf-829D" name="FNumber" color="val-offset-1" size="8"/>
+    <!-- Tag: ExposureProgram -->
+    <field-def id="tag-exf-8822" name="Tag: ExposureProgram" color="tag-endian" size="2"/>
+    <field-def id="data-exf-8822" name="ExposureProgram" color="val-offset-1" size="2" print="option">
+      <options convert-endianness="true">
+        <option name="Not defined" hex-value="0000"/>
+        <option name="Manual" hex-value="0001"/>
+        <option name="Normal program" hex-value="0002"/>
+        <option name="Aperture priority" hex-value="0003"/>
+        <option name="Shutter priority" hex-value="0004"/>
+        <option name="Creative program" hex-value="0005"/>
+        <option name="Action program" hex-value="0006"/>
+        <option name="Portrait mode" hex-value="0007"/>
+        <option name="Landscape mode" hex-value="0008"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <!-- Tag: SpectralSensitivity -->
+    <field-def id="tag-exf-8824" name="Tag: SpectralSensitivity" color="tag-endian" size="2"/>
+    <field-def id="data-exf-8824" name="SpectralSensitivity" color="val-offset-1" size="available" print="text"/>
+    <!-- Tag: PhotographicSensitivity -->
+    <field-def id="tag-exf-8827" name="Tag: PhotographicSensitivity" color="tag-endian" size="2"/>
+    <field-def id="data-exf-8827" name="PhotographicSensitivity" color="val-offset-1" size="2" print="uint">
+      <tooltip>Sensitivity of the camera or input device when the image was shot</tooltip>
+    </field-def>
+    <!-- Tag: SensitivityType -->
+    <field-def id="tag-exf-8830" name="Tag: SensitivityType" color="tag-endian" size="2"/>
+    <field-def id="data-exf-8830" name="SensitivityType" color="val-offset-1" size="2" print="option">
+      <options convert-endianness="true">
+        <option name="Unknown" hex-value="0000"/>
+        <option name="Standard output sensitivity (SOS)" hex-value="0001"/>
+        <option name="Recommended exposure index (REI)" hex-value="0002"/>
+        <option name="ISO speed" hex-value="0003"/>
+        <option name="SOS and REI" hex-value="0004"/>
+        <option name="SOS and ISO speed" hex-value="0005"/>
+        <option name="REI and ISO speed" hex-value="0006"/>
+        <option name="SOS, REI and ISO speed" hex-value="0007"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <!-- Tag: StandardOutputSensitivity -->
+    <field-def id="tag-exf-8831" name="Tag: StandardOutputSensitivity" color="tag-endian" size="2"/>
+    <field-def id="data-exf-8831" name="StandardOutputSensitivity" color="val-offset-1" size="4" print="uint">
+      <tooltip>Standard output sensitivity value of the camera or input device defined in ISO 12232</tooltip>
+    </field-def>
+    <!-- Tag: RecommendedExposureIndex -->
+    <field-def id="tag-exf-8832" name="Tag: RecommendedExposureIndex" color="tag-endian" size="2"/>
+    <field-def id="data-exf-8832" name="RecommendedExposureIndex" color="val-offset-1" size="4" print="uint">
+      <tooltip>Recommended exposure index value of the camera or input device defined in ISO 12232</tooltip>
+    </field-def>
+    <!-- Tag: ISOSpeed -->
+    <field-def id="tag-exf-8833" name="Tag: ISOSpeed" color="tag-endian" size="2"/>
+    <field-def id="data-exf-8833" name="ISOSpeed" color="val-offset-1" size="4" print="uint">
+      <tooltip>ISO speed value of the camera or input device defined in ISO 12232</tooltip>
+    </field-def>
+    <!-- Tag: ISOSpeedLatitudeyyy -->
+    <field-def id="tag-exf-8834" name="Tag: ISOSpeedLatitudeyyy" color="tag-endian" size="2"/>
+    <field-def id="data-exf-8834" name="ISOSpeedLatitudeyyy" color="val-offset-1" size="4" print="uint">
+      <tooltip>ISO speed latitude yyy value of the camera or input device defined in ISO 12232</tooltip>
+    </field-def>
+    <!-- Tag: ISOSpeedLatitudezzz -->
+    <field-def id="tag-exf-8835" name="Tag: ISOSpeedLatitudezzz" color="tag-endian" size="2"/>
+    <field-def id="data-exf-8835" name="ISOSpeedLatitudezzz" color="val-offset-1" size="4" print="uint">
+      <tooltip>ISO speed latitude zzz value of the camera or input device defined in ISO 12232</tooltip>
+    </field-def>
+    <!-- Tag: ExifVersion -->
+    <field-def id="tag-exf-9000" name="Tag: ExifVersion" color="tag-endian" size="2"/>
+    <field-def id="data-exf-9000" name="ExifVersion" color="val-offset-1" size="4" print="option">
+      <options>
+        <option name="v2.2" char-value="0220"/>
+        <option name="v2.21" char-value="0221"/>
+        <option name="v2.3" char-value="0230"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <!-- Tag: DateTimeOriginal -->
+    <field-def id="tag-exf-9003" name="Tag: DateTimeOriginal" color="tag-endian" size="2"/>
+    <field-def id="data-exf-9003" name="DateTimeOriginal" color="val-offset-1" size="available" print="text"/>
+    <!-- Tag: DateTimeDigitized -->
+    <field-def id="tag-exf-9004" name="Tag: DateTimeDigitized" color="tag-endian" size="2"/>
+    <field-def id="data-exf-9004" name="DateTimeDigitized" color="val-offset-1" size="available" print="text"/>
+    <!-- Tag: ComponentsConfiguration -->
+    <field-def id="tag-exf-9101" name="Tag: ComponentsConfiguration" color="tag-endian" size="2"/>
+    <field-def id="data-exf-9101" name="ComponentsConfiguration" color="val-offset-1" size="4" print="option">
+      <options>
+        <option name="Uncompressed RGB" hex-value="04050600"/>
+        <option name="Other cases" hex-value="01020300"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <!-- Tag: CompressedBitsPerPixel -->
+    <field-def id="tag-exf-9102" name="Tag: CompressedBitsPerPixel" color="tag-endian" size="2"/>
+    <field-def id="data-exf-9102" name="CompressedBitsPerPixel" color="val-offset-1" size="8"/>
+    <!-- Tag: ShutterSpeedValue -->
+    <field-def id="tag-exf-9201" name="Tag: ShutterSpeedValue" color="tag-endian" size="2"/>
+    <field-def id="data-exf-9201" name="ShutterSpeedValue" color="val-offset-1" size="8"/>
+    <!-- Tag: ApertureValue -->
+    <field-def id="tag-exf-9202" name="Tag: ApertureValue" color="tag-endian" size="2"/>
+    <field-def id="data-exf-9202" name="ApertureValue" color="val-offset-1" size="8"/>
+    <!-- Tag: BrightnessValue -->
+    <field-def id="tag-exf-9203" name="Tag: BrightnessValue" color="tag-endian" size="2"/>
+    <field-def id="data-exf-9203" name="BrightnessValue" color="val-offset-1" size="8"/>
+    <!-- Tag: ExposureBiasValue -->
+    <field-def id="tag-exf-9204" name="Tag: ExposureBiasValue" color="tag-endian" size="2"/>
+    <field-def id="data-exf-9204" name="ExposureBiasValue" color="val-offset-1" size="8"/>
+    <!-- Tag: MaxApertureValue -->
+    <field-def id="tag-exf-9205" name="Tag: MaxApertureValue" color="tag-endian" size="2"/>
+    <field-def id="data-exf-9205" name="MaxApertureValue" color="val-offset-1" size="8"/>
+    <!-- Tag: SubjectDistance -->
+    <field-def id="tag-exf-9206" name="Tag: SubjectDistance" color="tag-endian" size="2"/>
+    <field-def id="data-exf-9206" name="SubjectDistance" color="val-offset-1" size="8"/>
+    <!-- Tag: MeteringMode -->
+    <field-def id="tag-exf-9207" name="Tag: MeteringMode" color="tag-endian" size="2"/>
+    <field-def id="data-exf-9207" name="MeteringMode" color="val-offset-1" size="2" print="option">
+      <options convert-endianness="true">
+        <option name="Unknown" hex-value="0000"/>
+        <option name="Average" hex-value="0001"/>
+        <option name="CenterWeightedAverage" hex-value="0002"/>
+        <option name="Spot" hex-value="0003"/>
+        <option name="MultiSpot" hex-value="0004"/>
+        <option name="Pattern" hex-value="0005"/>
+        <option name="Partial" hex-value="0006"/>
+        <option name="Other" hex-value="00FF"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <!-- Tag: LightSource -->
+    <field-def id="tag-exf-9208" name="Tag: LightSource" color="tag-endian" size="2"/>
+    <field-def id="data-exf-9208" name="LightSource" color="val-offset-1" size="2" print="option">
+      <options convert-endianness="true">
+        <option name="Unknown" hex-value="0000"/>
+        <option name="Daylight" hex-value="0001"/>
+        <option name="Fluorescent" hex-value="0002"/>
+        <option name="Tungsten (incandescent light)" hex-value="0003"/>
+        <option name="Flash" hex-value="0004"/>
+        <option name="Fine weather" hex-value="0009"/>
+        <option name="Cloudy weather" hex-value="000A"/>
+        <option name="Shade" hex-value="000B"/>
+        <option name="Daylight fluorescent (D 5700 - 7100K)" hex-value="000C"/>
+        <option name="Day white fluorescent (N 4600 - 5500K)" hex-value="000D"/>
+        <option name="Cool white fluorescent (W 3800 - 4500K)" hex-value="000E"/>
+        <option name="White fluorescent (WW 3250 - 3800K)" hex-value="000F"/>
+        <option name="Warm white fluorescent (L 2600 - 3250K)" hex-value="0010"/>
+        <option name="Standard light A" hex-value="0011"/>
+        <option name="Standard light B" hex-value="0012"/>
+        <option name="Standard light C" hex-value="0013"/>
+        <option name="D55" hex-value="0014"/>
+        <option name="D65" hex-value="0015"/>
+        <option name="D75" hex-value="0016"/>
+        <option name="D50" hex-value="0017"/>
+        <option name="ISO studio tungsten" hex-value="0018"/>
+        <option name="Other" hex-value="00FF"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <!-- Tag: Flash -->
+    <field-def id="tag-exf-9209" name="Tag: Flash" color="tag-endian" size="2"/>
+    <field-def id="data-exf-9209" name="Flash" color="val-offset-1" size="2"/>
+    <field-def id="data-exf-9209-1" name="Flash (flash fired)" size="2" mask="1" print="option">
+      <options convert-endianness="true">
+        <option name="Flash did not fire" hex-value="0000"/>
+        <option name="Flash fired" hex-value="0001"/>
+      </options>
+      <tooltip auto="true">Flash fired (Flash bit 0)</tooltip>
+    </field-def>
+    <field-def id="data-exf-9209-2" name="Flash (flash return)" size="2" shift="1" mask="3" print="option">
+      <options convert-endianness="true">
+        <option name="No strobe return detection function" hex-value="0000"/>
+        <option name="Strobe return light not detected" hex-value="0001"/>
+        <option name="Strobe return light detected" hex-value="0003"/>
+      </options>
+      <tooltip auto="true">Flash return (Flash bits 1 and 2)</tooltip>
+    </field-def>
+    <field-def id="data-exf-9209-3" name="Flash (flash mode)" size="2" shift="3" mask="3" print="option">
+      <options convert-endianness="true">
+        <option name="Unknown" hex-value="0000"/>
+        <option name="Compulsory flash firing" hex-value="0001"/>
+        <option name="Compulsory flash suppression" hex-value="0002"/>
+        <option name="Auto mode" hex-value="0003"/>
+      </options>
+      <tooltip auto="true">Flash mode (Flash bits 3 and 4)</tooltip>
+    </field-def>
+    <field-def id="data-exf-9209-4" name="Flash (flash function)" size="2" shift="5" mask="1" print="option">
+      <options convert-endianness="true">
+        <option name="Flash function present" hex-value="0000"/>
+        <option name="No flash function" hex-value="0001"/>
+      </options>
+      <tooltip auto="true">Flash function (Flash bit 5)</tooltip>
+    </field-def>
+    <field-def id="data-exf-9209-5" name="Flash (red-eye mode)" size="2" shift="6" mask="1" print="option">
+      <options convert-endianness="true">
+        <option name="No red-eye reduction mode or unknown" hex-value="0000"/>
+        <option name="Red-eye reduction supported" hex-value="0001"/>
+      </options>
+      <tooltip auto="true">Red-eye mode (Flash bit 6)</tooltip>
+    </field-def>
+    <!-- Tag: FocalLength -->
+    <field-def id="tag-exf-920A" name="Tag: FocalLength" color="tag-endian" size="2"/>
+    <field-def id="data-exf-920A" name="FocalLength" color="val-offset-1" size="8"/>
+    <!-- Tag: MakerNote -->
+    <field-def id="tag-exf-927C" name="Tag: MakerNote" color="tag-endian" size="2"/>
+    <field-def id="data-exf-927C" name="MakerNote" color="val-offset-1" size="available" print="text"/>
+    <!-- Tag: UserComment -->
+    <field-def id="tag-exf-9286" name="Tag: UserComment" color="tag-endian" size="2"/>
+    <field-def id="data-exf-9286-1" name="UserComment encoding" color="val-offset-1" size="8" print="option">
+      <options>
+        <option name="ASCII" hex-value="4153434949000000"/>
+        <option name="JIS" hex-value="4A49530000000000"/>
+        <option name="Unicode" hex-value="554E49434F444500"/>
+        <option name="Undefined" hex-value="0000000000000000"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <field-def id="data-exf-9286-2" name="UserComment" color="val-offset-1" size="available" print="text"/>
+    <!-- Tag: SubSecTime -->
+    <field-def id="tag-exf-9290" name="Tag: SubSecTime" color="tag-endian" size="2"/>
+    <field-def id="data-exf-9290" name="SubSecTime" color="val-offset-1" size="available" print="text"/>
+    <!-- Tag: SubSecTimeOriginal -->
+    <field-def id="tag-exf-9291" name="Tag: SubSecTimeOriginal" color="tag-endian" size="2"/>
+    <field-def id="data-exf-9291" name="SubSecTimeOriginal" color="val-offset-1" size="available" print="text"/>
+    <!-- Tag: SubSecTimeDigitized -->
+    <field-def id="tag-exf-9292" name="Tag: SubSecTimeDigitized" color="tag-endian" size="2"/>
+    <field-def id="data-exf-9292" name="SubSecTimeDigitized" color="val-offset-1" size="available" print="text"/>
+    <!-- Tag: FlashpixVersion -->
+    <field-def id="tag-exf-A000" name="Tag: FlashpixVersion" color="tag-endian" size="2"/>
+    <field-def id="data-exf-A000" name="FlashpixVersion" color="val-offset-1" size="4" print="option">
+      <options>
+        <option name="Flashpix Format v1.0" char-value="0100"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <!-- Tag: ColorSpace -->
+    <field-def id="tag-exf-A001" name="Tag: ColorSpace" color="tag-endian" size="2"/>
+    <field-def id="data-exf-A001" name="ColorSpace" color="val-offset-1" size="2" print="option">
+      <options convert-endianness="true">
+        <option name="sRGB" hex-value="0001"/>
+        <option name="Uncalibrated" hex-value="FFFF"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <!-- Tag: PixelXDimension -->
+    <field-def id="tag-exf-A002" name="Tag: PixelXDimension" color="tag-endian" size="2"/>
+    <field-def id="data-exf-A002" name="PixelXDimension" color="val-offset-1" size="available" tooltip="Valid width of the meaningful image" print="uint"/>
+    <!-- Tag: PixelYDimension -->
+    <field-def id="tag-exf-A003" name="Tag: PixelYDimension" color="tag-endian" size="2"/>
+    <field-def id="data-exf-A003" name="PixelYDimension" color="val-offset-1" size="available" tooltip="Valid height of the meaningful image" print="uint"/>
+    <!-- Tag: RelatedSoundFile -->
+    <field-def id="tag-exf-A004" name="Tag: RelatedSoundFile" color="tag-endian" size="2"/>
+    <field-def id="data-exf-A004" name="RelatedSoundFile" color="val-offset-1" size="available" print="text"/>
+    <!-- Tag: FocalPlaneResolutionUnit -->
+    <field-def id="tag-exf-A210" name="Tag: FocalPlaneResolutionUnit" color="tag-endian" size="2"/>
+    <field-def id="data-exf-A210" name="FocalPlaneResolutionUnit" color="val-offset-1" size="2" print="option">
+      <options convert-endianness="true">
+        <option name="No unit" hex-value="0001"/>
+        <option name="Inch" hex-value="0002"/>
+        <option name="Centimeter" hex-value="0003"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <!-- Tag: SubjectLocation -->
+    <field-def id="tag-exf-A214" name="Tag: SubjectLocation" color="tag-endian" size="2"/>
+    <field-def id="data-exf-A214" name="SubjectLocation" color="val-offset-1" size="2" tooltip="X column number - Y row number" print="uint"/>
+    <!-- Tag: ExposureIndex -->
+    <field-def id="tag-exf-A215" name="Tag: ExposureIndex" color="tag-endian" size="2"/>
+    <field-def id="data-exf-A215" name="ExposureIndex" color="val-offset-1" size="8"/>
+    <!-- Tag: SensingMethod -->
+    <field-def id="tag-exf-A217" name="Tag: SensingMethod" color="tag-endian" size="2"/>
+    <field-def id="data-exf-A217" name="SensingMethod" color="val-offset-1" size="2" print="option">
+      <options convert-endianness="true">
+        <option name="Not defined" hex-value="0001"/>
+        <option name="One-chip color area sensor" hex-value="0002"/>
+        <option name="Two-chip color area sensor" hex-value="0003"/>
+        <option name="Three-chip color area sensor" hex-value="0004"/>
+        <option name="Color sequential area sensor" hex-value="0005"/>
+        <option name="Trilinear sensor" hex-value="0007"/>
+        <option name="Color sequential linear sensor" hex-value="0008"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <!-- Tag: FileSource -->
+    <field-def id="tag-exf-A300" name="Tag: FileSource" color="tag-endian" size="2"/>
+    <field-def id="data-exf-A300" name="FileSource" color="val-offset-1" size="1" print="option">
+      <options>
+        <option name="Others" hex-value="00"/>
+        <option name="Scanner of transparent type" hex-value="01"/>
+        <option name="Scanner of reflex type" hex-value="02"/>
+        <option name="DSC" hex-value="03"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <!-- Tag: SceneType -->
+    <field-def id="tag-exf-A301" name="Tag: SceneType" color="tag-endian" size="2"/>
+    <field-def id="data-exf-A301" name="SceneType" color="val-offset-1" size="1" print="option">
+      <options>
+        <option name="A directly photographed image" hex-value="01"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <!-- Tag: CFAPattern -->
+    <field-def id="tag-exf-A302" name="Tag: CFAPattern" color="tag-endian" size="2"/>
+    <field-def id="data-exf-A302" name="CFAPattern" color="val-offset-1" size="available"/>
+    <!-- Tag: CustomRendered -->
+    <field-def id="tag-exf-A401" name="Tag: CustomRendered" color="tag-endian" size="2"/>
+    <field-def id="data-exf-A401" name="CustomRendered" color="val-offset-1" size="2" print="option">
+      <options convert-endianness="true">
+        <option name="Normal process" hex-value="0000"/>
+        <option name="Custom process" hex-value="0001"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <!-- Tag: ExposureMode -->
+    <field-def id="tag-exf-A402" name="Tag: ExposureMode" color="tag-endian" size="2"/>
+    <field-def id="data-exf-A402" name="ExposureMode" color="val-offset-1" size="2" print="option">
+      <options convert-endianness="true">
+        <option name="Auto exposure" hex-value="0000"/>
+        <option name="Manual process" hex-value="0001"/>
+        <option name="Auto bracket" hex-value="0002"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <!-- Tag: WhiteBalance -->
+    <field-def id="tag-exf-A403" name="Tag: WhiteBalance" color="tag-endian" size="2"/>
+    <field-def id="data-exf-A403" name="WhiteBalance" color="val-offset-1" size="2" print="option">
+      <options convert-endianness="true">
+        <option name="Auto white balance" hex-value="0000"/>
+        <option name="Manual white balance" hex-value="0001"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <!-- Tag: DigitalZoomRatio -->
+    <field-def id="tag-exf-A404" name="Tag: DigitalZoomRatio" color="tag-endian" size="2"/>
+    <field-def id="data-exf-A404" name="DigitalZoomRatio" color="val-offset-1" size="8"/>
+    <!-- Tag: FocalLengthIn35mmFilm -->
+    <field-def id="tag-exf-A405" name="Tag: FocalLengthIn35mmFilm" color="tag-endian" size="2"/>
+    <field-def id="data-exf-A405" name="FocalLengthIn35mmFilm" color="val-offset-1" size="2" print="uint">
+      <tooltip>Focal length assuming a 35mm film camera, in milimeters</tooltip>
+    </field-def>
+    <!-- Tag: SceneCaptureType -->
+    <field-def id="tag-exf-A406" name="Tag: SceneCaptureType" color="tag-endian" size="2"/>
+    <field-def id="data-exf-A406" name="SceneCaptureType" color="val-offset-1" size="2" print="option">
+      <options convert-endianness="true">
+        <option name="Standard" hex-value="0000"/>
+        <option name="Landscape" hex-value="0001"/>
+        <option name="Portrait" hex-value="0002"/>
+        <option name="Night scene" hex-value="0003"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <!-- Tag: GainControl -->
+    <field-def id="tag-exf-A407" name="Tag: GainControl" color="tag-endian" size="2"/>
+    <field-def id="data-exf-A407" name="GainControl" color="val-offset-1" size="2" print="option">
+      <options convert-endianness="true">
+        <option name="None" hex-value="0000"/>
+        <option name="Low gain up" hex-value="0001"/>
+        <option name="High gain up" hex-value="0002"/>
+        <option name="Low gain down" hex-value="0003"/>
+        <option name="High gain down" hex-value="0004"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <!-- Tag: Contrast -->
+    <field-def id="tag-exf-A408" name="Tag: Contrast" color="tag-endian" size="2"/>
+    <field-def id="data-exf-A408" name="Contrast" color="val-offset-1" size="2" print="option">
+      <options convert-endianness="true">
+        <option name="Normal" hex-value="0000"/>
+        <option name="Soft" hex-value="0001"/>
+        <option name="Hard" hex-value="0002"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <!-- Tag: Saturation -->
+    <field-def id="tag-exf-A409" name="Tag: Saturation" color="tag-endian" size="2"/>
+    <field-def id="data-exf-A409" name="Saturation" color="val-offset-1" size="2" print="option">
+      <options convert-endianness="true">
+        <option name="Normal" hex-value="0000"/>
+        <option name="Low saturation" hex-value="0001"/>
+        <option name="High saturation" hex-value="0002"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <!-- Tag: Sharpness -->
+    <field-def id="tag-exf-A40A" name="Tag: Sharpness" color="tag-endian" size="2"/>
+    <field-def id="data-exf-A40A" name="Sharpness" color="val-offset-1" size="2" print="option">
+      <options convert-endianness="true">
+        <option name="Normal" hex-value="0000"/>
+        <option name="Soft" hex-value="0001"/>
+        <option name="Hard" hex-value="0002"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <!-- Tag: SubjectDistanceRange -->
+    <field-def id="tag-exf-A40C" name="Tag: SubjectDistanceRange" color="tag-endian" size="2"/>
+    <field-def id="data-exf-A40C" name="SubjectDistanceRange" color="val-offset-1" size="2" print="option">
+      <options convert-endianness="true">
+        <option name="Unknown" hex-value="0000"/>
+        <option name="Macro" hex-value="0001"/>
+        <option name="Close view" hex-value="0002"/>
+        <option name="Distant view" hex-value="0003"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <!-- Tag: ImageUniqueID -->
+    <field-def id="tag-exf-A420" name="Tag: ImageUniqueID" color="tag-endian" size="2"/>
+    <field-def id="data-exf-A420" name="ImageUniqueID" color="val-offset-1" size="available" print="text"/>
+    <!-- Tag: CameraOwnerName -->
+    <field-def id="tag-exf-A430" name="Tag: CameraOwnerName" color="tag-endian" size="2"/>
+    <field-def id="data-exf-A430" name="CameraOwnerName" color="val-offset-1" size="available" print="text"/>
+    <!-- Tag: BodySerialNumber -->
+    <field-def id="tag-exf-A431" name="Tag: BodySerialNumber" color="tag-endian" size="2"/>
+    <field-def id="data-exf-A431" name="BodySerialNumber" color="val-offset-1" size="available" print="text"/>
+    <!-- Tag: LensSpecification -->
+    <field-def id="tag-exf-A432" name="Tag: LensSpecification" color="tag-endian" size="2"/>
+    <field-def id="data-exf-A432-1" name="LensSpecification (Minimum focal length)" color="val-offset-1" size="8"/>
+    <field-def id="data-exf-A432-2" name="LensSpecification (Maximum focal length)" color="val-offset-1" size="8"/>
+    <field-def id="data-exf-A432-3" name="LensSpecification (Minimum F number in the minimum focal length)" color="val-offset-1" size="8"/>
+    <field-def id="data-exf-A432-4" name="LensSpecification (Minimum F number in the maximum focal length)" color="val-offset-1" size="8"/>
+    <!-- Tag: LensMake -->
+    <field-def id="tag-exf-A433" name="Tag: LensMake" color="tag-endian" size="2"/>
+    <field-def id="data-exf-A433" name="LensMake" color="val-offset-1" size="available" print="text"/>
+    <!-- Tag: LensModel -->
+    <field-def id="tag-exf-A434" name="Tag: LensModel" color="tag-endian" size="2"/>
+    <field-def id="data-exf-A434" name="LensModel" color="val-offset-1" size="available" print="text"/>
+    <!-- Tag: LensSerialNumber -->
+    <field-def id="tag-exf-A435" name="Tag: LensSerialNumber" color="tag-endian" size="2"/>
+    <field-def id="data-exf-A435" name="LensSerialNumber" color="val-offset-1" size="available" print="text"/>
+    <!-- Tag: Gamma -->
+    <field-def id="tag-exf-A500" name="Tag: Gamma" color="tag-endian" size="2"/>
+    <field-def id="data-exf-A500" name="Gamma" color="val-offset-1" size="8"/>
+    <!-- Exif GPSInfo tags -->
+    <!-- Tag: GPSVersionID -->
+    <field-def id="tag-gps-0000" name="Tag: GPSVersionID" color="tag-endian" size="2"/>
+    <field-def id="data-gps-0000" name="GPSVersionID" color="val-offset-1" size="4" print="option">
+      <options>
+        <option name="v2.3" hex-value="02030000"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <!-- Tag: GPSLatitudeRef -->
+    <field-def id="tag-gps-0001" name="Tag: GPSLatitudeRef" color="tag-endian" size="2"/>
+    <field-def id="data-gps-0001" name="GPSLatitudeRef" color="val-offset-1" size="available" print="text"/>
+    <!-- Tag: GPSLatitude -->
+    <field-def id="tag-gps-0002" name="Tag: GPSLatitude" color="tag-endian" size="2"/>
+    <field-def id="data-gps-0002-1" name="GPSLatitude (degrees)" color="val-offset-1" size="8"/>
+    <field-def id="data-gps-0002-2" name="GPSLatitude (minutes)" color="val-offset-1" size="8"/>
+    <field-def id="data-gps-0002-3" name="GPSLatitude (seconds)" color="val-offset-1" size="8"/>
+    <!-- Tag: GPSLongitudeRef -->
+    <field-def id="tag-gps-0003" name="Tag: GPSLongitudeRef" color="tag-endian" size="2"/>
+    <field-def id="data-gps-0003" name="GPSLongitudeRef" color="val-offset-1" size="available" print="text"/>
+    <!-- Tag: GPSLongitude -->
+    <field-def id="tag-gps-0004" name="Tag: GPSLongitude" color="tag-endian" size="2"/>
+    <field-def id="data-gps-0004-1" name="GPSLongitude (degrees)" color="val-offset-1" size="8"/>
+    <field-def id="data-gps-0004-2" name="GPSLongitude (minutes)" color="val-offset-1" size="8"/>
+    <field-def id="data-gps-0004-3" name="GPSLongitude (seconds)" color="val-offset-1" size="8"/>
+    <!-- Tag: GPSAltitudeRef -->
+    <field-def id="tag-gps-0005" name="Tag: GPSAltitudeRef" color="tag-endian" size="2"/>
+    <field-def id="data-gps-0005" name="GPSAltitudeRef" color="val-offset-1" size="1" print="option">
+      <options>
+        <option name="Sea level" hex-value="00"/>
+        <option name="Sea level reference (negative value)" hex-value="01"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <!-- Tag: GPSAltitude -->
+    <field-def id="tag-gps-0006" name="Tag: GPSAltitude" color="tag-endian" size="2"/>
+    <field-def id="data-gps-0006" name="GPSAltitude" color="val-offset-1" size="8"/>
+    <!-- Tag: GPSTimeStamp -->
+    <field-def id="tag-gps-0007" name="Tag: GPSTimeStamp" color="tag-endian" size="2"/>
+    <field-def id="data-gps-0007-1" name="GPSTimeStamp (hour)" color="val-offset-1" size="8"/>
+    <field-def id="data-gps-0007-2" name="GPSTimeStamp (minutes)" color="val-offset-1" size="8"/>
+    <field-def id="data-gps-0007-3" name="GPSTimeStamp (seconds)" color="val-offset-1" size="8"/>
+    <!-- Tag: GPSSatellites -->
+    <field-def id="tag-gps-0008" name="Tag: GPSSatellites" color="tag-endian" size="2"/>
+    <field-def id="data-gps-0008" name="GPSSatellites" color="val-offset-1" size="available" print="text"/>
+    <!-- Tag: GPSStatus -->
+    <field-def id="tag-gps-0009" name="Tag: GPSStatus" color="tag-endian" size="2"/>
+    <field-def id="data-gps-0009" name="GPSStatus" color="val-offset-1" size="available" print="text"/>
+    <!-- Tag: GPSMeasureMode -->
+    <field-def id="tag-gps-000A" name="Tag: GPSMeasureMode" color="tag-endian" size="2"/>
+    <field-def id="data-gps-000A" name="GPSMeasureMode" color="val-offset-1" size="available" print="text"/>
+    <!-- Tag: GPSDOP -->
+    <field-def id="tag-gps-000B" name="Tag: GPSDOP" color="tag-endian" size="2"/>
+    <field-def id="data-gps-000B" name="GPSDOP" color="val-offset-1" size="8"/>
+    <!-- Tag: GPSSpeedRef -->
+    <field-def id="tag-gps-000C" name="Tag: GPSSpeedRef" color="tag-endian" size="2"/>
+    <field-def id="data-gps-000C" name="GPSSpeedRef" color="val-offset-1" size="available" print="text"/>
+    <!-- Tag: GPSSpeed -->
+    <field-def id="tag-gps-000D" name="Tag: GPSSpeed" color="tag-endian" size="2"/>
+    <field-def id="data-gps-000D" name="GPSSpeed" color="val-offset-1" size="8"/>
+    <!-- Tag: GPSTrackRef -->
+    <field-def id="tag-gps-000E" name="Tag: GPSTrackRef" color="tag-endian" size="2"/>
+    <field-def id="data-gps-000E" name="GPSTrackRef" color="val-offset-1" size="available" print="text"/>
+    <!-- Tag: GPSTrack -->
+    <field-def id="tag-gps-000F" name="Tag: GPSTrack" color="tag-endian" size="2"/>
+    <field-def id="data-gps-000F" name="GPSTrack" color="val-offset-1" size="8"/>
+    <!-- Tag: GPSImgDirectionRef -->
+    <field-def id="tag-gps-0010" name="Tag: GPSImgDirectionRef" color="tag-endian" size="2"/>
+    <field-def id="data-gps-0010" name="GPSImgDirectionRef" color="val-offset-1" size="available" print="text"/>
+    <!-- Tag: GPSImgDirection -->
+    <field-def id="tag-gps-0011" name="Tag: GPSImgDirection" color="tag-endian" size="2"/>
+    <field-def id="data-gps-0011" name="GPSImgDirection" color="val-offset-1" size="8"/>
+    <!-- Tag: GPSMapDatum -->
+    <field-def id="tag-gps-0012" name="Tag: GPSMapDatum" color="tag-endian" size="2"/>
+    <field-def id="data-gps-0012" name="GPSMapDatum" color="val-offset-1" size="available" print="text"/>
+    <!-- Tag: GPSDestLatitudeRef -->
+    <field-def id="tag-gps-0013" name="Tag: GPSDestLatitudeRef" color="tag-endian" size="2"/>
+    <field-def id="data-gps-0013" name="GPSDestLatitudeRef" color="val-offset-1" size="available" print="text"/>
+    <!-- Tag: GPSDestLatitude -->
+    <field-def id="tag-gps-0014" name="Tag: GPSDestLatitude" color="tag-endian" size="2"/>
+    <field-def id="data-gps-0014-1" name="GPSDestLatitude (degrees)" color="val-offset-1" size="8"/>
+    <field-def id="data-gps-0014-2" name="GPSDestLatitude (minutes)" color="val-offset-1" size="8"/>
+    <field-def id="data-gps-0014-3" name="GPSDestLatitude (seconds)" color="val-offset-1" size="8"/>
+    <!-- Tag: GPSDestLongitudeRef -->
+    <field-def id="tag-gps-0015" name="Tag: GPSDestLongitudeRef" color="tag-endian" size="2"/>
+    <field-def id="data-gps-0015" name="GPSDestLongitudeRef" color="val-offset-1" size="available" print="text"/>
+    <!-- Tag: GPSDestLongitude -->
+    <field-def id="tag-gps-0016" name="Tag: GPSDestLongitude" color="tag-endian" size="2"/>
+    <field-def id="data-gps-0016-1" name="GPSDestLongitude (degrees)" color="val-offset-1" size="8"/>
+    <field-def id="data-gps-0016-2" name="GPSDestLongitude (minutes)" color="val-offset-1" size="8"/>
+    <field-def id="data-gps-0016-3" name="GPSDestLongitude (seconds)" color="val-offset-1" size="8"/>
+    <!-- Tag: GPSDestBearingRef -->
+    <field-def id="tag-gps-0017" name="Tag: GPSDestBearingRef" color="tag-endian" size="2"/>
+    <field-def id="data-gps-0017" name="GPSDestBearingRef" color="val-offset-1" size="available" print="text"/>
+    <!-- Tag: GPSDestBearing -->
+    <field-def id="tag-gps-0018" name="Tag: GPSDestBearing" color="tag-endian" size="2"/>
+    <field-def id="data-gps-0018" name="GPSDestBearing" color="val-offset-1" size="8"/>
+    <!-- Tag: GPSDestDistanceRef -->
+    <field-def id="tag-gps-0019" name="Tag: GPSDestDistanceRef" color="tag-endian" size="2"/>
+    <field-def id="data-gps-0019" name="GPSDestDistanceRef" color="val-offset-1" size="available" print="text"/>
+    <!-- Tag: GPSDestDistance -->
+    <field-def id="tag-gps-001A" name="Tag: GPSDestDistance" color="tag-endian" size="2"/>
+    <field-def id="data-gps-001A" name="GPSDestDistance" color="val-offset-1" size="8"/>
+    <!-- Tag: GPSProcessingMethod -->
+    <field-def id="tag-gps-001B" name="Tag: GPSProcessingMethod" color="tag-endian" size="2"/>
+    <field-def id="data-gps-001B" name="GPSProcessingMethod" color="val-offset-1" size="available" print="text"/>
+    <!-- Tag: GPSAreaInformation -->
+    <field-def id="tag-gps-001C" name="Tag: GPSAreaInformation" color="tag-endian" size="2"/>
+    <field-def id="data-gps-001C" name="GPSAreaInformation" color="val-offset-1" size="available" print="text"/>
+    <!-- Tag: GPSDateStamp -->
+    <field-def id="tag-gps-001D" name="Tag: GPSDateStamp" color="tag-endian" size="2"/>
+    <field-def id="data-gps-001D" name="GPSDateStamp" color="val-offset-1" size="available" print="text"/>
+    <!-- Tag: GPSDifferential -->
+    <field-def id="tag-gps-001E" name="Tag: GPSDifferential" color="tag-endian" size="2"/>
+    <field-def id="data-gps-001E" name="GPSDifferential" color="val-offset-1" size="1" print="option">
+      <options>
+        <option name="Measurement without differential correction" hex-value="00"/>
+        <option name="Differential correction applied" hex-value="01"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <!-- Tag: GPSHPositioningError -->
+    <field-def id="tag-gps-001F" name="Tag: GPSHPositioningError" color="tag-endian" size="2"/>
+    <field-def id="data-gps-001F" name="GPSHPositioningError" color="val-offset-1" size="8"/>
+    <!-- Miscellaneous fields -->
+    <field-def id="dummy" size="available"/>
+    <field-def id="img-strp" name="Image data strip" color="val-offset-1" size="available"/>
+    <field-def id="embd-jpeg" name="Embedded JPEG file" color="val-offset-1" size="available"/>
+    <field-def id="tag-error" name="Tag: Unknown" color="error-1" size="2"/>
+    <field-def id="type-error" name="Field type: Unknown" color="error-2" size="2"/>
+    <field-def id="bad-data" name="Unrecognized data" color="error-2" size="4"/>
+    <field-def id="unrecognized" name="Unrecognized data" color="error-1" size="available"/>
+    <field-def id="unused-data" name="Unused data" color="unused" size="available"/>
+  </field-defs>
+  <details><![CDATA[
+<b>Recognized tags (in hex)</b>:
+<b>Standard TIFF</b>: FE-103, 106-10A, 10D-112, 115-11F, 128, 129, 131, 132, 13B-13F, 201, 202, 211-214, 8298, 8769, 8825
+<b>Exif-specific</b>: 829A, 829D, 8822, 8824, 8827, 8830-8835, 9000, 9003, 9004, 9101, 9102, 9201-920A, 927C, 9286, 9290-9292, A000-A004, A210, A214, A215, A217, A300-A302, A401-A40A, A40C, A420, A430-A435, A500
+<b>Exif GPSInfo-specific</b>: 0-1F
+
+The MakerNote tag (of any manufacturer) is not interpreted
+The MakerNote, UserComment, GPSProcessingMethod and GPSAreaInformation tags are treated as ASCII tags, even though they are UNDEFINED
+
+The following checks are <span foreground="red">not implemented</span>:
+    - Tags in an IFD are in ascending order
+  ]]></details>
+</format>

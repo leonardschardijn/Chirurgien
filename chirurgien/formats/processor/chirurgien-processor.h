@@ -1,6 +1,6 @@
-/* chirurgien-formats.h
+/* chirurgien-processor.h
  *
- * Copyright (C) 2020 - Daniel Léonard Schardijn
+ * Copyright (C) 2021 - Daniel Léonard Schardijn
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,16 +18,16 @@
 
 #pragma once
 
-#include <glib.h>
-
-#include "processor/processor-file.h"
+#include <chirurgien-types.h>
 
 G_BEGIN_DECLS
 
-void    chirurgien_formats_analyze       (ProcessorFile *);
+/*** Public API ***/
 
-void    chirurgien_formats_initialize    (const gchar *);
+gboolean    format_identify    (const FormatDefinition *,
+                                ProcessorFile *);
 
-gchar * chirurgien_formats_load          (GFile *);
+void        format_process     (const FormatDefinition *,
+                                ProcessorFile *);
 
 G_END_DECLS

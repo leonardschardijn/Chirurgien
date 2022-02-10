@@ -1,0 +1,413 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<format name="Executable and Linkable Format" short-name="ELF">
+  <endianness var-id="endianness">
+    <little-endian hex-value="01"/>
+    <big-endian hex-value="02"/>
+  </endianness>
+  <magic>
+    <signature>
+      <match hex-value="7F454C46"/>
+    </signature>
+  </magic>
+  <colors>
+    <color id="signature" name="ELF file signature" index="0" background="true"/>
+    <color id="sec-name" name="Section name" index="1" background="true"/>
+    <color id="data-1" name="Header/segment/section fields or section data" index="2" background="true"/>
+    <color id="data-2" name="Header/segment/section fields or section data" index="3" background="true"/>
+    <color id="seg-type" name="Segment type" index="4" background="true"/>
+    <color id="start-data" name="Start of section data" index="5" background="true"/>
+    <color id="error" name="Error" index="6" background="false"/>
+    <color id="unused" name="Unused data" index="8" background="false"/>
+  </colors>
+  <run>
+    <field id="elf-sig" navigation="ELF"/>
+    <field id="hdr0" store-var="class" section="ELF header"/>
+    <selection>
+      <match var-id="class" op="eq" num-value="1"/>
+      <match var-id="class" op="eq" num-value="2"/>
+      <match>
+        <field id="bad-elf"/>
+      </match>
+    </selection>
+    <field id="hdr1" store-var="endianness"/>
+    <field id="hdr2"/>
+    <field id="hdr3"/>
+    <selection>
+      <match hex-value="00">
+        <field id="hdr4" suppress-print="true"/>
+      </match>
+      <match>
+        <field id="hdr4"/>
+      </match>
+    </selection>
+    <field id="hdr5"/>
+    <field id="hdr6"/>
+    <field id="hdr7"/>
+    <field id="hdr8"/>
+    <selection>
+      <match var-id="class" op="eq" num-value="1">
+        <field id="hdr9" limit="4"/>
+        <field id="hdr10" limit="4" store-var="prog-hdr-offset"/>
+        <field id="hdr11" limit="4" store-var="sec-hdr-offset"/>
+      </match>
+      <match>
+        <field id="hdr9" limit="8"/>
+        <field id="hdr10" limit="8" store-var="prog-hdr-offset"/>
+        <field id="hdr11" limit="8" store-var="sec-hdr-offset"/>
+      </match>
+    </selection>
+    <field id="hdr12"/>
+    <field id="hdr13"/>
+    <field id="hdr14"/>
+    <field id="hdr15" store-var="prog-hdr-entries" tab="Program header" section="Program header table"/>
+    <field id="hdr16" store-var="sec-hdr-entry-size"/>
+    <field id="hdr17" store-var="sec-hdr-entries" tab="Section header" section="Section header table"/>
+    <field id="hdr18" store-var="sec-names-idx"/>
+    <exec var-id="index" set="prog-hdr-offset"/>
+    <exec var-id="prog-hdr-entry" set="0"/>
+    <loop until-set="prog-hdr-entries" num-value="0">
+      <print line="Program header index" var-id="prog-hdr-entry" tab="Program header" section="Program header entry"/>
+      <field id="prg-hdr0" tab="Program header"/>
+      <selection>
+        <match var-id="class" op="eq" num-value="1">
+          <field id="prg-hdr1-32" tab="Program header"/>
+          <field id="prg-hdr2-32" tab="Program header"/>
+          <field id="prg-hdr3-32" tab="Program header"/>
+          <field id="prg-hdr4-32" tab="Program header"/>
+          <field id="prg-hdr5-32" tab="Program header"/>
+          <field id="prg-hdr6-32" tab="Program header"/>
+          <field id="prg-hdr7-32" tab="Program header"/>
+        </match>
+        <match>
+          <field id="prg-hdr1-64" tab="Program header"/>
+          <field id="prg-hdr2-64" tab="Program header"/>
+          <field id="prg-hdr3-64" tab="Program header"/>
+          <field id="prg-hdr4-64" tab="Program header"/>
+          <field id="prg-hdr5-64" tab="Program header"/>
+          <field id="prg-hdr6-64" tab="Program header"/>
+          <field id="prg-hdr7-64" tab="Program header"/>
+        </match>
+      </selection>
+      <exec var-id="prog-hdr-entry" add="1"/>
+      <exec var-id="prog-hdr-entries" subtract="1"/>
+    </loop>
+    <exec var-id="names-entry-offset" set="sec-hdr-entry-size" multiply="sec-names-idx"/>
+    <exec var-id="names-entry-offset" add="sec-hdr-offset"/>
+    <selection>
+      <match var-id="class" op="eq" num-value="1">
+        <exec var-id="names-entry-offset" add="16"/>
+        <field id="read-names-offset" limit="4" offset="names-entry-offset" store-var="names-offset" convert-endianness="true"/>
+      </match>
+      <match>
+        <exec var-id="names-entry-offset" add="24"/>
+        <field id="read-names-offset" limit="8" offset="names-entry-offset" store-var="names-offset" convert-endianness="true"/>
+      </match>
+    </selection>
+    <exec var-id="index" set="sec-hdr-offset"/>
+    <exec var-id="sec-hdr-entry" set="0"/>
+    <loop until-set="sec-hdr-entries" num-value="0">
+      <field id="sec-hdr0" store-var="name-offset" convert-endianness="true"/>
+      <match var-id="name-offset" op="gt" num-value="0">
+        <exec var-id="name-offset" add="names-offset"/>
+        <field id="sec-name" offset="name-offset" tab="Section header"/>
+      </match>
+      <print line="Section index" var-id="sec-hdr-entry" tab="Section header" section="Section header entry"/>
+      <field id="sec-hdr1" store-var="sec-type" tab="Section header"/>
+      <selection>
+        <match var-id="class" op="eq" num-value="1">
+          <field id="sec-hdr2" limit="4" tab="Section header"/>
+          <field id="sec-hdr3" limit="4" tab="Section header"/>
+          <field id="sec-hdr4" limit="4" store-var="sec-offset" tab="Section header"/>
+          <field id="sec-hdr5" limit="4" store-var="sec-size" tab="Section header"/>
+          <field id="sec-hdr6" tab="Section header"/>
+          <field id="sec-hdr7"/>
+          <field id="sec-hdr8" limit="4" tab="Section header"/>
+          <field id="sec-hdr9" limit="4" tab="Section header"/>
+        </match>
+        <match>
+          <field id="sec-hdr2" limit="8" tab="Section header"/>
+          <field id="sec-hdr3" limit="8" tab="Section header"/>
+          <field id="sec-hdr4" limit="8" store-var="sec-offset" tab="Section header"/>
+          <field id="sec-hdr5" limit="8" store-var="sec-size" tab="Section header"/>
+          <field id="sec-hdr6" tab="Section header"/>
+          <field id="sec-hdr7"/>
+          <field id="sec-hdr8" limit="8" tab="Section header"/>
+          <field id="sec-hdr9" limit="8" tab="Section header"/>
+        </match>
+      </selection>
+      <match var-id="sec-size" op="gt" num-value="0">
+        <match var-id="sec-offset" op="gt" num-value="0">
+          <selection>
+            <match var-id="sec-type" op="eq" num-value="0"/>
+            <match var-id="sec-type" op="eq" num-value="8"/>
+            <match var-id="sec-type" op="eq" num-value="17"/>
+            <match>
+              <field id="sec-data" limit="sec-size" offset="sec-offset" additional-color="start-data" navigation="name-offset"/>
+            </match>
+          </selection>
+        </match>
+      </match>
+      <exec var-id="sec-hdr-entry" add="1"/>
+      <exec var-id="sec-hdr-entries" subtract="1"/>
+    </loop>
+    <print tab="Program header" insert-tab="true"/>
+    <print tab="Section header" insert-tab="true"/>
+  </run>
+  <!-- ELF fields -->
+  <field-defs>
+    <field-def id="elf-sig" name="ELF file signature" color="signature" size="4"/>
+    <!-- ELF header fields -->
+    <field-def id="hdr0" name="Class" color="data-1" size="1" print="option">
+      <options>
+        <option name="ELFCLASS32 (32 bits)" hex-value="01"/>
+        <option name="ELFCLASS64 (64 bits)" hex-value="02"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <field-def id="hdr1" name="Endianness" color="data-2" size="1" print="option">
+      <options>
+        <option name="ELFDATA2LSB (Little-endian)" hex-value="01"/>
+        <option name="ELFDATA2MSB (Big-endian)" hex-value="02"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <field-def id="hdr2" name="ELF header version" color="data-1" size="1" print="option">
+      <options>
+        <option name="EV_CURRENT (Current version)" hex-value="01"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <field-def id="hdr3" name="Application Binary Interface" color="data-2" size="1" print="option">
+      <options>
+        <option name="Unspecified/System V" hex-value="00"/>
+        <option name="HP-UX" hex-value="01"/>
+        <option name="NetBSD" hex-value="02"/>
+        <option name="Linux" hex-value="03"/>
+        <option name="Solaris" hex-value="06"/>
+        <option name="AIX" hex-value="07"/>
+        <option name="IRIX" hex-value="08"/>
+        <option name="FreeBSD" hex-value="09"/>
+        <option name="OpenBSD" hex-value="0C"/>
+      </options>
+      <tooltip auto="true">Application Binary Interface (incomplete list)</tooltip>
+    </field-def>
+    <field-def id="hdr4" name="ABI version" color="data-1" size="1" print="uint">
+      <tooltip>Identifies the ABI version, if incompatibilities exist</tooltip>
+    </field-def>
+    <field-def id="hdr5" name="Unused" color="data-2" size="7"/>
+    <field-def id="hdr6" name="Object file type" color="data-1" size="2" print="option">
+      <options convert-endianness="true">
+        <option name="ET_NONE (Unspecified)" hex-value="0000"/>
+        <option name="ET_REL (Relocatable file)" hex-value="0001"/>
+        <option name="ET_EXEC (Executable file)" hex-value="0002"/>
+        <option name="ET_DYN (Shared object file)" hex-value="0003"/>
+        <option name="ET_CORE (Core file)" hex-value="0004"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <field-def id="hdr7" name="Instruction Set Architecture" color="data-2" size="2" print="option">
+      <options convert-endianness="true">
+        <option name="No machine" hex-value="0000"/>
+        <option name="SPARC" hex-value="0002"/>
+        <option name="Intel 80386" hex-value="0003"/>
+        <option name="Motorola 68000" hex-value="0004"/>
+        <option name="Motorola 88000" hex-value="0005"/>
+        <option name="PowerPC" hex-value="0014"/>
+        <option name="PowerPC 64-bit" hex-value="0015"/>
+        <option name="S390" hex-value="0016"/>
+        <option name="ARM 32-bit" hex-value="0028"/>
+        <option name="SPARC Version 9" hex-value="002B"/>
+        <option name="Intel IA-64" hex-value="0032"/>
+        <option name="AMD64" hex-value="003E"/>
+        <option name="ARM 64-bit" hex-value="00B7"/>
+        <option name="RISC-V" hex-value="00F3"/>
+      </options>
+      <tooltip auto="true">Instruction Set Architecture (incomplete list)</tooltip>
+    </field-def>
+    <field-def id="hdr8" name="Object file version" color="data-1" size="4" print="option">
+      <options convert-endianness="true">
+        <option name="EV_CURRENT (Current version)" hex-value="00000001"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <field-def id="hdr9" name="Entry point" color="data-2" size="available" print="uint">
+      <tooltip>Virtual address of the entry point</tooltip>
+    </field-def>
+    <field-def id="hdr10" name="Program header table offset" color="data-1" size="available" print="uint">
+      <tooltip>Offset of the program header table</tooltip>
+    </field-def>
+    <field-def id="hdr11" name="Section header table offset" color="data-2" size="available" print="uint">
+      <tooltip>Offset of the section header table</tooltip>
+    </field-def>
+    <field-def id="hdr12" name="Flags" color="data-1" size="4"/>
+    <field-def id="hdr13" name="ELF header size" color="data-2" size="2" print="uint">
+      <tooltip>Size of the ELF header, in bytes</tooltip>
+    </field-def>
+    <field-def id="hdr14" name="Program header table entry size" color="data-1" size="2" print="uint">
+      <tooltip>Size of the entries in the program header table, in bytes</tooltip>
+    </field-def>
+    <field-def id="hdr15" tag="Number of entries in the program header table" name="Number of entries" color="data-2" size="2" print="uint"/>
+    <field-def id="hdr16" name="Section header table entry size" color="data-1" size="2" print="uint">
+      <tooltip>Size of the entries in the section header table, in bytes</tooltip>
+    </field-def>
+    <field-def id="hdr17" tag="Number of entries in the section header table" name="Number of entries" color="data-2" size="2" print="uint"/>
+    <field-def id="hdr18" name="Section names index" color="data-1" size="2" print="uint">
+      <tooltip>Section header index of the section with the section names</tooltip>
+    </field-def>
+    <!-- Program header fields -->
+    <field-def id="prg-hdr0" name="Segment type" color="seg-type" size="4" print="option">
+      <options convert-endianness="true">
+        <option name="PT_NULL (Unused segment)" hex-value="00000000"/>
+        <option name="PT_LOAD (Loadable segment)" hex-value="00000001"/>
+        <option name="PT_DYNAMIC (Dynamic linking information)" hex-value="00000002"/>
+        <option name="PT_INTERP (Interpreter location)" hex-value="00000003"/>
+        <option name="PT_NOTE (Auxiliary information)" hex-value="00000004"/>
+        <option name="PT_SHLIB (Unspecified semantics)" hex-value="00000005"/>
+        <option name="PT_PHDR (Program header table)" hex-value="00000006"/>
+        <option name="PT_TLS (Thread-Local Storage template)" hex-value="00000007"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <field-def id="prg-hdr1-32" tag="Segment offset (p_offset)" name="Segment offset" color="data-1" size="4" print="uint">
+      <tooltip>File offset of the segment</tooltip>
+    </field-def>
+    <field-def id="prg-hdr2-32" tag="Segment virtual address (p_vaddr)" name="Segment virtual address" color="data-2" size="4" print="uint">
+      <tooltip>Virtual address of the segment in memory</tooltip>
+    </field-def>
+    <field-def id="prg-hdr3-32" tag="Segment physical address (p_paddr)" name="Segment physical address" color="data-1" size="4" print="uint">
+      <tooltip>Physical address of the segment in memory</tooltip>
+    </field-def>
+    <field-def id="prg-hdr4-32" tag="Segment size in file (p_filesz)" name="Segment size in file" color="data-2" size="4" print="uint">
+      <tooltip>Size of the segment in the file, in bytes</tooltip>
+    </field-def>
+    <field-def id="prg-hdr5-32" tag="Segment size in memory (p_memsz)" name="Segment size in memory" color="data-1" size="4" print="uint">
+      <tooltip>Size of the segment in memory, in bytes</tooltip>
+    </field-def>
+    <field-def id="prg-hdr6-32" tag="Segment flags (p_flags)" name="Segment flags" color="data-2" size="4"/>
+    <field-def id="prg-hdr6-32" tag="Segment flags (p_flags)" name="Segment flags" color="data-2" size="4" print="flags">
+      <flags convert-endianness="true">
+        <flag name="PF_X" mask="1" meaning="Segment is executable"/>
+        <flag name="PF_W" mask="2" meaning="Segment is writable"/>
+        <flag name="PF_R" mask="4" meaning="Segment is readable"/>
+      </flags>
+      <tooltip auto="true"/>
+    </field-def>
+    <field-def id="prg-hdr7-32" tag="Segment address alignment (p_align)" name="Segment address alignment" color="data-1" size="4" print="uint">
+      <tooltip>Loadable segments have address alignment constraints</tooltip>
+    </field-def>
+    <field-def id="prg-hdr1-64" tag="Segment flags (p_flags)" name="Segment flags" color="data-1" size="4" print="flags">
+      <flags convert-endianness="true">
+        <flag name="PF_X" mask="1" meaning="Segment is executable"/>
+        <flag name="PF_W" mask="2" meaning="Segment is writable"/>
+        <flag name="PF_R" mask="4" meaning="Segment is readable"/>
+      </flags>
+      <tooltip auto="true"/>
+    </field-def>
+    <field-def id="prg-hdr2-64" tag="Segment offset (p_offset)" name="Segment offset" color="data-2" size="8" print="uint">
+      <tooltip>File offset of the segment</tooltip>
+    </field-def>
+    <field-def id="prg-hdr3-64" tag="Segment virtual address (p_vaddr)" name="Segment virtual address" color="data-1" size="8" print="uint">
+      <tooltip>Virtual address of the segment in memory</tooltip>
+    </field-def>
+    <field-def id="prg-hdr4-64" tag="Segment physical address (p_paddr)" name="Segment physical address" color="data-2" size="8" print="uint">
+      <tooltip>Physical address of the segment in memory</tooltip>
+    </field-def>
+    <field-def id="prg-hdr5-64" tag="Segment size in file (p_filesz)" name="Segment size in file" color="data-1" size="8" print="uint">
+      <tooltip>Size of the segment in the file, in bytes</tooltip>
+    </field-def>
+    <field-def id="prg-hdr6-64" tag="Segment size in memory (p_memsz)" name="Segment size in memory" color="data-2" size="8" print="uint">
+      <tooltip>Size of the segment in memory, in bytes</tooltip>
+    </field-def>
+    <field-def id="prg-hdr7-64" tag="Segment address alignment (p_align)" name="Segment address alignment" color="data-1" size="8" print="uint">
+      <tooltip>Loadable segments have address alignment constraints</tooltip>
+    </field-def>
+    <!-- Section header fields -->
+    <field-def id="sec-hdr0" name="Section name offset (sh_name)" color="sec-name" size="4"/>
+    <field-def id="sec-hdr1" tag="Section type (sh_type)" name="Section type" color="data-1" size="4" print="option">
+      <options convert-endianness="true">
+        <option name="SHT_NULL (Inactive section)" hex-value="00000000"/>
+        <option name="SHT_PROGBITS (Program information)" hex-value="00000001"/>
+        <option name="SHT_SYMTAB (Symbol table)" hex-value="00000002"/>
+        <option name="SHT_STRTAB (String table)" hex-value="00000003"/>
+        <option name="SHT_RELA (Explicit relocation)" hex-value="00000004"/>
+        <option name="SHT_HASH (Hash table)" hex-value="00000005"/>
+        <option name="SHT_DYNAMIC (Dynamic linking)" hex-value="00000006"/>
+        <option name="SHT_NOTE (Note)" hex-value="00000007"/>
+        <option name="SHT_NOBITS (Empty)" hex-value="00000008"/>
+        <option name="SHT_REL (Implicit relocation)" hex-value="00000009"/>
+        <option name="SHT_SHLIB (Unspecified semantics)" hex-value="0000000A"/>
+        <option name="SHT_DYNSYM (Dynamic linking symbol table)" hex-value="0000000B"/>
+        <option name="SHT_INIT_ARRAY (Initialization functions)" hex-value="0000000E"/>
+        <option name="SHT_FINI_ARRAY (Termination functions)" hex-value="0000000F"/>
+        <option name="SHT_PREINIT_ARRAY (Pre-initialization functions)" hex-value="00000010"/>
+        <option name="SHT_GROUP (Section group)" hex-value="00000011"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <field-def id="sec-hdr2" tag="Section attributes (sh_flags)" name="Section attributes (sh_flags)" color="data-2" size="available" print="flags">
+      <flags convert-endianness="true">
+        <flag name="SHF_WRITE" mask="1" meaning="Has writable data"/>
+        <flag name="SHF_ALLOC" mask="2" meaning="Uses memory during execution"/>
+        <flag name="SHF_EXECINSTR" mask="4" meaning="Has executable machine instructions"/>
+        <flag name="SHF_MERGE" mask="10" meaning="May be merged to eliminate duplicates"/>
+        <flag name="SHF_STRINGS" mask="20" meaning="Has null-terminated strings"/>
+        <flag name="SHF_INFO_LINK" mask="40" meaning="Holds a section header table index (sh_info is a section index)"/>
+        <flag name="SHF_LINK_ORDER" mask="80" meaning="Has ordering requirements"/>
+        <flag name="SHF_OS_NONCONFORMING" mask="100" meaning="Requires OS-specific processing"/>
+        <flag name="SHF_GROUP" mask="200" meaning="Is a member of a section group"/>
+        <flag name="SHF_TLS" mask="400" meaning="Holds Thread-Local Storage"/>
+        <flag name="SHF_COMPRESSED" mask="800" meaning="Has compressed data"/>
+      </flags>
+      <tooltip auto="true"/>
+    </field-def>
+    <field-def id="sec-hdr3" tag="Section memory address (sh_addr)" name="Section memory address" color="data-1" size="available" print="uint">
+      <tooltip>Address of the section in the memory image of the process</tooltip>
+    </field-def>
+    <field-def id="sec-hdr4" tag="Section offset (sh_offset)" name="Section offset" color="data-2" size="available" print="uint">
+      <tooltip>Offset of the section in the file</tooltip>
+    </field-def>
+    <field-def id="sec-hdr5" tag="Section size (sh_size)" name="Section size" color="data-1" size="available" print="uint">
+      <tooltip>Size of the section in the file</tooltip>
+    </field-def>
+    <field-def id="sec-hdr6" tag="Section link index (sh_link)" name="Section link index" color="data-2" size="4" print="uint">
+      <tooltip>Some section types link to other sections</tooltip>
+    </field-def>
+    <field-def id="sec-hdr7" name="Section information (sh_info)" color="data-1" size="4"/>
+    <field-def id="sec-hdr8" tag="Section address alignment (sh_addralign)" name="Section address alignment" color="data-2" size="available" print="uint">
+      <tooltip>Some sections have address alignment constraints</tooltip>
+    </field-def>
+    <field-def id="sec-hdr9" tag="Table entry size (sh_entsize)" name="Table entry size" color="data-1" size="available" print="uint">
+      <tooltip>Some sections hold a table of fixed-size entries, this gives the size of the entries</tooltip>
+    </field-def>
+    <field-def id="sec-name" name="Section name" value="00" print="text"/>
+    <field-def id="sec-data" tag="navigation" name="Section data" color="data-1" size="available"/>
+    <!-- Miscellaneous fields -->
+    <field-def id="read-names-offset" size="available"/>
+    <field-def id="bad-elf" name="Invalid Class" color="error" size="available"/>
+    <field-def id="unused-data" name="Unused data" color="unused" size="available"/>
+  </field-defs>
+  <details><![CDATA[
+The ABI version field is not interpreted
+The SHT_SYMTAB_SHNDX section type is not recognized
+The sh_info field of a section is not interpreted
+ELF files with more than 65280 (FF00) sections are not supported
+
+The following are also <span foreground="red">not recognized</span>:
+    - Object file types in the reserved ranges:
+        - FE00-FEFF (OS-specific)
+        - FF00-FFFF (processor-specific)
+    - Segment types in the reserved ranges:
+        - 60000000-6FFFFFFF (OS-specific)
+        - 70000000-7FFFFFFF (processor-specific)
+    - Segment flags in the reserved bit masks
+        - FF00000 (OS-specific)
+        - F0000000 (processor-specific)
+    - Section types in the reserved ranges:
+        - 60000000-6FFFFFFF (OS-specific)
+        - 70000000-7FFFFFFF (processor-specific)
+        - 80000000-FFFFFFFF (application-specific)
+    - Section flags in the reserved bit masks:
+        - FF00000 (OS-specific)
+        - F0000000 (processor-specific)
+  ]]></details>
+</format>

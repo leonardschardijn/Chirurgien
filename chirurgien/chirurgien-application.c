@@ -21,6 +21,8 @@
 #include "chirurgien-window.h"
 #include "chirurgien-actions.h"
 
+#include <chirurgien-formats.h>
+
 
 struct _ChirurgienApplication
 {
@@ -59,6 +61,7 @@ chirurgien_application_startup (GApplication *app)
 
     gtk_application_set_accels_for_action (GTK_APPLICATION (app), "app.preferences", (const gchar *[]) {"<Primary>P", NULL});
     gtk_application_set_accels_for_action (GTK_APPLICATION (app), "app.about", (const gchar *[]) {"F1", NULL});
+    gtk_application_set_accels_for_action (GTK_APPLICATION (app), "app.formats", (const gchar *[]) {"F2", NULL});
     gtk_application_set_accels_for_action (GTK_APPLICATION (app), "app.quit", (const gchar *[]) {"<Primary>Q", NULL});
     gtk_application_set_accels_for_action (GTK_APPLICATION (app), "win.open", (const gchar *[]) {"<Primary>O", NULL});
     gtk_application_set_accels_for_action (GTK_APPLICATION (app), "win.save", (const gchar *[]) {"<Primary>S", NULL});
@@ -70,6 +73,17 @@ chirurgien_application_startup (GApplication *app)
     gtk_application_set_accels_for_action (GTK_APPLICATION (app), "win.redo", (const gchar *[]) {"<Primary><Shift>Z", NULL});
     gtk_application_set_accels_for_action (GTK_APPLICATION (app), "win.next-tab", (const gchar *[]) {"<Primary><Alt>Page_Down", NULL});
     gtk_application_set_accels_for_action (GTK_APPLICATION (app), "win.previous-tab", (const gchar *[]) {"<Primary><Alt>Page_Up", NULL});
+
+    /* Initialize supported formats */
+    chirurgien_formats_initialize ("/io/github/leonardschardijn/chirurgien/format-definitions/cpio-format.xml");
+    chirurgien_formats_initialize ("/io/github/leonardschardijn/chirurgien/format-definitions/elf-format.xml");
+    chirurgien_formats_initialize ("/io/github/leonardschardijn/chirurgien/format-definitions/gif-format.xml");
+    chirurgien_formats_initialize ("/io/github/leonardschardijn/chirurgien/format-definitions/jpeg-format.xml");
+    chirurgien_formats_initialize ("/io/github/leonardschardijn/chirurgien/format-definitions/pe-format.xml");
+    chirurgien_formats_initialize ("/io/github/leonardschardijn/chirurgien/format-definitions/png-format.xml");
+    chirurgien_formats_initialize ("/io/github/leonardschardijn/chirurgien/format-definitions/tar-format.xml");
+    chirurgien_formats_initialize ("/io/github/leonardschardijn/chirurgien/format-definitions/tiff-format.xml");
+    chirurgien_formats_initialize ("/io/github/leonardschardijn/chirurgien/format-definitions/webp-format.xml");
 }
 
 static void

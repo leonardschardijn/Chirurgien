@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<format name="tar archive" short-name="tar">
+  <magic>
+    <signature>
+      <match char-value="ustar" offset="257"/>
+    </signature>
+  </magic>
+  <colors>
+    <color id="final-blk" name="Final empty block" index="1" background="true"/>
+    <color id="hdr-flds-1" name="Header fields" index="2" background="true"/>
+    <color id="hdr-flds-2" name="Header fields" index="3" background="true"/>
+    <color id="contents" name="File contents" index="5" background="true"/>
+    <color id="padding" name="Padding" index="8" background="false"/>
+  </colors>
+  <run>
+    <loop until-set="stop">
+      <field id="file-name" navigation="File" tab="File"/>
+      <field id="file-mode" tab="File"/>
+      <field id="usr-id" tab="File" store-var="tar-field" ascii-base="8"/>
+      <print line="User ID" var-id="tar-field" tab="File" section="User ID (decimal)"/>
+      <field id="grp-id" tab="File" store-var="tar-field" ascii-base="8"/>
+      <print line="Group ID" var-id="tar-field" tab="File" section="Group ID (decimal)"/>
+      <field id="file-size" tab="File" store-var="file-size" ascii-base="8"/>
+      <print line="File size" var-id="file-size" tab="File" section="File size (decimal)"/>
+      <field id="mod-time" tab="File" store-var="tar-field" ascii-base="8"/>
+      <print line="Last modification time" var-id="tar-field" tooltip="As Unix time (seconds that have elapsed since 1970-01-01 00:00:00 UTC)" tab="File" section="Last modification time (decimal)"/>
+      <field id="hdr-chcksm"/>
+      <field id="file-type" tab="File" section="File type"/>
+      <selection>
+        <match hex-value="00">
+          <field id="lnk-file-name" suppress-print="true"/>
+        </match>
+        <match>
+          <field id="lnk-file-name" tab="File"/>
+        </match>
+      </selection>
+      <field id="ustar-id"/>
+      <field id="ustar-ver"/>
+      <selection>
+        <match hex-value="00">
+          <field id="owner-usr-name" suppress-print="true"/>
+        </match>
+        <match>
+          <field id="owner-usr-name" tab="File"/>
+        </match>
+      </selection>
+      <selection>
+        <match hex-value="00">
+          <field id="owner-grp-name" suppress-print="true"/>
+        </match>
+        <match>
+          <field id="owner-grp-name" tab="File"/>
+        </match>
+      </selection>
+      <selection>
+        <match hex-value="00">
+          <field id="dev-maj" suppress-print="true"/>
+        </match>
+        <match>
+          <field id="dev-maj" tab="File" store-var="tar-field" ascii-base="8"/>
+          <print line="Device major number" var-id="tar-field" tab="File" section="Device major number (decimal)"/>
+        </match>
+      </selection>
+      <selection>
+        <match hex-value="00">
+          <field id="dev-min" suppress-print="true"/>
+        </match>
+        <match>
+          <field id="dev-min" tab="File" store-var="tar-field" ascii-base="8"/>
+          <print line="Device minor number" var-id="tar-field" tab="File" section="Device minor number (decimal)"/>
+        </match>
+      </selection>
+      <selection>
+        <match hex-value="00">
+          <field id="file-name-pre" suppress-print="true"/>
+        </match>
+        <match>
+          <field id="file-name-pre" tab="File"/>
+        </match>
+      </selection>
+      <field id="hdr-padding"/>
+      <match var-id="file-size" op="gt" num-value="0">
+        <exec var-id="excess" set="file-size" modulo="512"/>
+        <field id="contents" limit="file-size" tab="File"/>
+        <exec var-id="padding" set="512" subtract="excess"/>
+        <field id="contents-padding" limit="padding"/>
+      </match>
+      <print tab="File" insert-tab="true"/>
+      <exec var-id="file-count" add="1"/>
+      <match hex-value="0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000">
+        <field id="final-blk" navigation="End"/>
+        <exec var-id="stop" set="1"/>
+      </match>
+    </loop>
+    <field id="arch-padding" limit-failed="true"/>
+    <print line="Number of files in archive" var-id="file-count" section="Archive"/>
+  </run>
+  <!-- tar fields -->
+  <field-defs>
+    <field-def id="file-name" name="File name" color="hdr-flds-1" size="100" print="text"/>
+    <field-def id="file-mode" name="File mode" color="hdr-flds-2" size="8" tooltip="File mode in octal format" print="text"/>
+    <field-def id="usr-id" tag="User ID" name="User ID (ASCII-encoded octal)" color="hdr-flds-1" size="8" print="text"/>
+    <field-def id="grp-id" tag="Group ID" name="Group ID (ASCII-encoded octal)" color="hdr-flds-2" size="8" print="text"/>
+    <field-def id="file-size" tag="File size" name="File size (ASCII-encoded octal)" color="hdr-flds-1" size="12" print="text"/>
+    <field-def id="mod-time" tag="Last modification time" name="Last modification time (ASCII-encoded octal)" color="hdr-flds-2" size="12" print="text"/>
+    <field-def id="hdr-chcksm" name="Header checksum" color="hdr-flds-1" size="8"/>
+    <field-def id="file-type" name="File type" color="hdr-flds-2" size="1" print="option">
+      <options>
+        <option name="Regular file" hex-value="00"/>
+        <option name="Regular file" hex-value="30"/>
+        <option name="Hard link" hex-value="31"/>
+        <option name="Symbolic link" hex-value="32"/>
+        <option name="Character special file" hex-value="33"/>
+        <option name="Block special file" hex-value="34"/>
+        <option name="Directory" hex-value="35"/>
+        <option name="FIFO special file" hex-value="36"/>
+        <option name="Global extended header" hex-value="67"/>
+        <option name="Extended header" hex-value="78"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <field-def id="lnk-file-name" name="Linked file name" color="hdr-flds-1" size="100" print="text"/>
+    <field-def id="ustar-id" name="UStar identifier" color="hdr-flds-2" size="6"/>
+    <field-def id="ustar-ver" name="UStar version" color="hdr-flds-1" size="2"/>
+    <field-def id="owner-usr-name" name="Owner user name" color="hdr-flds-2" size="32" print="text"/>
+    <field-def id="owner-grp-name" name="Owner group name" color="hdr-flds-1" size="32" print="text"/>
+    <field-def id="dev-maj" tag="Device major number" name="Device major number (ASCII-encoded octal)" color="hdr-flds-2" size="8" print="text"/>
+    <field-def id="dev-min" tag="Device minor number" name="Device minor number (ASCII-encoded octal)" color="hdr-flds-1" size="8" print="text"/>
+    <field-def id="file-name-pre" name="File name prefix" color="hdr-flds-2" size="155" print="text"/>
+    <field-def id="hdr-padding" name="Header block padding" color="padding" size="12"/>
+    <field-def id="contents" name="File contents" color="contents" size="available"/>
+    <field-def id="contents-padding" name="File contents padding" color="padding" size="available"/>
+    <field-def id="arch-padding" name="Archive padding" color="padding" size="available"/>
+    <field-def id="final-blk" name="Final empty block" color="final-blk" size="512"/>
+  </field-defs>
+  <details><![CDATA[
+<b>Recognized tar archive formats</b>:
+    - POSIX UStar
+    - PAX interchange format (an extension of the UStar format)
+
+Non-standard file types are not recognized
+Pax records are not interpreted
+  ]]></details>
+</format>

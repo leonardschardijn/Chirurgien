@@ -99,6 +99,13 @@
             <child>
               <object class="GtkShortcutsShortcut">
                 <property name="shortcut-type">GTK_SHORTCUT_ACCELERATOR</property>
+                <property name="accelerator">F2</property>
+                <property name="title" translatable="yes">Formats</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="shortcut-type">GTK_SHORTCUT_ACCELERATOR</property>
                 <property name="accelerator">F1</property>
                 <property name="title" translatable="yes">About</property>
               </object>

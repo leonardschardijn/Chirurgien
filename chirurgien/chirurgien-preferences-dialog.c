@@ -18,7 +18,7 @@
 
 #include "chirurgien-preferences-dialog.h"
 
-#include "chirurgien-colors.h"
+#include "chirurgien-globals.h"
 
 
 struct _ChirurgienPreferencesDialog
@@ -55,15 +55,15 @@ G_DEFINE_TYPE (ChirurgienPreferencesDialog, chirurgien_preferences_dialog, GTK_T
 static void
 set_colors (ChirurgienPreferencesDialog *dialog)
 {
-    gtk_color_chooser_set_rgba (GTK_COLOR_CHOOSER (dialog->color0), &colors[0]);
-    gtk_color_chooser_set_rgba (GTK_COLOR_CHOOSER (dialog->color1), &colors[1]);
-    gtk_color_chooser_set_rgba (GTK_COLOR_CHOOSER (dialog->color2), &colors[2]);
-    gtk_color_chooser_set_rgba (GTK_COLOR_CHOOSER (dialog->color3), &colors[3]);
-    gtk_color_chooser_set_rgba (GTK_COLOR_CHOOSER (dialog->color4), &colors[4]);
-    gtk_color_chooser_set_rgba (GTK_COLOR_CHOOSER (dialog->color5), &colors[5]);
-    gtk_color_chooser_set_rgba (GTK_COLOR_CHOOSER (dialog->color6), &colors[6]);
-    gtk_color_chooser_set_rgba (GTK_COLOR_CHOOSER (dialog->color7), &colors[7]);
-    gtk_color_chooser_set_rgba (GTK_COLOR_CHOOSER (dialog->color8), &colors[8]);
+    gtk_color_chooser_set_rgba (GTK_COLOR_CHOOSER (dialog->color0), &chirurgien_colors[0]);
+    gtk_color_chooser_set_rgba (GTK_COLOR_CHOOSER (dialog->color1), &chirurgien_colors[1]);
+    gtk_color_chooser_set_rgba (GTK_COLOR_CHOOSER (dialog->color2), &chirurgien_colors[2]);
+    gtk_color_chooser_set_rgba (GTK_COLOR_CHOOSER (dialog->color3), &chirurgien_colors[3]);
+    gtk_color_chooser_set_rgba (GTK_COLOR_CHOOSER (dialog->color4), &chirurgien_colors[4]);
+    gtk_color_chooser_set_rgba (GTK_COLOR_CHOOSER (dialog->color5), &chirurgien_colors[5]);
+    gtk_color_chooser_set_rgba (GTK_COLOR_CHOOSER (dialog->color6), &chirurgien_colors[6]);
+    gtk_color_chooser_set_rgba (GTK_COLOR_CHOOSER (dialog->color7), &chirurgien_colors[7]);
+    gtk_color_chooser_set_rgba (GTK_COLOR_CHOOSER (dialog->color8), &chirurgien_colors[8]);
 }
 
 static void
@@ -124,19 +124,21 @@ reset_default_colors (G_GNUC_UNUSED GtkButton *button,
 
     dialog = user_data;
 
-    for (gint i = 0; i < TOTAL_COLORS; i++)
+    for (gint i = 0; i < CHIRURGIEN_TOTAL_COLORS; i++)
     {
-        g_settings_reset (dialog->preferences_settings, color_names[i]);
+        g_settings_reset (dialog->preferences_settings,
+                          get_color_name (i));
 
-        color_string = g_settings_get_string (dialog->preferences_settings, color_names[i]);
+        color_string = g_settings_get_string (dialog->preferences_settings,
+                                              get_color_name (i));
 
-        gdk_rgba_parse (&colors[i], color_string);
+        gdk_rgba_parse (&chirurgien_colors[i], color_string);
 
-        pango_colors[i].red = colors[i].red * 65535;
-        pango_colors[i].green = colors[i].green * 65535;
-        pango_colors[i].blue = colors[i].blue * 65535;
+        pango_colors[i].red = chirurgien_colors[i].red * 65535;
+        pango_colors[i].green = chirurgien_colors[i].green * 65535;
+        pango_colors[i].blue = chirurgien_colors[i].blue * 65535;
 
-        pango_alphas[i] = colors[i].alpha * 65535;
+        pango_alphas[i] = chirurgien_colors[i].alpha * 65535;
 
         g_free (color_string);
     }
@@ -163,14 +165,16 @@ color_selected (GtkColorButton *button,
     color_string = gdk_rgba_to_string (&color);
     gdk_rgba_parse (&color, color_string);
 
-    colors[ color_index ] = color;
+    chirurgien_colors[ color_index ] = color;
 
     pango_colors[ color_index ].red = color.red * 65535;
     pango_colors[ color_index ].green = color.green * 65535;
     pango_colors[ color_index ].blue = color.blue * 65535;
     pango_alphas[ color_index ] = color.alpha * 65535;
 
-    g_settings_set_string (dialog->preferences_settings, color_names[ color_index ], color_string);
+    g_settings_set_string (dialog->preferences_settings,
+                           get_color_name (color_index),
+                           color_string);
 }
 
 static void

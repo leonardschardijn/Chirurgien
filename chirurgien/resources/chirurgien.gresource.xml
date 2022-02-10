@@ -13,16 +13,15 @@
     <file preprocess="xml-stripblanks">ui/chirurgien-formats-dialog.ui</file>
     <file preprocess="xml-stripblanks">ui/chirurgien-shortcuts-dialog.ui</file>
 
-    <!-- Supported formats information tabs -->
-    <file preprocess="xml-stripblanks">formats/intro-tab.ui</file>
-    <file preprocess="xml-stripblanks">formats/cpio-tab.ui</file>
-    <file preprocess="xml-stripblanks">formats/elf-tab.ui</file>
-    <file preprocess="xml-stripblanks">formats/gif-tab.ui</file>
-    <file preprocess="xml-stripblanks">formats/jpeg-tab.ui</file>
-    <file preprocess="xml-stripblanks">formats/pe-tab.ui</file>
-    <file preprocess="xml-stripblanks">formats/png-tab.ui</file>
-    <file preprocess="xml-stripblanks">formats/tar-tab.ui</file>
-    <file preprocess="xml-stripblanks">formats/tiff-tab.ui</file>
-    <file preprocess="xml-stripblanks">formats/webp-tab.ui</file>
+    <!-- Format definitions -->
+    <file preprocess="xml-stripblanks" compressed="true">format-definitions/cpio-format.xml</file>
+    <file preprocess="xml-stripblanks" compressed="true">format-definitions/elf-format.xml</file>
+    <file preprocess="xml-stripblanks" compressed="true">format-definitions/gif-format.xml</file>
+    <file preprocess="xml-stripblanks" compressed="true">format-definitions/jpeg-format.xml</file>
+    <file preprocess="xml-stripblanks" compressed="true">format-definitions/pe-format.xml</file>
+    <file preprocess="xml-stripblanks" compressed="true">format-definitions/png-format.xml</file>
+    <file preprocess="xml-stripblanks" compressed="true">format-definitions/tar-format.xml</file>
+    <file preprocess="xml-stripblanks" compressed="true">format-definitions/tiff-format.xml</file>
+    <file preprocess="xml-stripblanks" compressed="true">format-definitions/webp-format.xml</file>
   </gresource>
 </gresources>

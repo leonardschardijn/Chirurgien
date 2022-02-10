@@ -23,20 +23,24 @@
 #include <glib/gi18n.h>
 
 #include <chirurgien-formats.h>
-#include "chirurgien-colors.h"
+
+#include "chirurgien-globals.h"
 
 #include "chirurgien-view-tab.h"
 #include "chirurgien-editor.h"
 #include "chirurgien-actions.h"
 
 
-typedef enum {
-    FieldEdition,
-    FieldDeletion,
-    FieldInsertion
+typedef enum
+{
+    FIELD_EDITION,
+    FIELD_DELETION,
+    FIELD_INSERTION
+
 } ModificationType;
 
-typedef struct {
+typedef struct
+{
     /* Modification type, conditions interpretation
      * of the rest of the field */
     ModificationType      type;
@@ -129,7 +133,7 @@ struct _ChirurgienView
     /* The navigation buttons */
     GtkBox               *navigation;
     /* Selected navigation target */
-    FileField            *navigation_target;
+    const FileField      *navigation_target;
 
     /* View state */
     gboolean              has_file;
@@ -266,9 +270,9 @@ highlight_fields (ChirurgienView *view,
     PangoAttribute *attribute, *alpha_attribute, *navigation_attribute,
                    *additional_attribute = NULL, *additional_alpha_attribute;
 
-    FileField *file_field;
+    const FileField *file_field;
 
-    guint real_field_start;
+    gsize real_field_start;
     gsize field_end, scroll_end;
 
     pango_layout_set_attributes (layout, NULL);
@@ -281,14 +285,14 @@ highlight_fields (ChirurgienView *view,
 
     attribute_list = pango_attr_list_new ();
 
-    for (GSList *i = view->file_fields; i != NULL; i = i->next)
+    for (GSList *i = view->file_fields; i; i = i->next)
     {
         file_field = i->data;
 
         if (file_field->field_offset > scroll_end)
             break;
 
-        field_end = file_field->field_offset + file_field->field_length;
+        field_end = file_field->field_offset + file_field->field_size;
         if (field_end <= view->scroll_offset)
             continue;
 
@@ -317,7 +321,7 @@ highlight_fields (ChirurgienView *view,
         attribute->end_index = ((field_end - view->scroll_offset) * 3) - 1;
 
         /* Additional color */
-        if (file_field->additional_color_index != -1 &&
+        if (file_field->additional_color_index < CHIRURGIEN_TOTAL_COLORS &&
             attribute->start_index == real_field_start)
         {
             if (file_field->background)
@@ -515,14 +519,14 @@ handle_motion_event (G_GNUC_UNUSED GtkEventControllerMotion *controller,
     field_tooltip = g_string_new (NULL);
 
     /* Build the list of fields at the new mouse index */
-    for (GSList *i = view->file_fields; i != NULL; i = i->next)
+    for (GSList *i = view->file_fields; i; i = i->next)
     {
         file_field = i->data;
 
         if (file_field->field_offset > (gsize) byte_index)
             break;
 
-        if (file_field->field_offset + file_field->field_length > (gsize) byte_index)
+        if (file_field->field_offset + file_field->field_size > (gsize) byte_index)
         {
             view->fields_at_mouse_index = g_slist_prepend (view->fields_at_mouse_index, file_field);
 
@@ -597,13 +601,13 @@ edit_field_response (GtkDialog *dialog,
 
         if (memcmp (file_contents,
                     new_contents,
-                    view->selected_field->field_length))
+                    view->selected_field->field_size))
         {
             modification = g_slice_new (FileModification);
 
-            modification->type = FieldEdition;
+            modification->type = FIELD_EDITION;
             modification->offset = view->selected_field->field_offset;
-            modification->length = view->selected_field->field_length;
+            modification->length = view->selected_field->field_size;
             modification->data = g_malloc (modification->length);
 
             file_contents = view->file_contents->data + modification->offset;
@@ -648,7 +652,7 @@ edit_field (GtkButton *button,
     editor = chirurgien_editor_new ();
     chirurgien_editor_set_contents (CHIRURGIEN_EDITOR (editor),
                                     view->file_contents->data + view->selected_field->field_offset,
-                                    view->selected_field->field_length);
+                                    view->selected_field->field_size);
 
     for (gsize i = 0; !short_field_name; i++)
         if (view->selected_field->field_name[i] == '\n' ||
@@ -693,7 +697,7 @@ extract_field (G_GNUC_UNUSED GtkButton *button,
     extract_view = chirurgien_view_new (window);
     g_byte_array_append (extract_view->file_contents,
                          view->file_contents->data + view->selected_field->field_offset,
-                         view->selected_field->field_length);
+                         view->selected_field->field_size);
 
     for (gsize i = 0; !short_field_name; i++)
         if (view->selected_field->field_name[i] == '\n' ||
@@ -725,9 +729,9 @@ delete_field (GtkButton *button,
 
     modification = g_slice_new (FileModification);
 
-    modification->type = FieldDeletion;
+    modification->type = FIELD_DELETION;
     modification->offset = view->selected_field->field_offset;
-    modification->length = view->selected_field->field_length;
+    modification->length = view->selected_field->field_size;
     modification->data = g_malloc (modification->length);
 
     memcpy (modification->data,
@@ -767,12 +771,12 @@ insert_edit_response (GtkDialog *dialog,
     {
         modification = g_slice_new (FileModification);
 
-        modification->type = FieldInsertion;
+        modification->type = FIELD_INSERTION;
         if (!view->insertion_type)
             modification->offset = view->selected_field->field_offset;
         else
             modification->offset = view->selected_field->field_offset +
-                                   view->selected_field->field_length;
+                                   view->selected_field->field_size;
         modification->length = chirurgien_editor_get_contents_size (editor);
         modification->data = g_malloc (modification->length);
 
@@ -1027,7 +1031,7 @@ handle_click (GtkGestureClick *gesture,
             gtk_grid_attach (GTK_GRID (grid), widget, 0, 0, 2, 1);
 
             grid_row = 1;
-            for (GSList *i = view->fields_at_mouse_index; i != NULL; i = i->next)
+            for (GSList *i = view->fields_at_mouse_index; i; i = i->next)
             {
                 file_field = i->data;
 
@@ -1058,7 +1062,7 @@ navigate_view (GtkButton *button,
                gpointer   user_data)
 {
     ChirurgienView *view;
-    FileField *file_field;
+    const FileField *file_field;
 
     gsize field_line;
 
@@ -1086,7 +1090,7 @@ build_navigation_buttons (ChirurgienView *view)
     FileField *file_field;
     GtkWidget *button;
 
-    for (GSList *i = view->file_fields; i != NULL; i = i->next)
+    for (GSList *i = view->file_fields; i; i = i->next)
     {
         file_field = i->data;
 
@@ -1129,7 +1133,7 @@ get_view_measures (ChirurgienView *view)
     font_metrics = pango_context_get_metrics (context, pango_context_get_font_description (context),
                                               pango_context_get_language (context));
 
-    view->char_width =  pango_font_metrics_get_approximate_digit_width (font_metrics);
+    view->char_width =  pango_font_metrics_get_approximate_char_width (font_metrics);
 
     view->line_height = pango_font_metrics_get_ascent (font_metrics) +
                         pango_font_metrics_get_descent (font_metrics);
@@ -1159,7 +1163,7 @@ chirurgien_view_dispose (GObject *object)
 
     gtk_widget_unparent (GTK_WIDGET (g_steal_pointer (&view->main)));
 
-    for (GSList *i = view->file_fields; i != NULL; i = i->next)
+    for (GSList *i = view->file_fields; i; i = i->next)
     {
         file_field = i->data;
         g_free (file_field->field_name);
@@ -1168,7 +1172,7 @@ chirurgien_view_dispose (GObject *object)
     }
     g_slist_free (g_steal_pointer (&view->file_fields));
 
-    for (GList *i = view->modifications.head; i != NULL; i = i->next)
+    for (GList *i = view->modifications.head; i; i = i->next)
     {
         modification = i->data;
         g_free (modification->data);
@@ -1350,18 +1354,17 @@ chirurgien_view_set_file (ChirurgienView *view,
 void
 chirurgien_view_do_analysis (ChirurgienView *view)
 {
-    FormatsFile file;
+    ProcessorFile *file;
 
-    file.file_contents = view->file_contents->data;
-    file.file_size = view->file_contents->len;
-    file.file_contents_index = 0;
-    file.file_fields = NULL;
-    file.description = view->description;
-    file.overview = view->overview;
+    file = processor_file_create (view->file_contents->data,
+                                  view->file_contents->len,
+                                  view->description,
+                                  view->overview);
 
-    chirurgien_formats_analyze (&file);
+    chirurgien_formats_analyze (file);
 
-    view->file_fields = file.file_fields;
+    view->file_fields = processor_file_get_field_list (file);
+    processor_file_destroy (file);
 
     build_navigation_buttons (view);
 }
@@ -1375,7 +1378,7 @@ chirurgien_view_redo_analysis (ChirurgienView *view)
     if (!view->modified)
         return;
 
-    for (GSList *i = view->file_fields; i != NULL; i = i->next)
+    for (GSList *i = view->file_fields; i; i = i->next)
         g_slice_free (FileField, i->data);
     g_slist_free (g_steal_pointer (&view->file_fields));
 
@@ -1387,12 +1390,12 @@ chirurgien_view_redo_analysis (ChirurgienView *view)
     view->selected_field = NULL;
 
     for (child_widget = gtk_widget_get_first_child (GTK_WIDGET (view->navigation));
-         child_widget != NULL;
+         child_widget;
          child_widget = gtk_widget_get_first_child (GTK_WIDGET (view->navigation)))
         gtk_widget_unparent (child_widget);
 
     for (child_widget = gtk_widget_get_first_child (GTK_WIDGET (view->overview));
-         child_widget != NULL;
+         child_widget;
          child_widget = gtk_widget_get_first_child (GTK_WIDGET (view->overview)))
         gtk_widget_unparent (child_widget);
 
@@ -1453,14 +1456,14 @@ chirurgien_view_undo (ChirurgienView *view)
 
     modification = g_queue_peek_nth (&view->modifications, view->modification_index);
 
-    if (modification->type == FieldEdition)
+    if (modification->type == FIELD_EDITION)
     {
         contents = view->file_contents->data + modification->offset;
 
         for (gsize i = 0; i < modification->length; i++)
             contents[i] ^= modification->data[i];
     }
-    else if (modification->type == FieldDeletion)
+    else if (modification->type == FIELD_DELETION)
     {
         new_file_contents = g_byte_array_sized_new (view->file_contents->len +
                                                     modification->length);
@@ -1481,7 +1484,7 @@ chirurgien_view_undo (ChirurgienView *view)
 
         force_reanalysis = TRUE;
     }
-    else if (modification->type == FieldInsertion)
+    else if (modification->type == FIELD_INSERTION)
     {
         g_byte_array_remove_range (view->file_contents,
                                    modification->offset,
@@ -1509,14 +1512,14 @@ chirurgien_view_redo (ChirurgienView *view)
 
     modification = g_queue_peek_nth (&view->modifications, ++view->modification_index);
 
-    if (modification->type == FieldEdition)
+    if (modification->type == FIELD_EDITION)
     {
         contents = view->file_contents->data + modification->offset;
 
         for (gsize i = 0; i < modification->length; i++)
             contents[i] ^= modification->data[i];
     }
-    else if (modification->type == FieldDeletion)
+    else if (modification->type == FIELD_DELETION)
     {
         g_byte_array_remove_range (view->file_contents,
                                    modification->offset,
@@ -1524,7 +1527,7 @@ chirurgien_view_redo (ChirurgienView *view)
 
         force_reanalysis = TRUE;
     }
-    else if (modification->type == FieldInsertion)
+    else if (modification->type == FIELD_INSERTION)
     {
         new_file_contents = g_byte_array_sized_new (view->file_contents->len +
                                                     modification->length);

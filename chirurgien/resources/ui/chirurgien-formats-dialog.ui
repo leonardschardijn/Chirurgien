@@ -19,9 +19,169 @@
             <property name="margin-end">10</property>
             <property name="margin-top">10</property>
             <property name="margin-bottom">10</property>
+            <child>
+              <object class="GtkStackPage">
+                <property name="title" translatable="yes">New format</property>
+                <property name="child">
+                  <object class="GtkBox">
+                    <property name="orientation">GTK_ORIENTATION_VERTICAL</property>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="label" translatable="yes">Load new format definition</property>
+                        <property name="margin-top">70</property>
+                        <property name="margin-bottom">10</property>
+                        <attributes>
+                          <attribute name="weight" value="PANGO_WEIGHT_BOLD"/>
+                          <attribute name="scale" value="1.3"/>
+                        </attributes>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="margin-bottom">10</property>
+                        <property name="label" translatable="yes">System formats are evaluated before user-defined formats</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="label" translatable="yes">Enable/disable system formats in the 'System formats' tab</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="margin-bottom">40</property>
+                        <property name="label" translatable="yes">Remove user-defined formats in the 'User-defined formats' tab</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkButton" id="new_format">
+                        <property name="halign">GTK_ALIGN_CENTER</property>
+                        <child>
+                          <object class="GtkLabel">
+                            <property name="label" translatable="yes">New format</property>
+                            <property name="margin-start">30</property>
+                            <property name="margin-end">30</property>
+                          </object>
+                        </child>
+                        <style>
+                          <class name="circular"/>
+                        </style>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkScrolledWindow" id="message">
+                        <property name="hscrollbar-policy">GTK_POLICY_NEVER</property>
+                        <property name="vscrollbar-policy">GTK_POLICY_NEVER</property>
+                        <property name="margin-top">30</property>
+                        <property name="margin-start">180</property>
+                        <property name="margin-end">180</property>
+                        <property name="visible">f</property>
+                        <property name="has-frame">t</property>
+                        <child>
+                          <object class="GtkTextView">
+                            <property name="wrap-mode">GTK_WRAP_WORD</property>
+                            <property name="top-margin">5</property>
+                            <property name="bottom-margin">5</property>
+                            <property name="left-margin">5</property>
+                            <property name="right-margin">5</property>
+                            <property name="cursor-visible">f</property>
+                            <property name="editable">f</property>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkStackPage">
+                <property name="title" translatable="yes">System formats</property>
+                <property name="child">
+                  <object class="GtkBox">
+                    <property name="orientation">GTK_ORIENTATION_VERTICAL</property>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="label" translatable="yes">System formats</property>
+                        <property name="margin-top">10</property>
+                        <property name="margin-bottom">10</property>
+                        <attributes>
+                          <attribute name="weight" value="PANGO_WEIGHT_BOLD"/>
+                          <attribute name="scale" value="1.3"/>
+                        </attributes>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="margin-bottom">20</property>
+                        <property name="label" translatable="yes">Enable/disable predefined file formats</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkFrame">
+                        <property name="halign">GTK_ALIGN_CENTER</property>
+                        <child>
+                          <object class="GtkListBox" id="system_formats">
+                            <property name="selection-mode">GTK_SELECTION_NONE</property>
+                            <style>
+                              <class name="rich-list"/>
+                            </style>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </property>
+              </object>
+            </child>
           </object>
         </child>
       </object>
     </child>
   </template>
+  <object class="GtkBox" id="user_formats_page">
+    <property name="orientation">GTK_ORIENTATION_VERTICAL</property>
+    <child>
+      <object class="GtkLabel">
+        <property name="label" translatable="yes">User-defined formats</property>
+        <property name="margin-top">10</property>
+        <property name="margin-bottom">10</property>
+        <attributes>
+          <attribute name="weight" value="PANGO_WEIGHT_BOLD"/>
+          <attribute name="scale" value="1.3"/>
+        </attributes>
+      </object>
+    </child>
+    <child>
+      <object class="GtkLabel">
+        <property name="margin-bottom">20</property>
+        <property name="label" translatable="yes">Remove user-defined file formats</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkFrame">
+        <property name="halign">GTK_ALIGN_CENTER</property>
+        <child>
+          <object class="GtkListBox" id="user_formats">
+            <property name="selection-mode">GTK_SELECTION_NONE</property>
+            <style>
+              <class name="rich-list"/>
+            </style>
+            <child type="placeholder">
+              <object class="GtkLabel">
+                <property name="margin-top">10</property>
+                <property name="margin-bottom">10</property>
+                <property name="margin-start">10</property>
+                <property name="margin-end">10</property>
+                <property name="label" translatable="yes">No user-defined formats available</property>
+                <style>
+                  <class name="dim-label"/>
+                </style>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+  </object>
 </interface>

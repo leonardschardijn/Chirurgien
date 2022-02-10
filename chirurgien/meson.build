@@ -7,6 +7,7 @@ chirurgien_sources = [
   'chirurgien-editor.c',
   'chirurgien-actions.c',
   'chirurgien-utils.c',
+  'chirurgien-globals.c',
   'chirurgien-preferences-dialog.c',
   'chirurgien-formats-dialog.c'
 ]

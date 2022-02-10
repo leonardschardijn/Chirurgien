@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<format name="?" short-name="?">
+  <endianness>
+    <!-- <little-endian hex-value="?"/> -->
+    <!-- <big-endian hex-value="?"/> -->
+  </endianness>
+  <magic>
+    <signature>
+      <!-- <match hex-value="?"/> -->
+    </signature>
+  </magic>
+  <colors>
+    <!-- <color id="?" name="?" index="0" background="true"/> -->
+  </colors>
+  <run>
+    <!-- <field id="?"/> -->
+  </run>
+  <!-- Optional run-blocks -->
+  <!-- <block-defs> -->
+  <!--   <block-def id="?"> -->
+  <!--     <field id="?"/> -->
+  <!--   </block-def> -->
+  <!-- </block-defs> -->
+  <field-defs>
+    <!-- <field-def id="?" name="?" color="?" size="?"/> -->
+  </field-defs>
+  <details><![CDATA[
+New format
+  ]]></details>
+</format>

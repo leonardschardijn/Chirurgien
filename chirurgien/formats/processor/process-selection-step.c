@@ -1,6 +1,6 @@
-/* chirurgien-formats.h
+/* process-selection-step.c
  *
- * Copyright (C) 2020 - Daniel Léonard Schardijn
+ * Copyright (C) 2021 - Daniel Léonard Schardijn
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,18 +16,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include "processor.h"
 
-#include <glib.h>
 
-#include "processor/processor-file.h"
+void
+process_selection_start_step (ProcessorState *state)
+{
+    SelectionScope *scope;
 
-G_BEGIN_DECLS
+    scope = g_slice_new0 (SelectionScope);
 
-void    chirurgien_formats_analyze       (ProcessorFile *);
+    /* Start selection scope */
+    g_queue_push_tail (&state->selection_stack, scope);
+}
 
-void    chirurgien_formats_initialize    (const gchar *);
-
-gchar * chirurgien_formats_load          (GFile *);
-
-G_END_DECLS
+void
+process_selection_end_step (ProcessorState *state)
+{
+    /* End selection scope */
+    if (state->selection_stack.length)
+        selection_scope_destroy (g_queue_pop_tail (&state->selection_stack));
+}

@@ -1,0 +1,644 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<format name="WebP image" short-name="WEBP">
+  <endianness>
+    <little-endian/>
+  </endianness>
+  <magic>
+    <signature>
+      <match char-value="RIFF"/>
+      <match char-value="WEBP" offset="8"/>
+    </signature>
+  </magic>
+  <colors>
+    <color id="chunk-4cc" name="Chunk FourCC" index="0" background="true"/>
+    <color id="chunk-size" name="Chunk size" index="1" background="true"/>
+    <color id="chunk-data-1" name="Chunk data" index="2" background="true"/>
+    <color id="chunk-data-2" name="Chunk data" index="3" background="true"/>
+    <color id="error-1" name="Error" index="6" background="false"/>
+    <color id="error-2" name="Error" index="7" background="false"/>
+    <color id="padding" name="Padding" index="8" background="false"/>
+  </colors>
+  <run>
+    <field id="riff-4cc" navigation="RIFF"/>
+    <field id="chunk-size" store-var="riff-size"/>
+    <field id="webp-4cc" navigation="WEBP" limit="riff-size"/>
+    <loop until-set="riff-size" num-value="0">
+      <selection>
+        <match char-value="VP8 ">
+          <field id="vp8-4cc" limit="riff-size" navigation="VP8"/>
+          <block id="read-chunk-size"/>
+          <match var-id="chunk-size" op="gt" num-value="2">
+            <selection>
+              <match var-id="anmf-def" op="def">
+                <field id="vp8-0" tab="ANMF(s)" section="Frame details (lossy compression)"/>
+                <field id="vp8-1" tab="ANMF(s)"/>
+                <field id="vp8-2" store-var="flag"/>
+                <selection>
+                  <match var-id="flag" op="def">
+                    <field id="vp8-2-yes" tab="ANMF(s)"/>
+                  </match>
+                  <match>
+                    <field id="vp8-2-no" tab="ANMF(s)"/>
+                  </match>
+                </selection>
+              </match>
+              <match>
+                <field id="vp8-0" section="Frame details (lossy compression)"/>
+                <field id="vp8-1"/>
+                <field id="vp8-2" store-var="flag"/>
+                <selection>
+                  <match var-id="flag" op="def">
+                    <field id="vp8-2-yes"/>
+                  </match>
+                  <match>
+                    <field id="vp8-2-no"/>
+                  </match>
+                </selection>
+              </match>
+            </selection>
+          </match>
+          <field id="vp8-3" limit="chunk-size"/>
+          <selection>
+            <match hex-value="9D012A">
+              <field id="vp8-4" limit="chunk-size"/>
+              <selection>
+                <match var-id="anmf-def" op="def">
+                  <field id="vp8-5" tab="ANMF(s)"/>
+                  <field id="vp8-6" tab="ANMF(s)"/>
+                </match>
+                <match>
+                  <field id="vp8-5"/>
+                  <field id="vp8-6"/>
+                </match>
+              </selection>
+              <field id="vp8-7" limit="chunk-size"/>
+              <selection>
+                <match var-id="anmf-def" op="def">
+                  <field id="vp8-8" tab="ANMF(s)"/>
+                  <field id="vp8-9" tab="ANMF(s)"/>
+                </match>
+                <match>
+                  <field id="vp8-8"/>
+                  <field id="vp8-9"/>
+                </match>
+              </selection>
+              <field id="vp8-10" limit="chunk-size"/>
+              <field id="vp8-11" limit="chunk-size"/>
+            </match>
+            <match>
+              <field id="vp8-error" limit="chunk-size"/>
+            </match>
+          </selection>
+        </match>
+        <match char-value="VP8L">
+          <field id="vp8l-4cc" limit="riff-size" navigation="VP8L"/>
+          <block id="read-chunk-size"/>
+          <selection>
+            <match hex-value="2F">
+              <match var-id="chunk-size" op="gt" num-value="3">
+                <field id="vp8l-0" limit="chunk-size"/>
+                <field id="vp8l-1" store-var="img-dim" convert-endianness="true"/>
+                <exec var-id="img-dim" add="1"/>
+                <selection>
+                  <match var-id="anmf-def" op="def">
+                    <print line="Image width" var-id="img-dim" tooltip="Calculated as Image width + 1" tab="ANMF(s)" section="Frame details (lossless compression)"/>
+                  </match>
+                  <match>
+                    <print line="Image width" var-id="img-dim" tooltip="Calculated as Image width + 1" section="Frame details (lossless compression)"/>
+                  </match>
+                </selection>
+                <field id="vp8l-2" store-var="img-dim" convert-endianness="true"/>
+                <exec var-id="img-dim" add="1"/>
+                <selection>
+                  <match var-id="anmf-def" op="def">
+                    <print line="Image height" var-id="img-dim" tooltip="Calculated as Image height + 1" tab="ANMF(s)"/>
+                  </match>
+                  <match>
+                    <print line="Image height" var-id="img-dim" tooltip="Calculated as Image height + 1"/>
+                  </match>
+                </selection>
+                <field id="vp8l-3" store-var="flag"/>
+                <selection>
+                  <match var-id="flag" op="def">
+                    <selection>
+                      <match var-id="anmf-def" op="def">
+                        <field id="vp8l-3-yes" tab="ANMF(s)"/>
+                      </match>
+                      <match>
+                        <field id="vp8l-3-yes"/>
+                      </match>
+                    </selection>
+                  </match>
+                  <match>
+                    <selection>
+                      <match var-id="anmf-def" op="def">
+                        <field id="vp8l-3-no" tab="ANMF(s)"/>
+                      </match>
+                      <match>
+                        <field id="vp8l-3-no"/>
+                      </match>
+                    </selection>
+                  </match>
+                </selection>
+              </match>
+              <field id="vp8l-4" limit="chunk-size"/>
+              <field id="vp8l-5" limit="chunk-size"/>
+            </match>
+            <match>
+              <field id="vp8l-error" limit="chunk-size"/>
+            </match>
+          </selection>
+        </match>
+        <match char-value="VP8X">
+          <field id="vp8x-4cc" limit="riff-size" navigation="VP8X"/>
+          <block id="read-chunk-size"/>
+          <match var-id="chunk-size" op="gt" num-value="3">
+            <field id="vp8x-0" store-var="flag" section="Extended image details"/>
+            <selection>
+              <match var-id="flag" op="def">
+                <field id="vp8x-0-yes"/>
+              </match>
+              <match>
+                <field id="vp8x-0-no"/>
+              </match>
+            </selection>
+            <field id="vp8x-1" store-var="flag"/>
+            <selection>
+              <match var-id="flag" op="def">
+                <field id="vp8x-1-yes"/>
+              </match>
+              <match>
+                <field id="vp8x-1-no"/>
+              </match>
+            </selection>
+            <field id="vp8x-2" store-var="flag"/>
+            <selection>
+              <match var-id="flag" op="def">
+                <field id="vp8x-2-yes"/>
+              </match>
+              <match>
+                <field id="vp8x-2-no"/>
+              </match>
+            </selection>
+            <field id="vp8x-3" store-var="flag"/>
+            <selection>
+              <match var-id="flag" op="def">
+                <field id="vp8x-3-yes"/>
+              </match>
+              <match>
+                <field id="vp8x-3-no"/>
+              </match>
+            </selection>
+            <field id="vp8x-4" store-var="flag"/>
+            <selection>
+              <match var-id="flag" op="def">
+                <field id="vp8x-4-yes"/>
+              </match>
+              <match>
+                <field id="vp8x-4-no"/>
+              </match>
+            </selection>
+          </match>
+          <field id="vp8x-5" limit="chunk-size"/>
+          <field id="vp8x-6" limit="chunk-size" store-var="canv-dim" convert-endianness="true"/>
+          <exec var-id="canv-dim" add="1"/>
+          <print line="Canvas width" var-id="canv-dim" tooltip="Calculated as Canvas width + 1"/>
+          <field id="vp8x-7" limit="chunk-size" store-var="canv-dim" convert-endianness="true"/>
+          <exec var-id="canv-dim" add="1"/>
+          <print line="Canvas height" var-id="canv-dim" tooltip="Calculated as Canvas height + 1"/>
+        </match>
+        <match char-value="ALPH">
+          <field id="vp8l-4cc" limit="riff-size" navigation="ALPH"/>
+          <block id="read-chunk-size"/>
+          <match var-id="chunk-size" op="gt" num-value="0">
+            <selection>
+              <match var-id="anmf-def" op="def">
+                <field id="alph-0" store-var="comp" tab="ANMF(s)" section="Image alpha"/>
+                <field id="alph-1" tab="ANMF(s)"/>
+                <field id="alph-2" tab="ANMF(s)"/>
+              </match>
+              <match>
+                <field id="alph-0" store-var="comp" tab="ALPH" section="Image alpha"/>
+                <field id="alph-1" tab="ALPH"/>
+                <field id="alph-2" tab="ALPH"/>
+              </match>
+            </selection>
+          </match>
+          <field id="alph-3" limit="chunk-size"/>
+          <selection>
+            <match var-id="comp" op="eq" num-value="0">
+              <selection>
+                <match var-id="anmf-def" op="def">
+                  <field id="alph-4" limit="chunk-size" tab="ANMF(s)"/>
+                </match>
+                <match>
+                  <field id="alph-4" limit="chunk-size" tab="ALPH" insert-tab="true"/>
+                </match>
+              </selection>
+            </match>
+            <match var-id="comp" op="eq" num-value="1">
+              <selection>
+                <match var-id="anmf-def" op="def">
+                  <field id="alph-5" limit="chunk-size" tab="ANMF(s)"/>
+                </match>
+                <match>
+                  <field id="alph-5" limit="chunk-size" tab="ALPH" insert-tab="true"/>
+                </match>
+              </selection>
+            </match>
+          </selection>
+        </match>
+        <match char-value="ANIM">
+          <field id="anim-4cc" limit="riff-size" navigation="ANIM"/>
+          <block id="read-chunk-size"/>
+          <field id="anim-0" limit="chunk-size"/>
+          <field id="anim-1" limit="chunk-size" store-var="loop" convert-endianness="true"/>
+          <selection>
+            <match var-id="loop" op="gt" num-value="0">
+              <print line="Loop count" var-id="loop" tooltip="The number of times to loop the animation, 0 means infinitely" tab="ANIM" section="Animation" insert-tab="true"/>
+            </match>
+            <match>
+              <field id="anim-1-inf" tab="ANIM" section="Animation" insert-tab="true"/>
+            </match>
+          </selection>
+        </match>
+        <match char-value="ANMF">
+          <field id="anim-4cc" limit="riff-size" navigation="ANMF"/>
+          <exec var-id="anmf-def" set="1"/>
+          <field id="chunk-size" store-var="chunk-size"/>
+          <exec var-id="padding" set="chunk-size" modulo="2"/>
+          <selection>
+            <match var-id="chunk-size" op="gt" num-value="15">
+              <exec var-id="riff-size" subtract="16"/>
+              <field id="anmf-0" store-var="value" convert-endianness="true"/>
+              <exec var-id="value" multiply="2"/>
+              <print line="Frame X" var-id="value" tooltip="Calculated as Frame X * 2" tab="ANMF(s)" section="Animation frame details"/>
+              <field id="anmf-1" store-var="value" convert-endianness="true"/>
+              <exec var-id="value" multiply="2"/>
+              <print line="Frame Y" var-id="value" tooltip="Calculated as Frame Y * 2" tab="ANMF(s)"/>
+              <field id="anmf-2" store-var="value" convert-endianness="true"/>
+              <exec var-id="value" add="1"/>
+              <print line="Frame width" var-id="value" tooltip="Calculated as Frame width + 1" tab="ANMF(s)"/>
+              <field id="anmf-3" store-var="value" convert-endianness="true"/>
+              <exec var-id="value" add="1"/>
+              <print line="Frame height" var-id="value" tooltip="Calculated as Frame height + 1" tab="ANMF(s)"/>
+              <field id="anmf-4" tab="ANMF(s)"/>
+              <field id="anmf-5" tab="ANMF(s)"/>
+              <field id="anmf-6" tab="ANMF(s)"/>
+              <field id="anmf-7"/>
+              <exec var-id="chunk-size" set="0"/>
+            </match>
+            <match>
+              <exec var-id="riff-size" subtract="chunk-size"/>
+            </match>
+          </selection>
+        </match>
+        <match char-value="XMP ">
+          <field id="xmp-4cc" limit="riff-size" navigation="XMP"/>
+          <block id="read-chunk-size"/>
+          <field id="xmp-0" limit="chunk-size"/>
+        </match>
+        <match char-value="EXIF">
+          <field id="exif-4cc" limit="riff-size" navigation="EXIF"/>
+          <block id="read-chunk-size"/>
+          <field id="exif-0" limit="chunk-size"/>
+        </match>
+        <match char-value="ICCP">
+          <field id="iccp-4cc" limit="riff-size" navigation="ICCP"/>
+          <block id="read-chunk-size"/>
+          <field id="iccp-0" limit="chunk-size"/>
+        </match>
+        <match>
+          <field id="unknown-4cc" limit="riff-size" navigation="???"/>
+          <block id="read-chunk-size"/>
+        </match>
+      </selection>
+      <field id="unrecognized" limit="chunk-size"/>
+      <match var-id="padding" op="def">
+        <field id="padding"/>
+      </match>
+    </loop>
+    <match var-id="anmf-def" op="def">
+      <print tab="ANMF(s)" insert-tab="true"/>
+    </match>
+    <field id="unrecognized" limit-failed="true"/>
+  </run>
+  <block-defs>
+    <block-def id="read-chunk-size">
+      <field id="chunk-size" store-var="chunk-size" limit="riff-size"/>
+      <exec var-id="padding" set="chunk-size" modulo="2"/>
+      <exec var-id="riff-size" subtract="chunk-size"/>
+    </block-def>
+  </block-defs>
+  <!-- WebP fields -->
+  <field-defs>
+    <field-def id="riff-4cc" name="Chunk FourCC: RIFF" color="chunk-4cc" size="4"/>
+    <field-def id="chunk-size" name="Chunk size" color="chunk-size" size="4"/>
+    <field-def id="webp-4cc" name="Chunk FourCC: WEBP" color="chunk-4cc" size="4"/>
+    <!-- VP8 fields -->
+    <field-def id="vp8-4cc" name="Chunk FourCC: VP8" color="chunk-4cc" size="4"/>
+    <field-def id="vp8-0" name="Frame type" mask="1" size="1" print="option">
+      <options>
+        <option name="Key frame" hex-value="00"/>
+        <option name="Interframe" hex-value="01"/>
+      </options>
+      <tooltip auto="true">Frame type (bit 0 of Frame tag)</tooltip>
+    </field-def>
+    <field-def id="vp8-1" name="Version" shift="1" mask="7" size="1" print="option">
+      <options>
+        <option name="Version 0 (Bicubic - Normal)" hex-value="00"/>
+        <option name="Version 1 (Bilinear - Simple)" hex-value="01"/>
+        <option name="Version 2 (Bilinear - None)" hex-value="02"/>
+        <option name="Version 3 (None - None)" hex-value="03"/>
+      </options>
+      <tooltip auto="true">Version (Reconstruction filter - Loop filter)</tooltip>
+    </field-def>
+    <field-def id="vp8-2" shift="4" mask="1" size="3"/>
+    <field-def id="vp8-2-yes" name="Show frame">
+      <print>Yes</print>
+      <tooltip>
+Show frame (bit 4 of Frame tag)
+If the current frame is for display
+      </tooltip>
+    </field-def>
+    <field-def id="vp8-2-no" name="Show frame">
+      <print>No</print>
+      <tooltip>
+Show frame (bit 4 of Frame tag)
+If the current frame is for display
+      </tooltip>
+    </field-def>
+    <field-def id="vp8-3" color="chunk-data-1" size="3">
+      <tag>
+Frame tag
+Bit 0: Frame type
+Bits 1-3: Version
+Bit 4: Show frame flag
+Bits 5-23: First data partition size
+      </tag>
+    </field-def>
+    <field-def id="vp8-4" name="Sync code" color="chunk-data-2" size="3"/>
+    <field-def id="vp8-5" name="Frame width" size="2" mask="3FFF" print="uint"/>
+    <field-def id="vp8-6" name="Horizontal scale" size="2" shift="14" print="option">
+      <options>
+        <option name="No scaling" hex-value="0000"/>
+        <option name="5/4" hex-value="0001"/>
+        <option name="5/3" hex-value="0002"/>
+        <option name="2" hex-value="0003"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <field-def id="vp8-7" color="chunk-data-1" size="2">
+      <tag>
+Frame width and horizontal scale
+Bits 0-13: Width
+Bits 14-15: Horizontal scale
+      </tag>
+    </field-def>
+    <field-def id="vp8-8" name="Frame height" size="2" mask="3FFF" print="uint"/>
+    <field-def id="vp8-9" name="Vertical scale" size="2" shift="14" print="option">
+      <options>
+        <option name="No scaling" hex-value="0000"/>
+        <option name="5/4" hex-value="0001"/>
+        <option name="5/3" hex-value="0002"/>
+        <option name="2" hex-value="0003"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <field-def id="vp8-10" color="chunk-data-2" size="2">
+      <tag>
+Frame height and vertical scale
+Bits 0-13: Height
+Bits 14-15: Vertical scale
+      </tag>
+    </field-def>
+    <field-def id="vp8-11" name="Compressed VP8 data partitions" color="chunk-data-1" size="available"/>
+    <field-def id="vp8-error" name="Invalid sync code" color="error-2" size="3"/>
+    <!-- VP8L fields -->
+    <field-def id="vp8l-4cc" name="Chunk FourCC: VP8L" color="chunk-4cc" size="4"/>
+    <field-def id="vp8l-0" name="Signature byte" color="chunk-data-1" size="1"/>
+    <field-def id="vp8l-1" name="Image width" size="4" mask="3FFF"/>
+    <field-def id="vp8l-2" name="Image height" size="4" shift="14" mask="3FFF"/>
+    <field-def id="vp8l-3" shift="28" mask="1" size="4"/>
+    <field-def id="vp8l-3-yes" name="Alpha used">
+      <print>Yes</print>
+      <tooltip>
+Alpha used flag
+Set to 0 if all alpha values are 255
+      </tooltip>
+    </field-def>
+    <field-def id="vp8l-3-no" name="Alpha used">
+      <print>No</print>
+      <tooltip>
+Alpha used flag
+Set to 0 if all alpha values are 255
+      </tooltip>
+    </field-def>
+    <field-def id="vp8l-4" color="chunk-data-2" size="4">
+      <tag>
+Dimensions, alpha, version
+Bits 0-14: Image width
+Bits 15-27: Image height
+Bits 28: Alpha used flag
+Bits 29-31: Version (not used)
+      </tag>
+    </field-def>
+    <field-def id="vp8l-5" name="Transformations and compressed image data" color="chunk-data-1" size="available"/>
+    <field-def id="vp8l-error" name="Invalid signature byte" color="error-2" size="1"/>
+    <!-- VP8X fields -->
+    <field-def id="vp8x-4cc" name="Chunk FourCC: VP8X" color="chunk-4cc" size="4"/>
+    <field-def id="vp8x-0" shift="1" mask="1" size="4"/>
+    <field-def id="vp8x-0-yes" name="Image is animated">
+      <print>Yes</print>
+      <tooltip>
+Image is animated flag
+Set if this is an animated image
+      </tooltip>
+    </field-def>
+    <field-def id="vp8x-0-no" name="Image is animated">
+      <print>No</print>
+      <tooltip>
+Image is animated flag
+Set if this is an animated image
+      </tooltip>
+    </field-def>
+    <field-def id="vp8x-1" shift="2" mask="1" size="4"/>
+    <field-def id="vp8x-1-yes" name="XMP metadata available">
+      <print>Yes</print>
+      <tooltip>
+XMP metadata available flag
+Set if the file contains XMP metadata
+      </tooltip>
+    </field-def>
+    <field-def id="vp8x-1-no" name="XMP metadata available">
+      <print>No</print>
+      <tooltip>
+XMP metadata available flag
+Set if the file contains XMP metadata
+      </tooltip>
+    </field-def>
+    <field-def id="vp8x-2" shift="3" mask="1" size="4"/>
+    <field-def id="vp8x-2-yes" name="Exif metadata available">
+      <print>Yes</print>
+      <tooltip>
+Exif metadata available flag
+Set if the file contains Exif metadata
+      </tooltip>
+    </field-def>
+    <field-def id="vp8x-2-no" name="Exif metadata available">
+      <print>No</print>
+      <tooltip>
+XMP metadata available flag
+Set if the file contains Exif metadata
+      </tooltip>
+    </field-def>
+    <field-def id="vp8x-3" shift="4" mask="1" size="4"/>
+    <field-def id="vp8x-3-yes" name="Alpha used">
+      <print>Yes</print>
+      <tooltip>
+Alpha used flag
+Set if any of the frames of the image contain transparency information
+      </tooltip>
+    </field-def>
+    <field-def id="vp8x-3-no" name="Alpha used">
+      <print>No</print>
+      <tooltip>
+Alpha used
+Set if any of the frames of the image contain transparency information
+      </tooltip>
+    </field-def>
+    <field-def id="vp8x-4" shift="5" mask="1" size="4"/>
+    <field-def id="vp8x-4-yes" name="ICC profile used">
+      <print>Yes</print>
+      <tooltip>
+ICC profile used
+Set if the file contains an ICC profile
+      </tooltip>
+    </field-def>
+    <field-def id="vp8x-4-no" name="ICC profile used">
+      <print>No</print>
+      <tooltip>
+ICC profile used
+Set if the file contains an ICC profile
+      </tooltip>
+    </field-def>
+    <field-def id="vp8x-5" color="chunk-data-1" size="4">
+      <tag>
+Flags
+Bit 0: Reserved
+Bit 1: Image is animated
+Bit 2: XMP metadata available
+Bit 3: Exif metadata available
+Bit 4: Alpha used
+Bit 5: ICC profile used
+Bits 6-7: Reserved
+Bits 8-31: Reserved/unused
+      </tag>
+    </field-def>
+    <field-def id="vp8x-6" name="Canvas width" color="chunk-data-2" size="3"/>
+    <field-def id="vp8x-7" name="Canvas height" color="chunk-data-1" size="3"/>
+    <!-- ALPH fields -->
+    <field-def id="alph-4cc" name="Chunk FourCC: ALPH" color="chunk-4cc" size="4"/>
+    <field-def id="alph-0" name="Compression method" mask="3" size="1" print="option">
+      <options>
+        <option name="No compression" hex-value="00"/>
+        <option name="WebP lossless format" hex-value="01"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <field-def id="alph-1" name="Filtering method" shift="2" mask="3" size="1" print="option">
+      <options>
+        <option name="None" hex-value="00"/>
+        <option name="Horizontal filter" hex-value="01"/>
+        <option name="Vertical filter" hex-value="02"/>
+        <option name="Gradient filter" hex-value="03"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <field-def id="alph-2" name="Pre-processing" shift="4" mask="3" size="1" print="option">
+      <options>
+        <option name="No pre-processing" hex-value="00"/>
+        <option name="Level reduction" hex-value="01"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <field-def id="alph-3" color="chunk-data-1" size="1">
+      <tag>
+Flags
+Bits 0-1: Compression method
+Bits 2-3: Filtering method
+Bits 4-5: Pre-processing
+Bits 6-7: Reserved
+      </tag>
+    </field-def>
+    <field-def id="alph-4" name="Alpha values" color="chunk-data-2" size="available"/>
+    <field-def id="alph-5" name="Compressed alpha values" color="chunk-data-2" size="available"/>
+    <!-- ANIM fields -->
+    <field-def id="anim-4cc" name="Chunk FourCC: ANIM" color="chunk-4cc" size="4"/>
+    <field-def id="anim-0" name="Background color (BGRA order)" color="chunk-data-1" size="4"/>
+    <field-def id="anim-1" name="Loop count" color="chunk-data-2" size="2"/>
+    <field-def id="anim-1-inf" name="Loop count">
+      <print>Loop infinitely</print>
+      <tooltip>The number of times to loop the animation, 0 means infinitely</tooltip>
+    </field-def>
+    <!-- ANMF fields -->
+    <field-def id="anmf-4cc" name="Chunk FourCC: ANMF" color="chunk-4cc" size="4"/>
+    <field-def id="anmf-0" name="Frame X" color="chunk-data-1" size="3"/>
+    <field-def id="anmf-1" name="Frame Y" color="chunk-data-2" size="3"/>
+    <field-def id="anmf-2" name="Frame width" color="chunk-data-1" size="3"/>
+    <field-def id="anmf-3" name="Frame height" color="chunk-data-2" size="3"/>
+    <field-def id="anmf-4" name="Frame duration" color="chunk-data-1" size="3" print="uint">
+      <tooltip>
+The time to wait before displaying the next frame, in milliseconds
+A duration of 0 is implementation defined
+      </tooltip>
+    </field-def>
+    <field-def id="anmf-5" name="Disposal method" mask="1" size="1" print="option">
+      <options>
+        <option name="Do not dispose" hex-value="00"/>
+        <option name="Dispose to background color" hex-value="01"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <field-def id="anmf-6" name="Blending method" shift="1" mask="1" size="1" print="option">
+      <options>
+        <option name="Alpha blending" hex-value="00"/>
+        <option name="Do not blend" hex-value="01"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <field-def id="anmf-7" color="chunk-data-2" size="1">
+      <tag>
+Flags
+Bit 0: Disposal method
+Bit 1: Blending method
+Bits 2-7: Reserved
+      </tag>
+    </field-def>
+    <!-- XMP fields -->
+    <field-def id="xmp-4cc" name="Chunk FourCC: XMP" color="chunk-4cc" size="4"/>
+    <field-def id="xmp-0" name="Embedded XMP metadata" color="chunk-data-1" size="available"/>
+    <!-- Exif fields -->
+    <field-def id="exif-4cc" name="Chunk FourCC: EXIF" color="chunk-4cc" size="4"/>
+    <field-def id="exif-0" name="Embedded TIFF file" color="chunk-data-1" size="available"/>
+    <!-- ICCP fields -->
+    <field-def id="iccp-4cc" name="Chunk FourCC: ICCP" color="chunk-4cc" size="4"/>
+    <field-def id="iccp-0" name="Embedded ICC profile" color="chunk-data-1" size="available"/>
+    <!-- Miscellaneous fields -->
+    <field-def id="padding" name="Padding" color="padding" size="1"/>
+    <field-def id="unknown-4cc" name="Chunk FourCC: Unknown" color="error-2" size="4"/>
+    <field-def id="unrecognized" name="Unrecognized data" color="error-1" size="available"/>
+  </field-defs>
+  <details><![CDATA[
+<b>Recognized chunk types</b>:
+VP8, VP8L, VP8X, ANIM, ANMF, ALPH, ICCP, EXIF, XMP
+
+NOTE: The RIFF and WEBP types are implicitly recognized, as they are the file format's identifier
+
+The following checks are <span foreground="green">implemented</span>:
+    - The RIFF chunk size marks the end of file
+
+The following checks are <span foreground="red">not implemented</span>:
+    - The chunks inside a chunk-containing chunk do not exceed the container's size (e.g. the chunks inside an ANMF chunk do not exceed the ANMF chunk size), does not apply to the main RIFF chunk
+  ]]></details>
+</format>

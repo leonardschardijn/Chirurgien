@@ -1,0 +1,587 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<format name="Portable Network Graphics" short-name="PNG">
+  <endianness>
+    <big-endian/>
+  </endianness>
+  <magic>
+    <signature>
+      <match hex-value="89504E470D0A1A0A"/>
+    </signature>
+  </magic>
+  <colors>
+    <color id="signature" name="PNG file signature" index="0" background="true"/>
+    <color id="chunk-type" name="Chunk type" index="1" background="true"/>
+    <color id="chunk-data-1" name="Chunk data" index="2" background="true"/>
+    <color id="chunk-data-2" name="Chunk data" index="3" background="true"/>
+    <color id="chunk-length" name="Chunk length" index="4" background="true"/>
+    <color id="chunk-crc" name="Cyclic redundancy check" index="5" background="true"/>
+    <color id="error-1" name="Error" index="6" background="false"/>
+    <color id="error-2" name="Error" index="7" background="false"/>
+  </colors>
+  <run>
+    <field id="png-sig"/>
+    <field id="chnk-len" convert-endianness="true" store-var="length"/>
+    <selection>
+      <match char-value="IHDR">
+        <field id="ihdr-type" navigation="IHDR" section="Image details"/>
+        <exec var-id="ihdr-count" add="1"/>
+        <field id="ihdr0" limit="length"/>
+        <field id="ihdr1" limit="length"/>
+        <field id="ihdr2" limit="length"/>
+        <field id="ihdr3" limit="length" store-var="colortype"/>
+        <field id="ihdr4" limit="length"/>
+        <field id="ihdr5" limit="length"/>
+        <field id="ihdr6" limit="length"/>
+      </match>
+      <match>
+        <field id="unknown-type" navigation="???"/>
+        <field id="ihdr-first-error" limit="length"/>
+      </match>
+    </selection>
+    <field id="unrecognized" limit="length" limit-failed="true"/>
+    <field id="chnk-crc"/>
+    <match var-id="ihdr-count" op="def">
+      <loop until-set="iend-count">
+        <field id="chnk-len" convert-endianness="true" store-var="length"/>
+        <selection>
+          <match char-value="IHDR">
+            <field id="ihdr-type" navigation="IHDR" section="Image details"/>
+            <exec var-id="ihdr-count" add="1"/>
+            <field id="ihdr-error" limit="length"/>
+          </match>
+          <match char-value="PLTE">
+            <field id="plte-type" navigation="PLTE"/>
+            <exec var-id="plte-count" add="1"/>
+            <selection>
+              <match var-id="plte-count" op="eq" num-value="1">
+                <loop until-set="plte-entries" num-value="256" limit="length">
+                  <selection>
+                    <match var-id="plte-entries" op="bit">
+                      <field id="plte1" limit="length"/>
+                    </match>
+                    <match>
+                      <field id="plte0" limit="length"/>
+                    </match>
+                  </selection>
+                  <exec var-id="plte-entries" add="1"/>
+                </loop>
+                <print line="Palette entries" var-id="plte-entries" tooltip="Number of available colors in the palette" margin-top="10"/>
+              </match>
+              <match>
+                <field id="plte-error" limit="length"/>
+              </match>
+            </selection>
+          </match>
+          <match char-value="IDAT">
+            <field id="idat-type" navigation="IDAT"/>
+            <exec var-id="idat-count" add="1"/>
+            <field id="idat0" limit="length"/>
+          </match>
+          <match char-value="IEND">
+            <field id="iend-type" navigation="IEND"/>
+            <exec var-id="iend-count" add="1"/>
+          </match>
+          <match char-value="tRNS">
+            <field id="trns-type" navigation="tRNS"/>
+            <exec var-id="trns-count" add="1"/>
+            <selection>
+              <match var-id="colortype" hex-value="00">
+                <field id="trns0" limit="length" tab="tRNS" section="Transparency" insert-tab="true"/>
+              </match>
+              <match var-id="colortype" hex-value="02">
+                <field id="trns1" limit="length" tab="tRNS" section="Transparency"/>
+                <field id="trns2" limit="length" tab="tRNS"/>
+                <field id="trns3" limit="length" tab="tRNS" insert-tab="true"/>
+              </match>
+              <match var-id="colortype" hex-value="03">
+                <loop limit="length">
+                  <selection>
+                    <match var-id="plte-alpha-entries" op="bit">
+                      <field id="trns5" limit="length"/>
+                    </match>
+                    <match>
+                      <field id="trns4" limit="length"/>
+                    </match>
+                  </selection>
+                  <exec var-id="plte-alpha-entries" add="1"/>
+                </loop>
+                <print line="Palette alpha entries" var-id="plte-alpha-entries" tab="tRNS" section="Transparency" insert-tab="true"/>
+              </match>
+              <match>
+                <field id="trns-error" limit="length"/>
+              </match>
+            </selection>
+          </match>
+          <match char-value="cHRM">
+            <field id="chrm-type" navigation="cHRM"/>
+            <exec var-id="chrm-count" add="1"/>
+            <field id="chrm0" limit="length" tab="cHRM" section="Primary chromaticities and white point"/>
+            <field id="chrm1" limit="length" tab="cHRM"/>
+            <field id="chrm2" limit="length" tab="cHRM"/>
+            <field id="chrm3" limit="length" tab="cHRM"/>
+            <field id="chrm4" limit="length" tab="cHRM"/>
+            <field id="chrm5" limit="length" tab="cHRM"/>
+            <field id="chrm6" limit="length" tab="cHRM"/>
+            <field id="chrm7" limit="length" tab="cHRM"/>
+            <print line="NOTE: Values represent the 1931 CIE x,y chromaticities times 100000" tab="cHRM" no-section="true" insert-tab="true"/>
+          </match>
+          <match char-value="gAMA">
+            <field id="gama-type" navigation="gAMA"/>
+            <exec var-id="gama-count" add="1"/>
+            <field id="gama0" limit="length" tab="gAMA" section="Image gamma"/>
+            <print line="NOTE: Value represents the image gamma times 100000" tab="gAMA" no-section="true" insert-tab="true"/>
+          </match>
+          <match char-value="iCCP">
+            <field id="iccp-type" navigation="iCCP"/>
+            <exec var-id="iccp-count" add="1"/>
+            <field id="iccp0" limit="length" tab="iCCP"/>
+            <field id="null" limit="length"/>
+            <field id="iccp1" limit="length" tab="iCCP" section="Compression"/>
+            <field id="iccp2" limit="length"/>
+            <print line="NOTE: ICC profile names are encoded using ISO-8859-1" tab="iCCP" no-section="true" insert-tab="true"/>
+          </match>
+          <match char-value="sBIT">
+            <field id="sbit-type" navigation="sBIT"/>
+            <exec var-id="sbit-count" add="1"/>
+            <selection>
+              <match var-id="colortype" hex-value="00">
+                <field id="sbit0" limit="length" tab="sBIT" section="Original number of significant bits" insert-tab="true"/>
+              </match>
+              <match var-id="colortype" hex-value="02">
+                <field id="sbit1" limit="length" tab="sBIT" section="Original number of significant bits"/>
+                <field id="sbit2" limit="length" tab="sBIT"/>
+                <field id="sbit3" limit="length" tab="sBIT" insert-tab="true"/>
+              </match>
+              <match var-id="colortype" hex-value="03">
+                <field id="sbit1" limit="length" tab="sBIT" section="Original number of significant bits"/>
+                <field id="sbit2" limit="length" tab="sBIT"/>
+                <field id="sbit3" limit="length" tab="sBIT" insert-tab="true"/>
+              </match>
+              <match var-id="colortype" hex-value="04">
+                <field id="sbit0" limit="length" tab="sBIT" section="Original number of significant bits"/>
+                <field id="sbit4" limit="length" tab="sBIT" insert-tab="true"/>
+              </match>
+              <match var-id="colortype" hex-value="06">
+                <field id="sbit1" limit="length" tab="sBIT" section="Original number of significant bits"/>
+                <field id="sbit2" limit="length" tab="sBIT"/>
+                <field id="sbit3" limit="length" tab="sBIT"/>
+                <field id="sbit4" limit="length" tab="sBIT" insert-tab="true"/>
+              </match>
+              <match>
+                <field id="color-type-error" limit="length"/>
+              </match>
+            </selection>
+          </match>
+          <match char-value="sRGB">
+            <field id="srgb-type" navigation="sRGB"/>
+            <exec var-id="srgb-count" add="1"/>
+            <field id="srgb0" limit="length" tab="sRGB" section="Standard RGB color space" insert-tab="true"/>
+          </match>
+          <match char-value="tEXt">
+            <field id="text-type" navigation="tEXt"/>
+            <exec var-id="text-count" add="1"/>
+            <field id="text0" limit="length" tab="tEXt"/>
+            <field id="null" limit="length"/>
+            <field id="text1" limit="length" tab="tEXt"/>
+            <print line="NOTE: tEXt chunks are encoded using ISO-8859-1" tab="tEXt" no-section="true" insert-tab="true"/>
+          </match>
+          <match char-value="zTXt">
+            <field id="ztxt-type" navigation="zTXt"/>
+            <exec var-id="ztxt-count" add="1"/>
+            <field id="ztxt0" limit="length" tab="zTXt"/>
+            <field id="null" limit="length"/>
+            <field id="ztxt1" limit="length" tab="zTXt" section="Compression"/>
+            <field id="ztxt2" limit="length"/>
+            <print line="NOTE: zTXt chunks are encoded using ISO-8859-1" tab="zTXt" no-section="true" insert-tab="true"/>
+          </match>
+          <match char-value="iTXt">
+            <field id="itxt-type" navigation="iTXt"/>
+            <exec var-id="itxt-count" add="1"/>
+            <field id="itxt0" limit="length" tab="iTXt"/>
+            <field id="null" limit="length"/>
+            <field id="itxt1" limit="length" tab="iTXt" section="Compression" store-var="itxt-comp"/>
+            <field id="itxt2" limit="length" tab="iTXt"/>
+            <field id="itxt3" limit="length" tab="iTXt"/>
+            <field id="null" limit="length"/>
+            <field id="itxt4" limit="length" tab="iTXt"/>
+            <field id="null" limit="length"/>
+            <selection>
+              <match var-id="itxt-comp" hex-value="00">
+                <field id="itxt5" limit="length" tab="iTXt" insert-tab="true"/>
+              </match>
+              <match var-id="itxt-comp" hex-value="01">
+                <field id="itxt6" limit="length" tab="iTXt" insert-tab="true"/>
+              </match>
+              <match>
+                <field id="itxt-error" limit="length" tab="iTXt" insert-tab="true"/>
+              </match>
+            </selection>
+          </match>
+          <match char-value="bKGD">
+            <field id="bkgd-type" navigation="bKGD"/>
+            <exec var-id="bkgd-count" add="1"/>
+            <selection>
+              <match var-id="colortype" hex-value="00">
+                <field id="bkgd0" limit="length" tab="bKGD" section="Background color" insert-tab="true"/>
+              </match>
+              <match var-id="colortype" hex-value="02">
+                <field id="bkgd1" limit="length" tab="bKGD" section="Background color"/>
+                <field id="bkgd2" limit="length" tab="bKGD"/>
+                <field id="bkgd3" limit="length" tab="bKGD" insert-tab="true"/>
+              </match>
+              <match var-id="colortype" hex-value="03">
+                <field id="bkgd4" limit="length" tab="bKGD" section="Background color" insert-tab="true"/>
+              </match>
+              <match var-id="colortype" hex-value="04">
+                <field id="bkgd0" limit="length" tab="bKGD" section="Background color" insert-tab="true"/>
+              </match>
+              <match var-id="colortype" hex-value="06">
+                <field id="bkgd1" limit="length" tab="bKGD" section="Background color"/>
+                <field id="bkgd2" limit="length" tab="bKGD"/>
+                <field id="bkgd3" limit="length" tab="bKGD" insert-tab="true"/>
+              </match>
+              <match>
+                <field id="color-type-error" limit="length"/>
+              </match>
+            </selection>
+          </match>
+          <match char-value="hIST">
+            <field id="hist-type" navigation="hIST" tab="hIST" section="Palette entry frequency"/>
+            <exec var-id="hist-count" add="1"/>
+            <loop until-set="freq-entries" var-value="plte-entries" limit="length">
+              <selection>
+                <match var-id="freq-entries" op="bit">
+                  <field id="hist1" limit="length" tab="hIST"/>
+                </match>
+                <match>
+                  <field id="hist0" limit="length" tab="hIST"/>
+                </match>
+              </selection>
+              <exec var-id="freq-entries" add="1"/>
+            </loop>
+            <print line="Number of frequency entries" var-id="freq-entries" tab="hIST" margin-top="10"/>
+            <print line="NOTE: There should be one entry for every PLTE entry" tab="hIST" no-section="true" insert-tab="true"/>
+          </match>
+          <match char-value="pHYs">
+            <field id="phys-type" navigation="pHYs"/>
+            <exec var-id="phys-count" add="1"/>
+            <field id="phys0" limit="length" tab="pHYs" section="Intended pixel size or aspect ratio"/>
+            <field id="phys1" limit="length" tab="pHYs"/>
+            <field id="phys2" limit="length" tab="pHYs" insert-tab="true"/>
+          </match>
+          <match char-value="sPLT">
+            <field id="splt-type" navigation="sPLT"/>
+            <exec var-id="splt-count" add="1"/>
+            <field id="splt0" limit="length" tab="sPLT"/>
+            <field id="null" limit="length"/>
+            <field id="splt1" limit="length" tab="sPLT" section="Palette details" store-var="splt-sample"/>
+            <selection>
+              <match var-id="splt-sample" hex-value="08">
+                <loop limit="length">
+                  <selection>
+                    <match var-id="splt-entries" op="bit">
+                      <field id="splt4" limit="length"/>
+                      <field id="splt5" limit="length"/>
+                      <field id="splt11" limit="length"/>
+                    </match>
+                    <match>
+                      <field id="splt2" limit="length"/>
+                      <field id="splt3" limit="length"/>
+                      <field id="splt10" limit="length"/>
+                    </match>
+                  </selection>
+                  <exec var-id="splt-entries" add="1"/>
+                </loop>
+              </match>
+              <match var-id="splt-sample" hex-value="10">
+                <loop limit="length">
+                  <selection>
+                    <match var-id="splt-entries" op="bit">
+                      <field id="splt8" limit="length"/>
+                      <field id="splt9" limit="length"/>
+                      <field id="splt11" limit="length"/>
+                    </match>
+                    <match>
+                      <field id="splt6" limit="length"/>
+                      <field id="splt7" limit="length"/>
+                      <field id="splt10" limit="length"/>
+                    </match>
+                  </selection>
+                  <exec var-id="splt-entries" add="1"/>
+                </loop>
+              </match>
+              <match>
+                <field id="splt-error" limit="length"/>
+              </match>
+            </selection>
+            <print line="Palette entries" var-id="splt-entries" tab="sPLT"/>
+            <print line="NOTE: Palette names are encoded using ISO-8859-1" tab="sPLT" no-section="true" insert-tab="true"/>
+          </match>
+          <match char-value="tIME">
+            <field id="time-type" navigation="tIME"/>
+            <exec var-id="time-count" add="1"/>
+            <field id="time0" limit="length" tab="tIME" section="Last-modification time"/>
+            <field id="time1" limit="length" tab="tIME"/>
+            <field id="time2" limit="length" tab="tIME"/>
+            <field id="time3" limit="length" tab="tIME"/>
+            <field id="time4" limit="length" tab="tIME"/>
+            <field id="time5" limit="length" tab="tIME" insert-tab="true"/>
+          </match>
+          <match>
+            <field id="unknown-type" navigation="???"/>
+          </match>
+        </selection>
+        <field id="unrecognized" limit="length" limit-failed="true"/>
+        <field id="chnk-crc"/>
+      </loop>
+      <print line="IHDR chunks" var-id="ihdr-count" section="Chunk count"/>
+      <print line="PLTE chunks" var-id="plte-count" omit-undefined="true"/>
+      <print line="IDAT chunks" var-id="idat-count" omit-undefined="true"/>
+      <print line="IEND chunks" var-id="iend-count" omit-undefined="true"/>
+      <print line="tRNS chunks" var-id="trns-count" omit-undefined="true"/>
+      <print line="cHRM chunks" var-id="chrm-count" omit-undefined="true"/>
+      <print line="gAMA chunks" var-id="gama-count" omit-undefined="true"/>
+      <print line="iCCP chunks" var-id="iccp-count" omit-undefined="true"/>
+      <print line="sBIT chunks" var-id="sbit-count" omit-undefined="true"/>
+      <print line="sRGB chunks" var-id="srgb-count" omit-undefined="true"/>
+      <print line="tEXt chunks" var-id="text-count" omit-undefined="true"/>
+      <print line="zTXt chunks" var-id="ztxt-count" omit-undefined="true"/>
+      <print line="iTXt chunks" var-id="itxt-count" omit-undefined="true"/>
+      <print line="bKGD chunks" var-id="bkgd-count" omit-undefined="true"/>
+      <print line="hIST chunks" var-id="hist-count" omit-undefined="true"/>
+      <print line="pHYs chunks" var-id="phys-count" omit-undefined="true"/>
+      <print line="sPLT chunks" var-id="splt-count" omit-undefined="true"/>
+      <print line="tIME chunks" var-id="time-count" omit-undefined="true"/>
+    </match>
+    <field id="unrecognized" limit-failed="true"/>
+  </run>
+  <!-- PNG fields -->
+  <field-defs>
+    <field-def id="png-sig" name="PNG file signature" color="signature" size="8"/>
+    <field-def id="chnk-len" name="Chunk length" color="chunk-length" size="4"/>
+    <field-def id="chnk-crc" name="Chunk CRC" color="chunk-crc" size="4"/>
+    <!-- IHDR chunk fields -->
+    <field-def id="ihdr-type" name="Chunk type: IHDR" color="chunk-type" size="4"/>
+    <field-def id="ihdr0" name="Image width" color="chunk-data-1" size="4" print="int">
+      <tooltip><![CDATA[
+Minimum value: 1
+Maximum value: 2<sup>31</sup> - 1 (signed 32-bit integer)
+      ]]></tooltip>
+    </field-def>
+    <field-def id="ihdr1" name="Image height" color="chunk-data-2" size="4" print="int">
+      <tooltip><![CDATA[
+Minimum value: 1
+Maximum value: 2<sup>31</sup> - 1 (signed 32-bit integer)
+      ]]></tooltip>
+    </field-def>
+    <field-def id="ihdr2" name="Bit depth" color="chunk-data-1" size="1" print="option">
+      <options>
+        <option name="1 bit" hex-value="01"/>
+        <option name="2 bits" hex-value="02"/>
+        <option name="4 bits" hex-value="04"/>
+        <option name="8 bits" hex-value="08"/>
+        <option name="16 bits" hex-value="10"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <field-def id="ihdr3" name="Color type" color="chunk-data-2" size="1" print="option">
+      <options>
+        <option name="Grayscale sample" hex-value="00"/>
+        <option name="RGB triple" hex-value="02"/>
+        <option name="Palette index (a PLTE chunk must appear)" hex-value="03"/>
+        <option name="Grayscale sample + alpha sample" hex-value="04"/>
+        <option name="RGB triple + alpha sample" hex-value="06"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <field-def id="ihdr4" name="Compression method" color="chunk-data-1" size="1" print="option">
+      <options>
+        <option name="zlib-format DEFLATE" hex-value="00"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <field-def id="ihdr5" name="Filter method" color="chunk-data-2" size="1" print="option">
+      <options>
+        <option name="Adaptative filtering (five basic types)" hex-value="00"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <field-def id="ihdr6" name="Interlace method" color="chunk-data-1" size="1" print="option">
+      <options>
+        <option name="No interlace" hex-value="00"/>
+        <option name="Adam7 interlace" hex-value="01"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <field-def id="ihdr-first-error" name="The first chunk must be the IHDR chunk" color="error-1" size="available"/>
+    <field-def id="ihdr-error" name="Only one IHDR chunk can be defined" color="error-1" size="available"/>
+    <!-- PLTE chunk fields -->
+    <field-def id="plte-type" name="Chunk type: PLTE" color="chunk-type" size="4"/>
+    <field-def id="plte0" name="Palette entry" color="chunk-data-1" size="3"/>
+    <field-def id="plte1" name="Palette entry" color="chunk-data-2" size="3"/>
+    <field-def id="plte-error" name="Only one PLTE chunk can be defined" color="error-1" size="available"/>
+    <!-- IDAT chunk fields -->
+    <field-def id="idat-type" name="Chunk type: IDAT" color="chunk-type" size="4"/>
+    <field-def id="idat0" name="Compressed image" color="chunk-data-1" size="available"/>
+    <!-- IEND chunk fields -->
+    <field-def id="iend-type" name="Chunk type: IEND" color="chunk-type" size="4"/>
+    <!-- tRNS chunk fields -->
+    <field-def id="trns-type" name="Chunk type: tRNS" color="chunk-type" size="4"/>
+    <field-def id="trns0" name="Grayscale alpha value" color="chunk-data-1" tooltip="Value used to specify transparecy (alpha 0)" size="2" print="uint"/>
+    <field-def id="trns1" name="Red alpha value" color="chunk-data-1" tooltip="Value used to specify transparecy (alpha 0)" size="2" print="uint"/>
+    <field-def id="trns2" name="Green alpha value" color="chunk-data-2" tooltip="Value used to specify transparecy (alpha 0)" size="2" print="uint"/>
+    <field-def id="trns3" name="Blue alpha value" color="chunk-data-1" tooltip="Value used to specify transparecy (alpha 0)" size="2" print="uint"/>
+    <field-def id="trns4" name="Palette entry alpha" color="chunk-data-1" size="1"/>
+    <field-def id="trns5" name="Palette entry alpha" color="chunk-data-2" size="1"/>
+    <field-def id="trns-error" name="tRNS chunks are only valid in grayscale, RGB and indexed-color images" color="error-1" size="available"/>
+    <!-- cHRM chunk fields -->
+    <field-def id="chrm-type" name="Chunk type: cHRM" color="chunk-type" size="4"/>
+    <field-def id="chrm0" name="White point x" color="chunk-data-1" size="4" print="uint"/>
+    <field-def id="chrm1" name="White point y" color="chunk-data-2" size="4" print="uint"/>
+    <field-def id="chrm2" name="Red x" color="chunk-data-1" size="4" print="uint"/>
+    <field-def id="chrm3" name="Red y" color="chunk-data-2" size="4" print="uint"/>
+    <field-def id="chrm4" name="Green x" color="chunk-data-1" size="4" print="uint"/>
+    <field-def id="chrm5" name="Green y" color="chunk-data-2" size="4" print="uint"/>
+    <field-def id="chrm6" name="Blue x" color="chunk-data-1" size="4" print="uint"/>
+    <field-def id="chrm7" name="Blue y" color="chunk-data-2" size="4" print="uint"/>
+    <!-- gAMA chunk fields -->
+    <field-def id="gama-type" name="Chunk type: gAMA" color="chunk-type" size="4"/>
+    <field-def id="gama0" name="Image gamma" color="chunk-data-1" size="4" print="uint"/>
+    <!-- iCCP chunk fields -->
+    <field-def id="iccp-type" name="Chunk type: iCCP" color="chunk-type" size="4"/>
+    <field-def id="iccp0" name="ICC profile name" color="chunk-data-1" value="00" print="text" encoding="ISO-8859-1"/>
+    <field-def id="iccp1" name="Compression method" color="chunk-data-1" size="1" print="option">
+      <options>
+        <option name="zlib-format DEFLATE" hex-value="00"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <field-def id="iccp2" name="Compressed ICC profile" color="chunk-data-2" size="available"/>
+    <!-- sBIT chunk fields -->
+    <field-def id="sbit-type" name="Chunk type: sBIT" color="chunk-type" size="4"/>
+    <field-def id="sbit0" name="Grayscale sample significant bits" color="chunk-data-1" size="1" print="uint"/>
+    <field-def id="sbit1" name="Red sample significant bits" color="chunk-data-1" size="1" print="uint"/>
+    <field-def id="sbit2" name="Green sample significant bits" color="chunk-data-2" size="1" print="uint"/>
+    <field-def id="sbit3" name="Blue sample significant bits" color="chunk-data-1" size="1" print="uint"/>
+    <field-def id="sbit4" name="Alpha sample significant bits" color="chunk-data-2" size="1" print="uint"/>
+    <!-- sRGB chunk fields -->
+    <field-def id="srgb-type" name="Chunk type: sRGB" color="chunk-type" size="4"/>
+    <field-def id="srgb0" name="Rendering intent" color="chunk-data-1" size="1" print="option">
+      <options>
+        <option name="Perceptual" hex-value="00"/>
+        <option name="Relative colorimetric" hex-value="01"/>
+        <option name="Saturation" hex-value="02"/>
+        <option name="Absolute colorimetric" hex-value="03"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <!-- tEXt chunk fields -->
+    <field-def id="text-type" name="Chunk type: tEXt" color="chunk-type" size="4"/>
+    <field-def id="text0" name="Keyword" color="chunk-data-1" value="00" print="text" encoding="ISO-8859-1"/>
+    <field-def id="text1" name="Text string" color="chunk-data-1" size="available" print="text" encoding="ISO-8859-1"/>
+    <!-- zTXt chunk fields -->
+    <field-def id="ztxt-type" name="Chunk type: zTXt" color="chunk-type" size="4"/>
+    <field-def id="ztxt0" name="Keyword" color="chunk-data-1" value="00" print="text" encoding="ISO-8859-1"/>
+    <field-def id="ztxt1" name="Compression method" color="chunk-data-1" size="1" print="option">
+      <options>
+        <option name="zlib-format DEFLATE" hex-value="00"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <field-def id="ztxt2" name="Compressed text string" color="chunk-data-2" size="available"/>
+    <!-- iTXt chunk fields -->
+    <field-def id="itxt-type" name="Chunk type: iTXt" color="chunk-type" size="4"/>
+    <field-def id="itxt0" name="Keyword" color="chunk-data-1" value="00" print="text"/>
+    <field-def id="itxt1" name="Compression flag" color="chunk-data-1" size="1" print="option">
+      <options>
+        <option name="Uncompressed text" hex-value="00"/>
+        <option name="Compressed text" hex-value="01"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <field-def id="itxt2" name="Compression method" color="chunk-data-2" size="1" print="option">
+      <options>
+        <option name="zlib-format DEFLATE" hex-value="00"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <field-def id="itxt3" name="Language tag" color="chunk-data-1" value="00" print="text"/>
+    <field-def id="itxt4" name="Translated keyword" color="chunk-data-1" value="00" print="text"/>
+    <field-def id="itxt5" name="Uncompressed text string" color="chunk-data-1" size="available" print="text"/>
+    <field-def id="itxt6" name="Compressed text string" color="chunk-data-1" size="available"/>
+    <field-def id="itxt-error" name="Unrecognized text string" color="error-1" size="available"/>
+    <!-- bKGD chunk fields -->
+    <field-def id="bkgd-type" name="Chunk type: bKGD" color="chunk-type" size="4"/>
+    <field-def id="bkgd0" name="Grayscale background" color="chunk-data-1" size="2" print="uint"/>
+    <field-def id="bkgd1" name="Background red sample" color="chunk-data-1" size="2" print="uint"/>
+    <field-def id="bkgd2" name="Background green sample" color="chunk-data-2" size="2" print="uint"/>
+    <field-def id="bkgd3" name="Background blue sample" color="chunk-data-1" size="2" print="uint"/>
+    <field-def id="bkgd4" name="Background palette index" color="chunk-data-1" size="1" print="uint"/>
+    <!-- hIST chunk fields -->
+    <field-def id="hist-type" name="Chunk type: hIST" color="chunk-type" size="4"/>
+    <field-def id="hist0" name="Entry frequency" color="chunk-data-1" size="2" print="uint"/>
+    <field-def id="hist1" name="Entry frequency" color="chunk-data-2" size="2" print="uint"/>
+    <!-- pHYs chunk fields -->
+    <field-def id="phys-type" name="Chunk type: pHYs" color="chunk-type" size="4"/>
+    <field-def id="phys0" name="X axis" tag="X axis (pixels per unit)" tooltip="Pixels per unit" color="chunk-data-1" size="4" print="uint"/>
+    <field-def id="phys1" name="Y axis" tag="Y axis (pixels per unit)" tooltip="Pixels per unit" color="chunk-data-2" size="4" print="uint"/>
+    <field-def id="phys2" name="Unit specifier" color="chunk-data-1" size="1" print="option">
+      <options>
+        <option name="Unknown (pHYs chunk defines aspect ratio)" hex-value="00"/>
+        <option name="Meter" hex-value="01"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <!-- sPLT chunk fields -->
+    <field-def id="splt-type" name="Chunk type: sPLT" color="chunk-type" size="4"/>
+    <field-def id="splt0" name="Palette name" color="chunk-data-1" value="00" print="text" encoding="ISO-8859-1"/>
+    <field-def id="splt1" name="Sample depth" color="chunk-data-1" size="1" print="option">
+      <options>
+        <option name="8 bits" hex-value="08"/>
+        <option name="16 bits" hex-value="10"/>
+      </options>
+      <tooltip auto="true"/>
+    </field-def>
+    <field-def id="splt2" name="Palette entry" color="chunk-data-2" size="3"/>
+    <field-def id="splt3" name="Palette entry alpha" color="chunk-data-1" size="1"/>
+    <field-def id="splt4" name="Palette entry" color="chunk-data-1" size="3"/>
+    <field-def id="splt5" name="Palette entry alpha" color="chunk-data-2" size="1"/>
+    <field-def id="splt6" name="Palette entry" color="chunk-data-2" size="6"/>
+    <field-def id="splt7" name="Palette entry alpha" color="chunk-data-1" size="2"/>
+    <field-def id="splt8" name="Palette entry" color="chunk-data-1" size="6"/>
+    <field-def id="splt9" name="Palette entry alpha" color="chunk-data-2" size="2"/>
+    <field-def id="splt10" name="Palette entry frequency" color="chunk-data-2" size="2"/>
+    <field-def id="splt11" name="Palette entry frequency" color="chunk-data-1" size="2"/>
+    <field-def id="splt-error" name="Invalid sample depth" color="error-1" size="available"/>
+    <!-- tIME chunk fields -->
+    <field-def id="time-type" name="Chunk type: tIME" color="chunk-type" size="4"/>
+    <field-def id="time0" name="Year" color="chunk-data-1" size="2" print="uint"/>
+    <field-def id="time1" name="Month" color="chunk-data-2" size="1" print="uint"/>
+    <field-def id="time2" name="Day" color="chunk-data-1" size="1" print="uint"/>
+    <field-def id="time3" name="Hour" color="chunk-data-2" size="1" print="uint"/>
+    <field-def id="time4" name="Minute" color="chunk-data-1" size="1" print="uint"/>
+    <field-def id="time5" name="Second" color="chunk-data-2" size="1" print="uint"/>
+    <!-- Miscellaneous fields -->
+    <field-def id="null" name="Null separator" color="chunk-data-2" size="1"/>
+    <field-def id="color-type-error" name="Invalid color type" color="error-1" size="available"/>
+    <field-def id="unknown-type" name="Chunk type: Unknown" color="error-2" size="4"/>
+    <field-def id="unrecognized" name="Unrecognized data" color="error-1" size="available"/>
+  </field-defs>
+  <details><![CDATA[
+<b>Recognized chunk types</b>:
+IHDR, PLTE, IDAT, IEND, tRNS, cHRM, gAMA, iCCP, sBIT, sRGB, tEXt, zTXt, iTXt, bKGD, hIST, pHYs, sPLT, tIME
+
+The following checks are <span foreground="green">implemented</span>:
+    - A single IHDR chunk is defined and it is the first chunk
+    - A single PLTE chunk is defined with at most 256 entries
+    - The IEND chunk is end of file
+
+The following checks are <span foreground="red">not implemented</span>:
+    - All IDAT chunks are next to each other
+    - The chunk CRC is correct
+    - The color type and bit depth combination is valid
+    - The tEXt, zTXt and iTXt keywords are 1-79 bytes long
+    - The iCCP profile name is 1-79 bytes long
+    - The sPLT palette name is 1-79 bytes long
+  ]]></details>
+</format>
