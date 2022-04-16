@@ -26,6 +26,13 @@
         Whether the description panel should be visible.
       </description>
     </key>
+    <key name="hide-bottom-panel" type="b">
+      <default>true</default>
+      <summary>Hide bottom panel</summary>
+      <description>
+        Whether the bottom panel should be visible.
+      </description>
+    </key>
     <key name="auto-analysis" type="b">
       <default>false</default>
       <summary>Automatic reanalysis</summary>

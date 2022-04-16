@@ -39,10 +39,21 @@
                   </object>
                 </child>
                 <child>
+                  <object class="GtkCheckButton" id="bottom_panel">
+                    <property name="label" translatable="yes">Hide bottom panel</property>
+                    <layout>
+                      <property name="row">2</property>
+                      <property name="column">0</property>
+                      <property name="row-span">1</property>
+                      <property name="column-span">1</property>
+                    </layout>
+                  </object>
+                </child>
+                <child>
                   <object class="GtkCheckButton" id="auto_analysis">
                     <property name="label" translatable="yes">Automatic reanalysis after edition</property>
                     <layout>
-                      <property name="row">2</property>
+                      <property name="row">3</property>
                       <property name="column">0</property>
                       <property name="row-span">1</property>
                       <property name="column-span">1</property>
@@ -55,7 +66,7 @@
                     <property name="tooltip-text" translatable="yes">Deletions and insertions are not affected by the 'Automatic reanalysis' setting
 A reanalysis is always triggered automatically</property>
                     <layout>
-                      <property name="row">3</property>
+                      <property name="row">4</property>
                       <property name="column">0</property>
                       <property name="row-span">1</property>
                       <property name="column-span">1</property>

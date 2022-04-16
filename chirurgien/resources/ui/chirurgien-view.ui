@@ -3,6 +3,8 @@
   <template class="ChirurgienView" parent="GtkWidget">
     <child>
       <object class="GtkPaned" id="main">
+        <property name="shrink-start-child">f</property>
+        <property name="shrink-end-child">f</property>
         <property name="wide-handle">t</property>
         <child>
           <object class="GtkGrid">
@@ -182,6 +184,14 @@
             </child>
           </object>
         </child>
+      </object>
+    </child>
+    <child>
+      <object class="GtkStatusbar" id="status">
+        <property name="valign">GTK_ALIGN_END</property>
+        <style>
+          <class name="osd"/>
+        </style>
       </object>
     </child>
   </template>

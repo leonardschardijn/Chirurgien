@@ -27,6 +27,7 @@ struct _ChirurgienPreferencesDialog
 
     GtkCheckButton    *navigation;
     GtkCheckButton    *description;
+    GtkCheckButton    *bottom_panel;
     GtkCheckButton    *auto_analysis;
     GtkCheckButton    *extra_buttons;
 
@@ -77,6 +78,9 @@ set_preferences (ChirurgienPreferencesDialog *dialog)
     gtk_check_button_set_active (dialog->description,
                                  g_settings_get_boolean (dialog->preferences_settings,
                                                          "hide-description"));
+    gtk_check_button_set_active (dialog->bottom_panel,
+                                 g_settings_get_boolean (dialog->preferences_settings,
+                                                         "hide-bottom-panel"));
     gtk_check_button_set_active (dialog->auto_analysis,
                                  g_settings_get_boolean (dialog->preferences_settings,
                                                          "auto-analysis"));
@@ -93,6 +97,9 @@ set_preferences (ChirurgienPreferencesDialog *dialog)
                      G_SETTINGS_BIND_SET);
     g_settings_bind (dialog->preferences_settings, "hide-description",
                      dialog->description, "active",
+                     G_SETTINGS_BIND_SET);
+    g_settings_bind (dialog->preferences_settings, "hide-bottom-panel",
+                     dialog->bottom_panel, "active",
                      G_SETTINGS_BIND_SET);
     g_settings_bind (dialog->preferences_settings, "auto-analysis",
                      dialog->auto_analysis, "active",
@@ -200,6 +207,7 @@ chirurgien_preferences_dialog_class_init(ChirurgienPreferencesDialogClass *klass
                              "/io/github/leonardschardijn/chirurgien/ui/chirurgien-preferences-dialog.ui");
     gtk_widget_class_bind_template_child (widget_class, ChirurgienPreferencesDialog, navigation);
     gtk_widget_class_bind_template_child (widget_class, ChirurgienPreferencesDialog, description);
+    gtk_widget_class_bind_template_child (widget_class, ChirurgienPreferencesDialog, bottom_panel);
     gtk_widget_class_bind_template_child (widget_class, ChirurgienPreferencesDialog, auto_analysis);
     gtk_widget_class_bind_template_child (widget_class, ChirurgienPreferencesDialog, extra_buttons);
     gtk_widget_class_bind_template_child (widget_class, ChirurgienPreferencesDialog, color0);

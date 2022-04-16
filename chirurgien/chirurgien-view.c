@@ -108,8 +108,11 @@ struct _ChirurgienView
     /* The 'Overview' page in the description panel */
     GtkBox               *overview;
 
+    /* The lower statusbar displaying byte and field offset */
+    GtkStatusbar         *status;
+
     /* The index of the byte pointed to by the mouse */
-    gint                  current_mouse_index;
+    gsize                 current_mouse_index;
     /* List of fields at the byte pointed to by the mouse */
     GSList               *fields_at_mouse_index;
     /* Number of fields at the mouse index */
@@ -486,7 +489,8 @@ handle_motion_event (G_GNUC_UNUSED GtkEventControllerMotion *controller,
 {
     ChirurgienView *view;
     FileField *file_field;
-    gint byte_index;
+    gint byte_position;
+    gsize byte_index;
 
     GString *field_tooltip;
 
@@ -495,10 +499,10 @@ handle_motion_event (G_GNUC_UNUSED GtkEventControllerMotion *controller,
     if (!pango_layout_xy_to_index (view->view_layout,
                                    x * PANGO_SCALE,
                                    y * PANGO_SCALE,
-                                   &byte_index,
+                                   &byte_position,
                                    NULL))
     {
-        view->current_mouse_index = -1;
+        view->current_mouse_index = G_MAXSIZE;
         view->n_fields_at_mouse_index = 0;
 
         gtk_widget_set_tooltip_text (view->file_view, NULL);
@@ -506,7 +510,7 @@ handle_motion_event (G_GNUC_UNUSED GtkEventControllerMotion *controller,
         return;
     }
 
-    byte_index = view->scroll_offset + (byte_index - (byte_index % 3)) / 3;
+    byte_index = view->scroll_offset + (byte_position - (byte_position % 3)) / 3;
 
     /* Same byte index, nothing to do */
     if (view->current_mouse_index == byte_index)
@@ -523,10 +527,10 @@ handle_motion_event (G_GNUC_UNUSED GtkEventControllerMotion *controller,
     {
         file_field = i->data;
 
-        if (file_field->field_offset > (gsize) byte_index)
+        if (file_field->field_offset > byte_index)
             break;
 
-        if (file_field->field_offset + file_field->field_size > (gsize) byte_index)
+        if (file_field->field_offset + file_field->field_size > byte_index)
         {
             view->fields_at_mouse_index = g_slist_prepend (view->fields_at_mouse_index, file_field);
 
@@ -985,11 +989,41 @@ handle_click (GtkGestureClick *gesture,
     FileField *file_field;
     gint grid_row;
 
+    gchar *byte_index;
+
     view = user_data;
 
     if (n_press == 1)
     {
         gtk_widget_grab_focus (gtk_event_controller_get_widget (GTK_EVENT_CONTROLLER (gesture)));
+
+        if (!view->n_fields_at_mouse_index)
+            return;
+
+        if (view->n_fields_at_mouse_index == 1)
+        {
+            file_field = view->fields_at_mouse_index->data;
+            byte_index = g_strdup_printf (_("Byte offset: %lu (hex: %lX)\t\tField offset: %lu (hex: %lX)\t\tByte offset in field: %lu (hex: %lX)"),
+                                          view->current_mouse_index,
+                                          view->current_mouse_index,
+                                          file_field->field_offset,
+                                          file_field->field_offset,
+                                          view->current_mouse_index - file_field->field_offset,
+                                          view->current_mouse_index - file_field->field_offset);
+        }
+        else
+        {
+            byte_index = g_strdup_printf (_("Multiple fields overlap at this position: %lu (hex: %lX)"),
+                                          view->current_mouse_index,
+                                          view->current_mouse_index);
+        }
+
+        gtk_statusbar_remove_all (view->status,
+                                  gtk_statusbar_get_context_id (view->status, "status"));
+        gtk_statusbar_push (view->status,
+                            gtk_statusbar_get_context_id (view->status, "status"),
+                            byte_index);
+        g_free (byte_index);
     }
     else if (n_press == 2)
     {
@@ -1015,7 +1049,7 @@ handle_click (GtkGestureClick *gesture,
         {
             create_field_popover (GTK_POPOVER (popover), view->fields_at_mouse_index->data);
         }
-        else if (view->n_fields_at_mouse_index > 1)
+        else
         {
             grid = gtk_grid_new ();
             gtk_grid_set_column_spacing (GTK_GRID (grid), 10);
@@ -1162,6 +1196,7 @@ chirurgien_view_dispose (GObject *object)
     view = CHIRURGIEN_VIEW (object);
 
     gtk_widget_unparent (GTK_WIDGET (g_steal_pointer (&view->main)));
+    gtk_widget_unparent (GTK_WIDGET (g_steal_pointer (&view->status)));
 
     for (GSList *i = view->file_fields; i; i = i->next)
     {
@@ -1212,6 +1247,7 @@ chirurgien_view_class_init (ChirurgienViewClass *klass)
     gtk_widget_class_bind_template_child (widget_class, ChirurgienView, navigation_icon);
     gtk_widget_class_bind_template_child (widget_class, ChirurgienView, navigation);
     gtk_widget_class_bind_template_child (widget_class, ChirurgienView, overview);
+    gtk_widget_class_bind_template_child (widget_class, ChirurgienView, status);
     gtk_widget_class_bind_template_child (widget_class, ChirurgienView, adjustment);
     gtk_widget_class_bind_template_child (widget_class, ChirurgienView, view_tab);
     gtk_widget_class_bind_template_child (widget_class, ChirurgienView, reanalyze_notice);
@@ -1228,6 +1264,9 @@ chirurgien_view_init (ChirurgienView *view)
 
     gtk_paned_set_shrink_start_child (view->main, FALSE);
     gtk_paned_set_shrink_end_child (view->main, FALSE);
+
+    gtk_widget_set_layout_manager (GTK_WIDGET (view),
+                                   gtk_box_layout_new (GTK_ORIENTATION_VERTICAL));
 
     view->view_layout = gtk_widget_create_pango_layout (view->file_view, NULL);
 
@@ -1272,7 +1311,7 @@ chirurgien_view_init (ChirurgienView *view)
 
     view->file_fields = NULL;
 
-    view->current_mouse_index = -1;
+    view->current_mouse_index = G_MAXSIZE;
     view->fields_at_mouse_index = NULL;
     view->n_fields_at_mouse_index = 0;
 
@@ -1301,6 +1340,9 @@ chirurgien_view_new (ChirurgienWindow *window)
                      G_SETTINGS_BIND_DEFAULT);
     g_settings_bind (view->preferences_settings, "hide-description",
                      view->description, "visible",
+                     G_SETTINGS_BIND_GET | G_SETTINGS_BIND_INVERT_BOOLEAN);
+    g_settings_bind (view->preferences_settings, "hide-bottom-panel",
+                     view->status, "visible",
                      G_SETTINGS_BIND_GET | G_SETTINGS_BIND_INVERT_BOOLEAN);
 
     return view;
@@ -1384,7 +1426,7 @@ chirurgien_view_redo_analysis (ChirurgienView *view)
 
     g_slist_free (g_steal_pointer (&view->fields_at_mouse_index));
 
-    view->current_mouse_index = -1;
+    view->current_mouse_index = G_MAXSIZE;
     view->n_fields_at_mouse_index = 0;
 
     view->selected_field = NULL;
