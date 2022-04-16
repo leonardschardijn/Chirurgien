@@ -53,7 +53,6 @@ field_defs_start (GMarkupParseContext *context,
 
     gpointer value_address;
 
-    gsize option_value_size;
     gpointer option_value;
 
     gint line, character;
@@ -235,11 +234,15 @@ field_defs_start (GMarkupParseContext *context,
 
             option->name = attr1;
 
+            parser_control->current_field->value_collection =
+                g_slist_append (parser_control->current_field->value_collection,
+                                option);
+
             if (attr2)
             {
-                option_value_size = strlen (attr2);
+                option->value = attr2;
 
-                if (option_value_size != parser_control->current_field->size)
+                if (strlen (attr2) != parser_control->current_field->size)
                 {
                     g_markup_parse_context_get_position (context, &line, &character);
                     *error = g_error_new (G_MARKUP_ERROR,
@@ -248,8 +251,6 @@ field_defs_start (GMarkupParseContext *context,
                                           line, character);
                     return;
                 }
-
-                option->value = attr2;
             }
             else if (attr3)
             {
@@ -258,9 +259,7 @@ field_defs_start (GMarkupParseContext *context,
                                                         attr3,
                                                         error))
                 {
-                    option_value_size = strlen (attr3) >> 1;
-
-                    if (option_value_size != parser_control->current_field->size)
+                    if ((strlen (attr3) >> 1) != parser_control->current_field->size)
                     {
                         g_markup_parse_context_get_position (context, &line, &character);
                         *error = g_error_new (G_MARKUP_ERROR,
@@ -276,10 +275,6 @@ field_defs_start (GMarkupParseContext *context,
                                                    TRUE);
 
                     option->value = option_value;
-
-                    parser_control->current_field->value_collection =
-                        g_slist_append (parser_control->current_field->value_collection,
-                                        option);
                 }
             }
             else

@@ -494,6 +494,10 @@ process_field_step (const FormatDefinition *format_definition,
 
                 switch (field_def->size)
                 {
+                    case 1:
+                    op_value = raw_field_value.one;
+
+                    break;
                     case 2:
                     op_value = raw_field_value.two;
 
