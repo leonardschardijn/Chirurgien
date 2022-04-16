@@ -82,7 +82,7 @@ void       chirurgien_actions_recent_open        (GSimpleAction *,
 /* Others */
 void       chirurgien_actions_load_format        (GtkButton *,
                                                   gpointer);
-void       chirurgien_actions_new_view           (ChirurgienWindow *,
+gboolean   chirurgien_actions_new_view           (ChirurgienWindow *,
                                                   GFile *);
 void       chirurgien_actions_show_view          (ChirurgienWindow *,
                                                   ChirurgienView *);

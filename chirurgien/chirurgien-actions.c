@@ -596,7 +596,7 @@ chirurgien_actions_load_format (G_GNUC_UNUSED GtkButton *self,
     gtk_native_dialog_show (GTK_NATIVE_DIALOG (dialog));
 }
 
-void
+gboolean
 chirurgien_actions_new_view (ChirurgienWindow *window,
                              GFile            *file)
 {
@@ -614,13 +614,15 @@ chirurgien_actions_new_view (ChirurgienWindow *window,
         g_signal_connect (error_dialog, "response", G_CALLBACK (gtk_window_destroy), NULL);
         gtk_window_present (GTK_WINDOW (error_dialog));
 
-        return;
+        return FALSE;
     }
 
     view = chirurgien_view_new (window);
     chirurgien_view_set_file (view, file);
 
     chirurgien_actions_show_view (window, view);
+
+    return TRUE;
 }
 
 void

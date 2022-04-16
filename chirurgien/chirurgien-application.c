@@ -42,15 +42,6 @@ static GActionEntry app_entries[] =
 };
 
 static void
-chirurgien_application_activate (GApplication *app)
-{
-    ChirurgienWindow *window;
-
-    window = chirurgien_window_new (GTK_APPLICATION (app));
-    gtk_window_present (GTK_WINDOW (window));
-}
-
-static void
 chirurgien_application_startup (GApplication *app)
 {
     G_APPLICATION_CLASS (chirurgien_application_parent_class)->startup (app);
@@ -87,6 +78,32 @@ chirurgien_application_startup (GApplication *app)
 }
 
 static void
+chirurgien_application_activate (GApplication *app)
+{
+    ChirurgienWindow *window;
+
+    window = chirurgien_window_new (GTK_APPLICATION (app));
+    gtk_window_present (GTK_WINDOW (window));
+}
+
+static void
+chirurgien_application_open (GApplication  *app,
+                             GFile        **files,
+                             gint           n_files,
+                             G_GNUC_UNUSED const gchar *hint)
+{
+    ChirurgienWindow *window;
+
+    window = chirurgien_window_new (GTK_APPLICATION (app));
+
+    for (gint i = 0; i < n_files; i++)
+        if (!chirurgien_actions_new_view (window, files[i]))
+            break;
+
+    gtk_window_present (GTK_WINDOW (window));
+}
+
+static void
 chirurgien_application_init (G_GNUC_UNUSED ChirurgienApplication *app)
 {
     gtk_window_set_default_icon_name ("io.github.leonardschardijn.Chirurgien");
@@ -95,8 +112,9 @@ chirurgien_application_init (G_GNUC_UNUSED ChirurgienApplication *app)
 static void
 chirurgien_application_class_init (ChirurgienApplicationClass *klass)
 {
-    G_APPLICATION_CLASS (klass)->activate = chirurgien_application_activate;
     G_APPLICATION_CLASS (klass)->startup = chirurgien_application_startup;
+    G_APPLICATION_CLASS (klass)->activate = chirurgien_application_activate;
+    G_APPLICATION_CLASS (klass)->open = chirurgien_application_open;
 }
 
 /*** Public API ***/
@@ -106,5 +124,6 @@ chirurgien_application_new (void)
 {
     return g_object_new (CHIRURGIEN_TYPE_APPLICATION,
                          "application-id", "io.github.leonardschardijn.Chirurgien",
+                         "flags", G_APPLICATION_HANDLES_OPEN,
                          NULL);
 }
