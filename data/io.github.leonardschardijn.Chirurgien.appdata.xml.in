@@ -4,14 +4,18 @@
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0-or-later</project_license>
   <name>Chirurgien</name>
-  <summary>Understand and manipulate file formats</summary>
+  <summary>Understand and manipulate binary file formats</summary>
   <description>
-    <p>Chirurgien helps understand and manipulate file formats.</p>
+    <p>
+      <em>Chirurgien</em> is a hex editor and an essential tool for reverse engineering, analyzing, and carving binary file formats.
+    </p>
     <p>Features:</p>
     <ul>
-      <li>File format highlighting</li>
-      <li>File description panel</li>
-      <li>Field edition, extraction, deletion and insertion</li>
+      <li>Human-readable description panel</li>
+      <li>Insert, edit, extract, and delete file data</li>
+      <li>File structure/chunk navigation panel</li>
+      <li>Built-in support with structure recognition and highlighting for many file formats</li>
+      <li>Extendable with new and custom file format definitions</li>
     </ul>
   </description>
   <screenshots>
@@ -28,7 +32,7 @@
       <image>https://raw.githubusercontent.com/leonardschardijn/Chirurgien/master/data/screenshot4.png</image>
     </screenshot>
   </screenshots>
-  <url type="homepage">https://github.com/leonardschardijn/Chirurgien</url>
+  <url type="homepage">https://github.com/leonardschardijn/Chirurgien#readme</url>
   <developer_name>Daniel Léonard Schardijn</developer_name>
   <content_rating type="oars-1.1"/>
   <releases>
