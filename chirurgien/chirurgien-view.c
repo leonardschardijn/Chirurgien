@@ -1167,7 +1167,7 @@ get_view_measures (ChirurgienView *view)
     font_metrics = pango_context_get_metrics (context, pango_context_get_font_description (context),
                                               pango_context_get_language (context));
 
-    view->char_width =  pango_font_metrics_get_approximate_char_width (font_metrics);
+    view->char_width =  pango_font_metrics_get_approximate_digit_width (font_metrics);
 
     view->line_height = pango_font_metrics_get_ascent (font_metrics) +
                         pango_font_metrics_get_descent (font_metrics);
